@@ -1,12 +1,15 @@
 ===================================================================================================
+
 Model-Morphing Function - Specification
-Author: Institute for Systems Biology
+
+	Institute for Systems Biology
 	Price Lab
 	Brendan King
 	2015
+
 ===================================================================================================
 
-Synopsis: mm-morphmodel <Model> <Genome> [-?ehmw][--long options]
+Synopsis/Usage: mm-morphmodel <Model> <Genome> [-?ehmvw][--long options]
 
 	-m STR --outputid STR --model STR    Name to be provided for output model
 	--genomews STR                       Workspace where genome is located
@@ -20,6 +23,15 @@ Synopsis: mm-morphmodel <Model> <Genome> [-?ehmw][--long options]
 	=== Handling of essential no-gene-match reactions ===
 
 	--remove			     Remove essential no-gene-match reactions and gap-fill
+	--keep				     Keep essential no-gene-match reactions in the model
+	
+	================  Reporting Options =================
+
+	-v, --verbose			     Report as much information as possible
+	-f, --file DIR		 	     Write report to file in DIR
+
+		***For now, verbose is default. decide if it is the best name for the option and come up with more meaningful options***
+
 Name: mm-morphmodel - 'Morph' a model an existing model to fit a related genome
 
 Description: 
@@ -27,11 +39,17 @@ Description:
 Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' organism. It keeps reactions from the 'source' model for which there is at least one matching gene feature, and attempts to remove those in the source model that do not have BLAST hits in the second genome. It also adds reactions annotated within the target genome that are unique to the target organism. The model is never broken in the process, such that the Biomass reaction and any other specified reaction [insert how you flag this option] must always carry flux. If a reaction can't be removed without breaking the model, it is flagged again and a few options are available for handling these reactions [insert said options] 
 
 Examples:
+
 Authors: Brendan King, Vangelis Simeonidis, Matt Richards
+
 Environment Requirements: 
+
 	- Access to the fbaModelServices, GenomeComparison, *workspaceServices*, and *probannoServices* clients for KBase server calls. This is most easily done by installing the KBaseClient available at:
-	 Instructions and Code Base (Read these first): https://github.com/ModelSEED/KBaseClient
-	Clone URL: https://github.com/ModelSEED/KBaseClient.git
+   	  Instructions and Code Base (Read these first): https://github.com/ModelSEED/KBaseClient
+	  Clone URL: https://github.com/ModelSEED/KBaseClient.git
+
 Installation Guide:
+
 Type Definitions:
+
 Function Definitions:
