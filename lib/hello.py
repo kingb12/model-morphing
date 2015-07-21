@@ -1,4 +1,7 @@
-from biokbase.workspaceService.Client.py import workspaceService
-input['ws-name'] = 'eureka'
-workspaceService.create_workspace(workspaceService,input)
+from biokbase.workspace.client import Workspace 
+params = {}
+params['ws-name'] = 'eureka'
+ws = Workspace()
+ws.create_workspace(params)
+
  
