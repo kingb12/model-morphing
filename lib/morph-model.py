@@ -29,10 +29,10 @@ AUTHORS
 #Parse incoming arguments
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
 parser = argparse.ArgumentParser(formatter_class.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
-parser.add_argument('genome', help='ID of the Genome object' action='store', default=None)
-parser.add_argument('model', help='ID of the Model object' action='store', default=None)
-parser.add_argument('--genomews', help='Workspace of the Genome object' action='store', default=None, dest='genomews')
-parser.add_argument('--modelws', help='Workspace of the Model object' action='store', default=None, dest='modelws')
+parser.add_argument('genome', help='ID of the Genome object', action='store', default=None)
+parser.add_argument('model', help='ID of the Model object', action='store', default=None)
+parser.add_argument('--genomews', help='Workspace of the Genome object', action='store', default=None, dest='genomews')
+parser.add_argument('--modelws', help='Workspace of the Model object', action='store', default=None, dest='modelws')
 	#TODO: ADD OTHER OPTION ARGUMENTS
 usage = parser.format_usage()
 parser.description = desc1 + '	' + usage + desc2
@@ -70,5 +70,7 @@ while (ws_conflict):
 		ws_conflict = False
 	except ServerError:
 		ws_name += str(random.randint(1,9))
+print args
+print ws_id
+print ws_name
 
-# 		
