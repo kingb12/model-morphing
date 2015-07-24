@@ -3,7 +3,11 @@
 #import necesary services
 from biokbase.workspace.client import Workspace 
 from biokbase.workspace.client import ServerError 
-from biokbase.workspace.ScriptHelpers import user_workspace
+from clients.GenomeComparisonClient import GenomeComparison
+
+# TODO remove these imports
+import list_objs_by_ID
+# from biokbase.workspace.ScriptHelpers import user_workspace
 
 import random
 import sys
@@ -28,7 +32,7 @@ AUTHORS
 '''
 #Parse incoming arguments
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
-parser = argparse.ArgumentParser(formatter_class.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
+parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
 parser.add_argument('genome', help='ID of the Genome object', action='store', default=None)
 parser.add_argument('model', help='ID of the Model object', action='store', default=None)
 parser.add_argument('--genomews', help='Workspace of the Genome object', action='store', default=None, dest='genomews')
@@ -41,16 +45,19 @@ input_args = parser.parse_args()
 
 #Prepare the argument dictionary
 args = dict()
-args['genome'] = args.genome
-args['model'] = args.model
-if args.genomews is None:
-	args['genomews'] = user_workspace()
+args['genome'] = input_args.genome
+args['model'] = input_args.model
+if input_args.genomews is None:
+#FIXME: fix this functionality
+# 	args['genomews'] = user_workspace()
+	args['genomews'] = 8730
 else:
-	args['genomews'] = args.genomews
-if args.modelws is None:
-	args['modelws'] = user_workspace()
+	args['genomews'] = input_args.genomews
+if input_args.modelws is None:
+#	args['modelws'] = user_workspace()
+	args['modelws'] = 8730
 else:
-	args['modelws'] = args.modelws
+	args['modelws'] = input_args.modelws
 
 # some global vars
 ws_id = None
@@ -70,7 +77,17 @@ while (ws_conflict):
 		ws_conflict = False
 	except ServerError:
 		ws_name += str(random.randint(1,9))
-print args
-print ws_id
-print ws_name
+
+# Copy objs from current ws to temp one (for argument simplicity to later method calls)
+	#TODO: verify this does not significantly impact performance
+	ws_client.copy_object({'ws_id' : args['genomews'], 'obj_id' : args['genome']}, {'ws_id' : ws_id, 'obj_id' : args['genome']}) #ObjectIdentity old => ObjectIdentity new
+	ws_client.copy_object({'ws_id' : args['modelws'], 'obj_id' : args['model']}, {'ws_id' : ws_id, 'obj_id' : args['model']}) #ObjectIdentity old => ObjectIdentity new
+	list_objs_by_ID()
+#Prepare Proteome Comparison
+gencomp_client = GenomeComparison()
+	# Set up parameters
+blast_proteomes_params = dict()
+blast_proteomes_params['genome1ws'] = ws_id
+blast_proteomes_params['genome2ws'] = ws_id
+blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
 
