@@ -4,9 +4,8 @@
 from biokbase.workspace.client import Workspace 
 from biokbase.workspace.client import ServerError 
 from clients.GenomeComparisonClient import GenomeComparison
-
+from biokbase.fbaModelServices.Client import fbaModelServices
 # TODO remove these imports
-import list_objs_by_ID
 # from biokbase.workspace.ScriptHelpers import user_workspace
 
 import random
@@ -30,13 +29,24 @@ EXAMPLES
 AUTHORS
 	Brendan King, Vangelis Simeonidis, Matt Richards
 '''
+# Set up KBase Service Clients
+ws_client = Workspace()
+	# Get FBA Model Services URL parameter
+with open (".kbase_fbaModelServicesURL", "r") as myfile:
+	url = myfile.read().replace('\n','')
+fba_client = fbaModelServices(url)
+	# Get Genome Comparison URL parameter
+with open (".kbase_genomecomparisonURL", "r") as myfile:
+	url = myfile.read().replace('\n','')
+gencomp_client = GenomeComparison(url)
 #Parse incoming arguments
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
+	#FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
 parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
-parser.add_argument('genome', help='ID of the Genome object', action='store', default=None)
-parser.add_argument('model', help='ID of the Model object', action='store', default=None)
-parser.add_argument('--genomews', help='Workspace of the Genome object', action='store', default=None, dest='genomews')
-parser.add_argument('--modelws', help='Workspace of the Model object', action='store', default=None, dest='modelws')
+parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
+parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
+parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
+parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
 	#TODO: ADD OTHER OPTION ARGUMENTS
 usage = parser.format_usage()
 parser.description = desc1 + '	' + usage + desc2
@@ -58,36 +68,51 @@ if input_args.modelws is None:
 	args['modelws'] = 8730
 else:
 	args['modelws'] = input_args.modelws
-
+for i in args:
+	print type(i) 
+	print i
 # some global vars
 ws_id = None
 ws_name = 'MMws'
 
 # initiate a new workspace
-ws_client = Workspace()
 ws_conflict = True
 while (ws_conflict):
-	create_ws_params = {'workspace' : ws_name}
+	clone_ws_params = {'workspace' : ws_name, 'wsi' : {'id' : args['genomews']}, 'globalread' : 'r'}
 	# Try to create a workspace, catch an error if the name is already in use
 	try:
-		new_ws = ws_client.create_workspace(create_ws_params)
+		new_ws = ws_client.clone_workspace(clone_ws_params)
 		# new_ws is type workspace_info, a tuple where 0, 1 are id, name
 		ws_id = new_ws[0]
 		ws_name = new_ws[1]
 		ws_conflict = False
 	except ServerError:
 		ws_name += str(random.randint(1,9))
-
 # Copy objs from current ws to temp one (for argument simplicity to later method calls)
-	#TODO: verify this does not significantly impact performance
-	ws_client.copy_object({'ws_id' : args['genomews'], 'obj_id' : args['genome']}, {'ws_id' : ws_id, 'obj_id' : args['genome']}) #ObjectIdentity old => ObjectIdentity new
-	ws_client.copy_object({'ws_id' : args['modelws'], 'obj_id' : args['model']}, {'ws_id' : ws_id, 'obj_id' : args['model']}) #ObjectIdentity old => ObjectIdentity new
-	list_objs_by_ID()
+			#TODO decide if this is even needed
+			#TODO: verify this does not significantly impact performance
+# genomesrcid = {'wsid' : int(args['genomews']), 'objid' : int(args['genome'])}
+# # modelsrcid = {'wsid' : int(args['modelws']), 'objid' : int(args['model'])}
+# # genomedestid = {'wsid' : int(ws_id), 'objid' : int(args['genome'])}
+# modeldestid = {'wsid' : int(ws_id), 'objid' : int(args['model'])}
+# ws_client.copy_object({'from' : genomesrcid , 'to' : genomedestid}) #ObjectIdentity old => ObjectIdentity new
+# ws_client.copy_object({'from' : modelsrcid , 'to' : modeldestid}) #ObjectIdentity old => ObjectIdentity new
+
+a = ws_client.list_objects({'ids' : [ws_id]})
+for i in a:
+	print i
 #Prepare Proteome Comparison
-gencomp_client = GenomeComparison()
 	# Set up parameters
 blast_proteomes_params = dict()
-blast_proteomes_params['genome1ws'] = ws_id
-blast_proteomes_params['genome2ws'] = ws_id
+blast_proteomes_params['genome1ws'] = args['genomews']
+blast_proteomes_params['genome2ws'] = args['modelws']
 blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
-
+get_models_params = dict()
+get_models_params['models'] = list() 
+get_models_params['models'].append(args['model']) 
+get_models_params['workspaces'] = list()
+get_models_params['workspaces'].append(args['modelws']) 
+# model = fba_client.get_models(get_models_params)
+# model = fba_client.get_models({'models' : [args['model']], 'workspaces' : args['modelws']})
+# model.
+ws_client.delete_workspace({'id' : ws_id})
