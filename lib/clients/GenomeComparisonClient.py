@@ -180,8 +180,7 @@ class GenomeComparison(object):
         if ret.code != httplib.OK:
             raise URLError('Received bad response code from server:' +
                            ret.code)
-        resp = json.loads(ret.read())
-
+      	resp = json.loads(ret.read())
         if 'result' in resp:
             return resp['result'][0]
         else:

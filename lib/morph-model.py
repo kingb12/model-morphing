@@ -36,34 +36,39 @@ AUTHORS
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
-#Prepare Proteome Comparison
+#Prepare Proteome Comparison: Sets the args['protcomp'] reference to the protcomp dictionary AND sets the model field if no prot comp exists (saves comp time)
 def blast_proteomes(args):
+	if (args['protcomp'] == None):
 		# Set up parameters
-	blast_proteomes_params = dict()
-	blast_proteomes_params['genome1ws'] = args['genomews']
-	blast_proteomes_params['genome2ws'] = args['modelws']
-	blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
-	get_models_params = dict()
-	get_models_params['models'] = list() 
-	get_models_params['models'].append(args['model']) 
-	get_models_params['workspaces'] = list()
-	get_models_params['workspaces'].append(args['modelws']) 
-	print args
-	print ws_client.get_workspace_info({'id' : ws_id})
-	print ws_client.list_objects({'ids' : [ws_id]})
-	model = fba_client.get_models(get_models_params)
-	# model = fba_client.get_models({'models' : [args['model']], 'workspaces' : args['modelws']})
-	# model.
-	
+		global model
+		blast_proteomes_params = dict()
+		blast_proteomes_params['genome1ws'] = args['genomews']
+		blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
+		get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
+		model = fba_client.get_models(get_models_params)[0]
+		[genome2ws, genome2id] = model['genome_ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
+		blast_proteomes_params['genome2ws'] =  genome2ws
+		blast_proteomes_params['genome2id'] =  genome2id
+		blast_proteomes_params['output_ws'] =  ws_id
+		blast_proteomes_params['output_id'] =  '42' #FIXME: THIS WILL BREAK IF THERE IS AN OBJ 42 ALREADY IN WS
+		jobid = gencomp_client.blast_proteomes(blast_proteomes_params)
+		
+	else:
+		protcomp_ref = args['protcomp']
+		print protcomp_ref
+		args['protcomp'] = ws_client.get_objects([{'wsid' : args['protcompws'], 'objid' : protcomp_ref}])[0]
+ 		print type(args['protcomp'])
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
 	#FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
 	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
-	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
 	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
+	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
+	parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
 	parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
 	parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
+	parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
 		#TODO: ADD OTHER OPTION ARGUMENTS
 	usage = parser.format_usage()
 	parser.description = desc1 + '	' + usage + desc2
@@ -74,6 +79,7 @@ def parse_arguments():
 	args = dict()
 	args['genome'] = input_args.genome
 	args['model'] = input_args.model
+	args['protcomp'] = input_args.protcomp
 	if input_args.genomews is None:
 	#FIXME: fix this functionality
 	# 	args['genomews'] = user_workspace()
@@ -85,6 +91,11 @@ def parse_arguments():
 		args['modelws'] = 8730
 	else:
 		args['modelws'] = input_args.modelws
+	if input_args.protcompws is None:
+	#	args['protcompws'] = user_workspace()
+		args['protcompws'] = 8730
+	else:
+		args['protcompws'] = input_args.protcompws
 	return args
 
 #Initiate Clients Objects for Function
@@ -99,6 +110,7 @@ def init_clients():
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
 	clients['gencomp'] = GenomeComparison(url)
+	clients['ujs'] = 
 	return clients
 
 # initiate MMws workspace and clone in all needed objects
@@ -108,10 +120,10 @@ def init_workspace():
 	global ws_id
 	ws_name = 'MMws'
 	while (ws_conflict):
-		clone_ws_params = {'workspace' : ws_name, 'wsi' : {'id' : args['genomews']}, 'globalread' : 'r'}
+		create_ws_params = {'workspace' : ws_name, 'globalread' : 'r', 'description' : "A workspace for storing the FBA's and meta data of the algorithm"}
 		# Try to create a workspace, catch an error if the name is already in use
 		try:
-			new_ws = ws_client.clone_workspace(clone_ws_params)
+			new_ws = ws_client.create_workspace(create_ws_params)
 			# new_ws is type workspace_info, a tuple where 0, 1 are id, name
 			ws_id = new_ws[0]
 			ws_name = new_ws[1]
@@ -142,6 +154,6 @@ gencomp_client = clients['gencomp']
 init_workspace() # creates global vars ws_name and ws_id
 
 #Blast Proteomes
-blast_proteomes(args)
-# Clean up/Finish
+args['protcomp'] = blast_proteomes(args)
 finish()
+# Clean up/Finish

@@ -5,5 +5,5 @@ ws = Workspace()
 # b = ws.create_workspace(params)
 a = ws.list_workspace_info(params)
 for i in a:
-	print i[0:5]
+	print i
 

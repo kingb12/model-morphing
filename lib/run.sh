@@ -1,1 +1,1 @@
-python morph-model.py 4 3 --genomews 8730 --modelws 8730
+python morph-model.py 5 3 6  --genomews 9145 --modelws 9145 --protcompws 9145
