@@ -3,14 +3,16 @@
 #import necesary services
 from biokbase.workspace.client import Workspace 
 from biokbase.workspace.client import ServerError 
-from clients.GenomeComparisonClient import GenomeComparison
+from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
+from biokbase.userandjobstate.Client import UserAndJobState
 # TODO remove these imports
 # from biokbase.workspace.ScriptHelpers import user_workspace
 
 import random
 import sys
 import argparse
+import time
 desc1 = '''
 NAME
 	 mm-morphmodel - 'Morph' a model an existing model to fit a related genome
@@ -52,7 +54,14 @@ def blast_proteomes(args):
 		blast_proteomes_params['output_ws'] =  ws_id
 		blast_proteomes_params['output_id'] =  '42' #FIXME: THIS WILL BREAK IF THERE IS AN OBJ 42 ALREADY IN WS
 		jobid = gencomp_client.blast_proteomes(blast_proteomes_params)
-		
+		while (ujs_client.get_job_status({'job' : jobid})[1] != 'completed' or ujs_client.get_job_status({'job' : jobid})[1] != 'error' ):
+			time.sleep(20)
+			# this is a fairly long running job, (3 min on narrative interface), so 
+		if (ujs_client.get_job_status({'job' : jobid}) == 'error'):
+			raise Exception
+		else:
+			args['protcomp'] = ws_client.get_objects({
+			
 	else:
 		protcomp_ref = args['protcomp']
 		print protcomp_ref
@@ -110,7 +119,7 @@ def init_clients():
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
 	clients['gencomp'] = GenomeComparison(url)
-	clients['ujs'] = 
+	clients['ujs'] = UserAndJobState()
 	return clients
 
 # initiate MMws workspace and clone in all needed objects
@@ -149,7 +158,7 @@ clients = init_clients()
 fba_client = clients['fba']
 ws_client = clients['ws']
 gencomp_client = clients['gencomp']
-
+ujs_client = clients['ujs']
 #initiate Model Morphing workspace
 init_workspace() # creates global vars ws_name and ws_id
 
