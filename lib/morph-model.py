@@ -5,7 +5,7 @@ from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError 
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
-from biokbase.userandjobstate.Client import UserAndJobState
+from biokbase.userandjobstate.client import UserAndJobState
 # TODO remove these imports
 # from biokbase.workspace.ScriptHelpers import user_workspace
 
@@ -38,35 +38,16 @@ AUTHORS
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
-#Prepare Proteome Comparison: Sets the args['protcomp'] reference to the protcomp dictionary AND sets the model field if no prot comp exists (saves comp time)
-def blast_proteomes(args):
-	if (args['protcomp'] == None):
-		# Set up parameters
-		global model
-		blast_proteomes_params = dict()
-		blast_proteomes_params['genome1ws'] = args['genomews']
-		blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
-		get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
-		model = fba_client.get_models(get_models_params)[0]
-		[genome2ws, genome2id] = model['genome_ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
-		blast_proteomes_params['genome2ws'] =  genome2ws
-		blast_proteomes_params['genome2id'] =  genome2id
-		blast_proteomes_params['output_ws'] =  ws_id
-		blast_proteomes_params['output_id'] =  '42' #FIXME: THIS WILL BREAK IF THERE IS AN OBJ 42 ALREADY IN WS
-		jobid = gencomp_client.blast_proteomes(blast_proteomes_params)
-		while (ujs_client.get_job_status({'job' : jobid})[1] != 'completed' or ujs_client.get_job_status({'job' : jobid})[1] != 'error' ):
-			time.sleep(20)
-			# this is a fairly long running job, (3 min on narrative interface), so 
-		if (ujs_client.get_job_status({'job' : jobid}) == 'error'):
-			raise Exception
-		else:
-			args['protcomp'] = ws_client.get_objects({
-			
-	else:
-		protcomp_ref = args['protcomp']
-		print protcomp_ref
-		args['protcomp'] = ws_client.get_objects([{'wsid' : args['protcompws'], 'objid' : protcomp_ref}])[0]
- 		print type(args['protcomp'])
+# label reactions in each model
+def label_reactions():
+	model_rxn_ids = set()
+	for rxn in model['reactions']:
+		model_rxn_ids.add(rxn['reaction'])
+	for mdlrxn in recon['reactions']:
+		if mdlrxn['reaction'] in model_rxn_ids:
+			for ftr in mdlrxn['features']:
+				if ftr in model_reactions[mdlrxn]['features']:
+					print ftr
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
@@ -140,6 +121,45 @@ def init_workspace():
 		except ServerError:
 			 ws_name += str(random.randint(1,9))
 
+#Prepare Proteome Comparison: Sets the args['protcomp'] reference to the protcomp dictionary AND sets the model field if no prot comp exists (saves comp time)
+def blast_proteomes():
+	global model
+	if args['protcomp'] is None:
+		# Set up parameters
+		blast_proteomes_params = dict()
+		blast_proteomes_params['genome1ws'] = args['genomews']
+		blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
+		get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
+		model = fba_client.get_models(get_models_params)[0]
+		[genome2ws, genome2id] = model['genome_ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
+		blast_proteomes_params['genome2ws'] =  genome2ws
+		blast_proteomes_params['genome2id'] =  genome2id
+		blast_proteomes_params['output_ws'] =  ws_id
+		blast_proteomes_params['output_id'] =  '42' #FIXME: THIS WILL BREAK IF THERE IS AN OBJ 42 ALREADY IN WS
+		jobid = gencomp_client.blast_proteomes(blast_proteomes_params)
+		while ujs_client.get_job_status({'job' : jobid})[1] != 'completed' and ujs_client.get_job_status({'job' : jobid})[1] != 'error':
+			time.sleep(20)
+		if (ujs_client.get_job_status({'job' : jobid}) == 'error'):
+			raise Exception
+		else:
+			protcomp = ws_client.get_objects([{'wsid' : ws_id , 'objid' : '42'}])
+	else:
+		protcomp_ref = args['protcomp']
+		protcomp = ws_client.get_objects([{'wsid' : args['protcompws'], 'objid' : protcomp_ref}])[0] #get objects returns a list, [0] is the first object
+	return protcomp['data']
+
+# Get the reactions for the comparison 'recon' model in Genome B
+def build_models():
+	global recon
+	global model
+	if model is None:
+		get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
+		model = fba_client.get_models(get_models_params)[0]
+	recon_params = {'genome' : args['genome'], 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
+	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
+	get_models_params = {'models' : [recon_id], 'workspaces' : [ws_id]}
+	recon = fba_client.get_models(get_models_params)[0]
+
 # Finishing/Cleanup  Steps 
 def finish():
 	ws_client.delete_workspace({'id' : ws_id})
@@ -149,7 +169,9 @@ def finish():
 #
 # the scripted algorithm steps in order
 # =================================================================================================
-
+# init variables
+model = None
+recon = None
 #parse command args
 args = parse_arguments()
 
@@ -163,6 +185,8 @@ ujs_client = clients['ujs']
 init_workspace() # creates global vars ws_name and ws_id
 
 #Blast Proteomes
-args['protcomp'] = blast_proteomes(args)
+args['protcomp'] = blast_proteomes()
+build_models()
+label_reactions()
 finish()
 # Clean up/Finish
