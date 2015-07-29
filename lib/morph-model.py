@@ -40,14 +40,20 @@ AUTHORS
 
 # label reactions in each model
 def label_reactions():
-	model_rxn_ids = set()
-	for rxn in model['reactions']:
-		model_rxn_ids.add(rxn['reaction'])
+	model_rxn_ids = dict()
+	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
+	for i  in range(len(model['reactions'])):
+		model_rxn_ids[model['reactions'][i]['reaction']] = i
 	for mdlrxn in recon['reactions']:
 		if mdlrxn['reaction'] in model_rxn_ids:
+			print mdlrxn['reaction']
 			for ftr in mdlrxn['features']:
-				if ftr in model_reactions[mdlrxn]['features']:
-					print ftr
+				print ftr
+				if ftr in model['reactions'][model_rxn_ids[mdlrxn['reaction']]]['features']:
+					print ftr + " in common"
+			for f in model['reactions'][model_rxn_ids[mdlrxn['reaction']]]['features']:
+				print f + " in model"
+		
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
