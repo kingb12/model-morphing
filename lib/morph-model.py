@@ -59,13 +59,17 @@ def label_reactions():
 			rxn_labels['common'].add(mdlrxn['reaction'])
 		else:
 			rxn_labels['recon'].add(mdlrxn['reaction'])
-		[genome1ws, genome1id] = args['protcomp']['genome1ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
-		genome1 = ws_client.get_objects([{'wsid' : genome1ws, 'objid' : genome1id}])[0]
-		print genome1.keys()
-		[genome2ws, genome2id] = args['protcomp']['genome2ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
-		genome2 = ws_client.get_objects([{'wsid' : genome2ws, 'objid' : genome2id}])[0]
-		print genome2.keys()
-		return
+	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
+	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
+	i = 0
+	for rxn in trans_model['reactions']:
+		if rxn['reaction'] not in model_rxn_ids:
+			print "error: you don't understand translate model"
+		if len(rxn['features']) == 0:
+			i += 1	
+	print len(trans_model['reactions'])		
+	print i
+	return
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
@@ -160,11 +164,9 @@ def blast_proteomes():
 		if (ujs_client.get_job_status({'job' : jobid}) == 'error'):
 			raise Exception
 		else:
-			protcomp = ws_client.get_objects([{'wsid' : ws_id , 'objid' : '42'}])
-	else:
-		protcomp_ref = args['protcomp']
-		protcomp = ws_client.get_objects([{'wsid' : args['protcompws'], 'objid' : protcomp_ref}])[0] #get objects returns a list, [0] is the first object
-	return protcomp['data']
+			args['protcomp'] = blast_proteomes_params['output_id']
+			args['protcompws'] = blast_proteomes_params['output_ws']
+	return [args['protcomp'], args['protcompws']]
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
@@ -203,7 +205,7 @@ ujs_client = clients['ujs']
 init_workspace() # creates global vars ws_name and ws_id
 
 #Blast Proteomes
-args['protcomp'] = blast_proteomes()
+[args['protcomp'], args['protcompws']] = blast_proteomes()
 build_models()
 label_reactions()
 finish()
