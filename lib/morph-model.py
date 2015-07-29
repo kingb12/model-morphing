@@ -40,20 +40,32 @@ AUTHORS
 
 # label reactions in each model
 def label_reactions():
+	# Dictionaries for ids => model.reactions list indices
 	model_rxn_ids = dict()
+	recon_rxn_ids = dict()
+	# Dictionary for all rxn ids and their 'labels'
+	rxn_labels = dict()
+	rxn_labels['recon'] = set()
+	rxn_labels['common'] = set() #Check: Is this a subset of gene-match (should be)
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	for i  in range(len(model['reactions'])):
+	for i in range(len(model['reactions'])):
 		model_rxn_ids[model['reactions'][i]['reaction']] = i
-	for mdlrxn in recon['reactions']:
+	for j in range(len(recon['reactions'])):
+		recon_rxn_ids[recon['reactions'][j]['reaction']] = j
+		mdlrxn = recon['reactions'][j]
+		print mdlrxn['features']
+		# if the recon reaction is already in the model
 		if mdlrxn['reaction'] in model_rxn_ids:
-			print mdlrxn['reaction']
-			for ftr in mdlrxn['features']:
-				print ftr
-				if ftr in model['reactions'][model_rxn_ids[mdlrxn['reaction']]]['features']:
-					print ftr + " in common"
-			for f in model['reactions'][model_rxn_ids[mdlrxn['reaction']]]['features']:
-				print f + " in model"
-		
+			rxn_labels['common'].add(mdlrxn['reaction'])
+		else:
+			rxn_labels['recon'].add(mdlrxn['reaction'])
+		[genome1ws, genome1id] = args['protcomp']['genome1ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
+		genome1 = ws_client.get_objects([{'wsid' : genome1ws, 'objid' : genome1id}])[0]
+		print genome1.keys()
+		[genome2ws, genome2id] = args['protcomp']['genome2ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
+		genome2 = ws_client.get_objects([{'wsid' : genome2ws, 'objid' : genome2id}])[0]
+		print genome2.keys()
+		return
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
