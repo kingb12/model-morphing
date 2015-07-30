@@ -42,33 +42,44 @@ AUTHORS
 def label_reactions():
 	# Dictionaries for ids => model.reactions list indices
 	model_rxn_ids = dict()
+	trans_model_rxn_ids = dict()
 	recon_rxn_ids = dict()
 	# Dictionary for all rxn ids and their 'labels'
 	rxn_labels = dict()
 	rxn_labels['recon'] = set()
 	rxn_labels['common'] = set() #Check: Is this a subset of gene-match (should be)
+	rxn_labels['gene-match'] = set() 
+	rxn_labels['gene-no-match'] = set() 
+	rxn_labels['no-gene'] = set() 
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	for i in range(len(model['reactions'])):
-		model_rxn_ids[model['reactions'][i]['reaction']] = i
-	for j in range(len(recon['reactions'])):
-		recon_rxn_ids[recon['reactions'][j]['reaction']] = j
-		mdlrxn = recon['reactions'][j]
-		print mdlrxn['features']
+	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
+	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
+	for i in range(len(trans_model['reactions'])):
+		trans_model_rxn_ids[trans_model['reactions'][i]['reaction']] = i
+		mdlrxn = trans_model['reactions'][i]
+		if len(mdlrxn['features']) == 0:
+			rxn_labels['no-gene'].add(mdlrxn['reaction'])
+		else: 
+			rxn_labels['gene-match'].add(mdlrxn['reaction'])
+	for j in range(len(model['reactions'])):
+		model_rxn_ids[model['reactions'][j]['reaction']] = j
+		mdlrxn = model['reactions'][j]
+		if mdlrxn['reaction'] not in trans_model_rxn_ids:
+			rxn_labels['gene-no-match'].add(mdlrxn['reaction'])
+	for k in range(len(recon['reactions'])):
+		recon_rxn_ids[recon['reactions'][k]['reaction']] = k
+		mdlrxn = recon['reactions'][k]
 		# if the recon reaction is already in the model
 		if mdlrxn['reaction'] in model_rxn_ids:
 			rxn_labels['common'].add(mdlrxn['reaction'])
 		else:
 			rxn_labels['recon'].add(mdlrxn['reaction'])
-	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
-	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
-	i = 0
-	for rxn in trans_model['reactions']:
-		if rxn['reaction'] not in model_rxn_ids:
-			print "error: you don't understand translate model"
-		if len(rxn['features']) == 0:
-			i += 1	
-	print len(trans_model['reactions'])		
-	print i
+	print str(len(model_rxn_ids)) + ' mdl rxns'
+	print str(len(trans_model_rxn_ids)) + ' trans rxns'
+	print str(len(rxn_labels['recon'])) + ' recon rxns'
+	print str(len(rxn_labels['gene-no-match'])) + ' no-match rxns'
+	print str(len(rxn_labels['gene-match'])) + ' gene-match rxns'
+	print str(len(rxn_labels['no-gene'])) + ' no-gene rxns'
 	return
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -205,7 +216,7 @@ ujs_client = clients['ujs']
 init_workspace() # creates global vars ws_name and ws_id
 
 #Blast Proteomes
-[args['protcomp'], args['protcompws']] = blast_proteomes()
+# [args['protcomp'], args['protcompws']] = blast_proteomes()
 build_models()
 label_reactions()
 finish()
