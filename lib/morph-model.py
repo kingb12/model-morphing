@@ -39,8 +39,62 @@ AUTHORS
 # =================================================================================================
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
-def build_supermodel(model, recon, trans_model):
+def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash):
 	print "building supermodel..."
+	tuplist = list()
+	for rxn_id in rxn_labels['gene-no-match']:
+		tuplist.append( get_add_rxn_tuple(model['reactions'][id_hash[rxn_id]]))
+	fba_client.add_reaction({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : '7', 'workspace' : ws_id, 'reactions' : tuplist})
+	print 'added no match'
+	print fba_client.compare_models({'models' : [args['model'], trans_model_id], 'workspaces' : [args['modelws'], ws_id]})
+# label reactions in each model
+def label_reactions(model, recon):
+	# Dictionaries for ids => model.reactions list indices
+	model_rxn_ids = dict()
+	trans_model_rxn_ids = dict()
+	recon_rxn_ids = dict()
+	# Dictionary for all rxn ids and their 'labels'
+	rxn_labels = dict()
+	rxn_labels['recon'] = set()
+	rxn_labels['common'] = set() #Check: Is this a subset of gene-match (should be)
+	rxn_labels['gene-match'] = set() 
+	rxn_labels['gene-no-match'] = set() 
+	rxn_labels['no-gene'] = set() 
+	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
+	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
+	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
+	for i in range(len(trans_model['reactions'])):
+		trans_model_rxn_ids[trans_model['reactions'][i]['reaction']] = i
+		mdlrxn = trans_model['reactions'][i]
+		if len(mdlrxn['features']) == 0:
+			rxn_labels['no-gene'].add(mdlrxn['reaction'])
+		else: 
+			rxn_labels['gene-match'].add(mdlrxn['reaction'])
+	for j in range(len(model['reactions'])):
+		model_rxn_ids[model['reactions'][j]['reaction']] = j
+		mdlrxn = model['reactions'][j]
+		if mdlrxn['reaction'] not in trans_model_rxn_ids:
+			rxn_labels['gene-no-match'].add(mdlrxn['reaction'])
+	for k in range(len(recon['reactions'])):
+		recon_rxn_ids[recon['reactions'][k]['reaction']] = k
+		mdlrxn = recon['reactions'][k]
+		# if the recon reaction is already in the model
+		if mdlrxn['reaction'] in model_rxn_ids:
+			rxn_labels['common'].add(mdlrxn['reaction'])
+		else:
+			rxn_labels['recon'].add(mdlrxn['reaction'])
+	with open("mmlog.txt", "a") as log:
+		log.write("MODEL LABELING STATISTICS: ")
+		log.write(str(len(model_rxn_ids)) + ' model reactions')
+		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions')
+		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions')
+		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions')
+		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions')
+		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions')
+	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
+	return trans_model, rxn_labels, ids
+def get_add_rxn_tuple(rxn):
+	return tuple(rxn['reaction'], rxn['compartment'], rxn['direction']) 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
@@ -147,10 +201,12 @@ def build_models():
 	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
 	get_models_params = {'models' : [recon_id], 'workspaces' : [ws_id]}
 	recon = fba_client.get_models(get_models_params)[0]
-	return [model, recon]
+	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
+	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
+	return [model, recon, trans_model, trans_model_id]
 
 # label reactions in each model
-def label_reactions(model, recon):
+def label_reactions(): #model, recon, trans_model):
 	# Dictionaries for ids => model.reactions list indices
 	model_rxn_ids = dict()
 	trans_model_rxn_ids = dict()
@@ -163,8 +219,6 @@ def label_reactions(model, recon):
 	rxn_labels['gene-no-match'] = set() 
 	rxn_labels['no-gene'] = set() 
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
-	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
 	for i in range(len(trans_model['reactions'])):
 		trans_model_rxn_ids[trans_model['reactions'][i]['reaction']] = i
 		mdlrxn = trans_model['reactions'][i]
@@ -185,7 +239,7 @@ def label_reactions(model, recon):
 			rxn_labels['common'].add(mdlrxn['reaction'])
 		else:
 			rxn_labels['recon'].add(mdlrxn['reaction'])
-	with open("mmlog.txt", "a") as log:
+	with open(".mmlog.txt", "a") as log:
 		log.write("MODEL LABELING STATISTICS: ")
 		log.write(str(len(model_rxn_ids)) + ' model reactions')
 		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions')
@@ -194,7 +248,7 @@ def label_reactions(model, recon):
 		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions')
 		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions')
 	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
-	return trans_model, rxn_labels, ids
+	return rxn_labels, ids
 
 # Finishing/Cleanup  Steps 
 def finish():
@@ -211,7 +265,7 @@ recon = None
 #parse command args
 args = parse_arguments()
 
-#initiate clients
+#initiate clientslk
 clients = init_clients()
 fba_client = clients['fba']
 ws_client = clients['ws']
@@ -220,8 +274,8 @@ ujs_client = clients['ujs']
 #initiate Model Morphing workspace
 init_workspace() # creates global vars ws_name and ws_id
 # [args['protcomp'], args['protcompws']] = blast_proteomes()
-[model, recon] = build_models()
-[trans_model, rxn_labels, id_hash] = label_reactions(model, recon)
-morphed_model = build_supermodel(model, recon, trans_model)
+[model, recon, trans_model, trans_model_id] = build_models()
+[rxn_labels, id_hash] = label_reactions() #model, recon)
+morphed_model = build_supermodel()#model, recon, trans_model)
 finish()
 # Clean up/Finish
