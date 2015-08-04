@@ -6,8 +6,6 @@ from biokbase.workspace.client import ServerError
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.userandjobstate.client import UserAndJobState
-# TODO remove these imports
-# from biokbase.workspace.ScriptHelpers import user_workspace
 
 import random
 import sys
@@ -38,74 +36,7 @@ AUTHORS
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
-# Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
-def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash):
-	tuplist = list()
-	print id_hash.keys()
-	for rxn_id in rxn_labels['gene-no-match']:
-		print rxn_id
-		tuplist.append( get_add_rxn_tuple(model['reactions'][id_hash['model'][rxn_id]]))
-	print model.keys()
-	for i in model.keys():
-		if type(model[i]) is list and len(model[i]) > 0:
-			print model[i][0]
-		else:
-			print model[i]
-	rxn_keys = model['reactions'][1].keys()
-	print rxn_keys
-	for i in rxn_keys:
-		print model['reactions'][1][i]
-# 	fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : '7', 'workspace' : ws_id, 'reactions' : tuplist})
-	print 'added no match'
-#	print fba_client.compare_models({'models' : [args['model'], trans_model_id], 'workspaces' : [args['modelws'], ws_id]})
-# label reactions in each model
-def label_reactions(model, recon):
-	# Dictionaries for ids => model.reactions list indices
-	model_rxn_ids = dict()
-	trans_model_rxn_ids = dict()
-	recon_rxn_ids = dict()
-	# Dictionary for all rxn ids and their 'labels'
-	rxn_labels = dict()
-	rxn_labels['recon'] = set()
-	rxn_labels['common'] = set() #Check: Is this a subset of gene-match (should be)
-	rxn_labels['gene-match'] = set() 
-	rxn_labels['gene-no-match'] = set() 
-	rxn_labels['no-gene'] = set() 
-	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
-	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
-	for i in range(len(trans_model['reactions'])):
-		trans_model_rxn_ids[trans_model['reactions'][i]['reaction']] = i
-		mdlrxn = trans_model['reactions'][i]
-		if len(mdlrxn['features']) == 0:
-			rxn_labels['no-gene'].add(mdlrxn['reaction'])
-		else: 
-			rxn_labels['gene-match'].add(mdlrxn['reaction'])
-	for j in range(len(model['reactions'])):
-		model_rxn_ids[model['reactions'][j]['reaction']] = j
-		mdlrxn = model['reactions'][j]
-		if mdlrxn['reaction'] not in trans_model_rxn_ids:
-			rxn_labels['gene-no-match'].add(mdlrxn['reaction'])
-	for k in range(len(recon['reactions'])):
-		recon_rxn_ids[recon['reactions'][k]['reaction']] = k
-		mdlrxn = recon['reactions'][k]
-		# if the recon reaction is already in the model
-		if mdlrxn['reaction'] in model_rxn_ids:
-			rxn_labels['common'].add(mdlrxn['reaction'])
-		else:
-			rxn_labels['recon'].add(mdlrxn['reaction'])
-	with open("mmlog.txt", "a") as log:
-		log.write("MODEL LABELING STATISTICS: ")
-		log.write(str(len(model_rxn_ids)) + ' model reactions')
-		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions')
-		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions')
-		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions')
-		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions')
-		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions')
-	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
-	return trans_model, rxn_labels, ids
-def get_add_rxn_tuple(rxn):
-	return (rxn['reaction'], rxn['compartment'], rxn['direction']) 
+
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
@@ -114,9 +45,11 @@ def parse_arguments():
 	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
 	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
 	parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
+	parser.add_argument('probanno', type=int,  help='ID of the ProbAnno object', action='store', default=None)
 	parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
 	parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
 	parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
+	parser.add_argument('--probannows', type=int, help='Workspace of the ProbAnno object', action='store', default=None, dest='probannows')
 		#TODO: ADD OTHER OPTION ARGUMENTS
 	usage = parser.format_usage()
 	parser.description = desc1 + '	' + usage + desc2
@@ -129,7 +62,7 @@ def parse_arguments():
 	args['model'] = input_args.model
 	args['protcomp'] = input_args.protcomp
 	if input_args.genomews is None:
-	#FIXME: fix this functionality
+	FIXME: fix this functionality
 	# 	args['genomews'] = user_workspace()
 		args['genomews'] = 8730
 	else:
@@ -192,7 +125,7 @@ def build_models():
 	return [model, recon, trans_model, trans_model_id]
 
 # label reactions in each model
-def label_reactions(): #model, recon, trans_model):
+def label_reactions(): #model, recon, trans_model
 	# Dictionaries for ids => model.reactions list indices
 	model_rxn_ids = dict()
 	trans_model_rxn_ids = dict()
@@ -226,18 +159,56 @@ def label_reactions(): #model, recon, trans_model):
 		else:
 			rxn_labels['recon'].add(mdlrxn['reaction'])
 	with open(".mmlog.txt", "a") as log:
-		log.write("MODEL LABELING STATISTICS: ")
-		log.write(str(len(model_rxn_ids)) + ' model reactions')
-		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions')
-		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions')
-		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions')
-		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions')
-		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions')
+		log.write("MODEL LABELING STATISTICS: \n")
+		log.write(str(len(model_rxn_ids)) + ' model reactions\n')
+		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions\n')
+		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions\n')
+		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions\n')
+		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions\n')
+		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
 	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
 	return rxn_labels, ids
 
+# Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
+def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
+#Add the GENE_NO_MATCH reactions:
+	i = 0 #an index for how many reactions are addded so provide new indices to the id hash
+	orig_size = len(trans_model['reactions'])
+	for rxn_id in rxn_labels['gene-no-match']:
+		# id_hash['model][rxn key] gives the index of the reaction in the model['reactions'] list to make this look up O(1) instead of O(n)
+		reaction = model['reactions'][id_hash['model'][rxn_id]]
+		trans_model['reactions'].append(reaction)
+		id_hash['trans'][rxn_id] = orig_size + i
+		# assert trans_model['reactions'][id_hash['trans'][rxn_id]]['reaction'] is rxn_id #assert that value got added to end of the list and no changes occured 
+		i += 1
+	with open(".mmlog.txt", "a") as log:
+		log.write('MODEL REACTION ADDITION STATISTICS: \n')
+		log.write('Added ' +str(i) + '  gene-no-match reactions to translated model: ' + str(rxn_labels['gene-no-match']) + '\n')
+#Add the RECON reactions:
+	i = 0 #an index for how many reactions are addded so provide new indices to the id hash
+	orig_size = len(trans_model['reactions'])
+	for rxn_id in rxn_labels['recon']:
+		# id_hash['model][rxn key] gives the index of the reaction in the model['reactions'] list to make this look up O(1) instead of O(n)
+		reaction = recon['reactions'][id_hash['recon'][rxn_id]]
+		trans_model['reactions'].append(reaction)
+		id_hash['trans'][rxn_id] = orig_size + i
+		assert trans_model['reactions'][id_hash['trans'][rxn_id]]['reaction'] is rxn_id #assert that value got added to end of the list and no changes occured 
+		i += 1
+	with open(".mmlog.txt", "a") as log:
+		log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
+		log.write('SUPERMODEL STATE: \n')
+		log.write('NAME: ' + trans_model['name'] + '\n')
+		numftrs = 0
+		for rxn in trans_model['reactions']:
+			numftrs += len(rxn['features'])	
+		log.write('REACTIONS: ' + str(len(trans_model['reactions'])))
+		log.write('FEATURES: ' + str(numftrs))
+	return trans_model
+
 # Finishing/Cleanup  Steps 
 def finish():
+	with open('.mmlog.txt', 'r') as log:
+		print log.read()
 	if ws_id is not None:
 		ws_client.delete_workspace({'id' : ws_id})
 	else:
@@ -272,7 +243,7 @@ try:
 	print 'label rxns...'
 	[rxn_labels, id_hash] = label_reactions() #model, recon)
 	print 'build supermodel...'
-	morphed_model = build_supermodel()#model, recon, trans_model)
+	morphed_model = build_supermodel()
 finally:
 	finish()
 # Clean up/Finish
