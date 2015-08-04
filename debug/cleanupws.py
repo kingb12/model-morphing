@@ -1,7 +1,11 @@
 
 from biokbase.workspace.client import Workspace 
 ws = Workspace()
-for i in range(9160,9167):
-	params = {'id' : i}
-	ws.delete_workspace(params) 
+
+with open('ws.txt' , 'r') as f:
+    for line in f:
+        int_list = [int(i) for i in line.split()]
+        print int_list
+for i in int_list:
+	ws.delete_workspace({'id' : str(i)})
 

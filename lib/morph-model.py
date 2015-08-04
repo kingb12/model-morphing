@@ -40,13 +40,24 @@ AUTHORS
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash):
-	print "building supermodel..."
 	tuplist = list()
+	print id_hash.keys()
 	for rxn_id in rxn_labels['gene-no-match']:
-		tuplist.append( get_add_rxn_tuple(model['reactions'][id_hash[rxn_id]]))
-	fba_client.add_reaction({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : '7', 'workspace' : ws_id, 'reactions' : tuplist})
+		print rxn_id
+		tuplist.append( get_add_rxn_tuple(model['reactions'][id_hash['model'][rxn_id]]))
+	print model.keys()
+	for i in model.keys():
+		if type(model[i]) is list and len(model[i]) > 0:
+			print model[i][0]
+		else:
+			print model[i]
+	rxn_keys = model['reactions'][1].keys()
+	print rxn_keys
+	for i in rxn_keys:
+		print model['reactions'][1][i]
+# 	fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : '7', 'workspace' : ws_id, 'reactions' : tuplist})
 	print 'added no match'
-	print fba_client.compare_models({'models' : [args['model'], trans_model_id], 'workspaces' : [args['modelws'], ws_id]})
+#	print fba_client.compare_models({'models' : [args['model'], trans_model_id], 'workspaces' : [args['modelws'], ws_id]})
 # label reactions in each model
 def label_reactions(model, recon):
 	# Dictionaries for ids => model.reactions list indices
@@ -94,7 +105,7 @@ def label_reactions(model, recon):
 	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
 	return trans_model, rxn_labels, ids
 def get_add_rxn_tuple(rxn):
-	return tuple(rxn['reaction'], rxn['compartment'], rxn['direction']) 
+	return (rxn['reaction'], rxn['compartment'], rxn['direction']) 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#TODO: replace sys.argv with appropriate replacement from bash script interface
@@ -168,31 +179,6 @@ def init_workspace():
 		except ServerError:
 			 ws_name += str(random.randint(1,9))
 
-#Prepare Proteome Comparison: Sets the args['protcomp'] reference to the protcomp dictionary AND sets the model field if no prot comp exists (saves comp time)
-def blast_proteomes():
-	global model
-	if args['protcomp'] is None:
-		# Set up parameters
-		blast_proteomes_params = dict()
-		blast_proteomes_params['genome1ws'] = args['genomews']
-		blast_proteomes_params['genome1id'] = args['genome'] #genome 1 = the input genome
-		get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
-		model = fba_client.get_models(get_models_params)[0]
-		[genome2ws, genome2id] = model['genome_ref'].split('/')[0:2] # genome_ref's take the form: "ws_id/obj_id/(some number that didnt seem important)"
-		blast_proteomes_params['genome2ws'] =  genome2ws
-		blast_proteomes_params['genome2id'] =  genome2id
-		blast_proteomes_params['output_ws'] =  ws_id
-		blast_proteomes_params['output_id'] =  '42' #FIXME: THIS WILL BREAK IF THERE IS AN OBJ 42 ALREADY IN WS
-		jobid = gencomp_client.blast_proteomes(blast_proteomes_params)
-		while ujs_client.get_job_status({'job' : jobid})[1] != 'completed' and ujs_client.get_job_status({'job' : jobid})[1] != 'error':
-			time.sleep(20)
-		if (ujs_client.get_job_status({'job' : jobid}) == 'error'):
-			raise Exception
-		else:
-			args['protcomp'] = blast_proteomes_params['output_id']
-			args['protcompws'] = blast_proteomes_params['output_ws']
-	return [args['protcomp'], args['protcompws']]
-
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
 	get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
@@ -252,7 +238,10 @@ def label_reactions(): #model, recon, trans_model):
 
 # Finishing/Cleanup  Steps 
 def finish():
-	ws_client.delete_workspace({'id' : ws_id})
+	if ws_id is not None:
+		ws_client.delete_workspace({'id' : ws_id})
+	else:
+		print "ws_id" is None
 
 # =================================================================================================
 # 						Script
@@ -262,20 +251,28 @@ def finish():
 # init variables
 model = None
 recon = None
-#parse command args
-args = parse_arguments()
-
-#initiate clientslk
-clients = init_clients()
-fba_client = clients['fba']
-ws_client = clients['ws']
-gencomp_client = clients['gencomp']
-ujs_client = clients['ujs']
-#initiate Model Morphing workspace
-init_workspace() # creates global vars ws_name and ws_id
-# [args['protcomp'], args['protcompws']] = blast_proteomes()
-[model, recon, trans_model, trans_model_id] = build_models()
-[rxn_labels, id_hash] = label_reactions() #model, recon)
-morphed_model = build_supermodel()#model, recon, trans_model)
-finish()
+ws_id = None
+try:
+	#parse command args
+	print 'parsing args'
+	args = parse_arguments()
+	#initiate clientslk
+	print 'init clients...'
+	clients = init_clients()
+	fba_client = clients['fba']
+	ws_client = clients['ws']
+	gencomp_client = clients['gencomp']
+	ujs_client = clients['ujs']
+	#initiate Model Morphing workspace
+	print 'init ws...'
+	init_workspace() # creates global vars ws_name and ws_id
+	# [args['protcomp'], args['protcompws']] = blast_proteomes()
+	print 'build models'
+	[model, recon, trans_model, trans_model_id] = build_models()
+	print 'label rxns...'
+	[rxn_labels, id_hash] = label_reactions() #model, recon)
+	print 'build supermodel...'
+	morphed_model = build_supermodel()#model, recon, trans_model)
+finally:
+	finish()
 # Clean up/Finish
