@@ -36,6 +36,15 @@ AUTHORS
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
+#Save model to geven workspace
+def save_model(model, workspace, name, model_type):
+	save_data = dict()
+	save_data['type'] = model_type
+	save_data['data'] = model
+	save_data['name'] = name
+#	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
+	print model['biomasses']
+	print model['biomasses'][0]
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -50,6 +59,7 @@ def parse_arguments():
 	parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
 	parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
 	parser.add_argument('--probannows', type=int, help='Workspace of the ProbAnno object', action='store', default=None, dest='probannows')
+	parser.add_argument('--outputws', type=int, help='Workspace for the morphed Model object', action='store', default=None, dest='outputws')
 		#TODO: ADD OTHER OPTION ARGUMENTS
 	usage = parser.format_usage()
 	parser.description = desc1 + '	' + usage + desc2
@@ -61,22 +71,33 @@ def parse_arguments():
 	args['genome'] = input_args.genome
 	args['model'] = input_args.model
 	args['protcomp'] = input_args.protcomp
+	args['probanno'] = input_args.probanno
 	if input_args.genomews is None:
-	FIXME: fix this functionality
+	# FIXME: fix this functionality
 	# 	args['genomews'] = user_workspace()
-		args['genomews'] = 8730
+		args['genomews'] = 9145
 	else:
 		args['genomews'] = input_args.genomews
 	if input_args.modelws is None:
 	#	args['modelws'] = user_workspace()
-		args['modelws'] = 8730
+		args['modelws'] = 9145
 	else:
 		args['modelws'] = input_args.modelws
 	if input_args.protcompws is None:
 	#	args['protcompws'] = user_workspace()
-		args['protcompws'] = 8730
+		args['protcompws'] = 9145
 	else:
 		args['protcompws'] = input_args.protcompws
+	if input_args.probannows is None:
+	#	args['probannows'] = user_workspace()
+		args['probannows'] = 9145
+	else:
+		args['probannows'] = input_args.probannows
+	if input_args.outputws is None:
+	#	args['outputws'] = user_workspace()
+		args['outputws'] = 9145
+	else:
+		args['outputws'] = input_args.outputws
 	return args
 
 #Initiate Clients Objects for Function
@@ -122,7 +143,9 @@ def build_models():
 	recon = fba_client.get_models(get_models_params)[0]
 	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
 	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
-	return [model, recon, trans_model, trans_model_id]
+	type_string = ws_client.get_object_info_new({'objects' : [{'objid' : args['model'], 'wsid' : args['modelws']}]})[0][2]
+	print type_string
+	return [model, recon, trans_model, trans_model_id, type_string]
 
 # label reactions in each model
 def label_reactions(): #model, recon, trans_model
@@ -239,11 +262,12 @@ try:
 	init_workspace() # creates global vars ws_name and ws_id
 	# [args['protcomp'], args['protcompws']] = blast_proteomes()
 	print 'build models'
-	[model, recon, trans_model, trans_model_id] = build_models()
+	[model, recon, trans_model, trans_model_id, model_type] = build_models()
 	print 'label rxns...'
 	[rxn_labels, id_hash] = label_reactions() #model, recon)
 	print 'build supermodel...'
 	morphed_model = build_supermodel()
+	save_model(morphed_model, args['outputws'], 'MM-' + str(args['genome']), model_type)
 finally:
 	finish()
 # Clean up/Finish
