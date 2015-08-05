@@ -42,7 +42,7 @@ def save_model(model, workspace, name, model_type):
 	save_data['type'] = model_type
 	save_data['data'] = model
 	save_data['name'] = name
-#	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
+	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -133,21 +133,14 @@ def init_workspace():
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
-	get_models_params = {'models' : [args['model']], 'workspaces' : [args['modelws']]}
-	model = fba_client.get_models(get_models_params)[0]
 	recon_params = {'genome' : args['genome'], 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
 	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
-	get_models_params = {'models' : [recon_id], 'workspaces' : [ws_id]}
-	recon = fba_client.get_models(get_models_params)[0]
 	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
-	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
-	type_string = ws_client.get_object_info_new({'objects' :[{'objid' : args['model'], 'wsid' : args['modelws']}]})[0][2]
-	modelobj = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]['data']
-	print type_string
-	print modelobj.keys()
-	print modelobj['modelreactions'][0]['reaction_ref']
-	print model['reactions'][0]['reaction']
-	return [model, recon, trans_model, trans_model_id, type_string]
+	model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
+	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
+	trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
+	print model.keys()
+	return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
 
 # label reactions in each model
 def label_reactions(): #model, recon, trans_model
@@ -163,26 +156,31 @@ def label_reactions(): #model, recon, trans_model
 	rxn_labels['gene-no-match'] = set() 
 	rxn_labels['no-gene'] = set() 
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	for i in range(len(trans_model['reactions'])):
-		trans_model_rxn_ids[trans_model['reactions'][i]['reaction']] = i
-		mdlrxn = trans_model['reactions'][i]
-		if len(mdlrxn['features']) == 0:
-			rxn_labels['no-gene'].add(mdlrxn['reaction'])
+	for i in model['modelreactions'][-1].keys():
+		print i + ': ' + str(model['modelreactions'][-1][i])
+	for i in range(len(trans_model['modelreactions'])):
+		rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+		trans_model_rxn_ids[rxn_id] = i
+		mdlrxn = trans_model['modelreactions'][i]
+		if len(mdlrxn['modelReactionProteins']) == 1:
+			rxn_labels['no-gene'].add(mdlrxn['reaction_ref'])
 		else: 
-			rxn_labels['gene-match'].add(mdlrxn['reaction'])
-	for j in range(len(model['reactions'])):
-		model_rxn_ids[model['reactions'][j]['reaction']] = j
-		mdlrxn = model['reactions'][j]
-		if mdlrxn['reaction'] not in trans_model_rxn_ids:
-			rxn_labels['gene-no-match'].add(mdlrxn['reaction'])
-	for k in range(len(recon['reactions'])):
-		recon_rxn_ids[recon['reactions'][k]['reaction']] = k
-		mdlrxn = recon['reactions'][k]
+			rxn_labels['gene-match'].add(mdlrxn['reaction_ref'])
+	for j in range(len(model['modelreactions'])):
+		rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+		model_rxn_ids[rxn_id] = i
+		mdlrxn = model['modelreactions'][j]
+		if mdlrxn['reaction_ref'] not in trans_model_rxn_ids:
+			rxn_labels['gene-no-match'].add(mdlrxn['reaction_ref'])
+	for k in range(len(recon['modelreactions'])):
+		rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+		recon_rxn_ids[rxn_id] = i
+		mdlrxn = recon['modelreactions'][k]
 		# if the recon reaction is already in the model
-		if mdlrxn['reaction'] in model_rxn_ids:
-			rxn_labels['common'].add(mdlrxn['reaction'])
+		if mdlrxn['reaction_ref'] in model_rxn_ids:
+			rxn_labels['common'].add(mdlrxn['reaction_ref'])
 		else:
-			rxn_labels['recon'].add(mdlrxn['reaction'])
+			rxn_labels['recon'].add(mdlrxn['reaction_ref'])
 	with open(".mmlog.txt", "a") as log:
 		log.write("MODEL LABELING STATISTICS: \n")
 		log.write(str(len(model_rxn_ids)) + ' model reactions\n')
@@ -265,12 +263,12 @@ try:
 	init_workspace() # creates global vars ws_name and ws_id
 	# [args['protcomp'], args['protcompws']] = blast_proteomes()
 	print 'build models'
-	[model, recon, trans_model, trans_model_id, model_type] = build_models()
+	[model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
 	print 'label rxns...'
 	[rxn_labels, id_hash] = label_reactions() #model, recon)
 	print 'build supermodel...'
-	morphed_model = build_supermodel()
-	save_model(morphed_model, args['outputws'], 'MM-' + str(args['genome']), model_type)
+#	morphed_model = build_supermodel()
+	save_model(model, args['outputws'], 'MM-' + str(args['genome']), model_info[2]) #info[2] is 'type'
 finally:
 	finish()
 # Clean up/Finish
