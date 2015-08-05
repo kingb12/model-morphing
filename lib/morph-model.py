@@ -43,8 +43,6 @@ def save_model(model, workspace, name, model_type):
 	save_data['data'] = model
 	save_data['name'] = name
 #	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
-	print model['biomasses']
-	print model['biomasses'][0]
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -143,8 +141,11 @@ def build_models():
 	recon = fba_client.get_models(get_models_params)[0]
 	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
 	trans_model = fba_client.get_models({'models' : [trans_model_id], 'workspaces' : [ws_id]})[0]
-	type_string = ws_client.get_object_info_new({'objects' : [{'objid' : args['model'], 'wsid' : args['modelws']}]})[0][2]
+	type_string = ws_client.get_object_info_new({'objects' :[{'objid' : args['model'], 'wsid' : args['modelws']}]})[0][2]
+	modelobj = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]['data']
 	print type_string
+	print modelobj.keys()
+	print modelobj['modelreactions'][0]
 	return [model, recon, trans_model, trans_model_id, type_string]
 
 # label reactions in each model
@@ -231,7 +232,8 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 # Finishing/Cleanup  Steps 
 def finish():
 	with open('.mmlog.txt', 'r') as log:
-		print log.read()
+	#	print log.read()
+		print None
 	if ws_id is not None:
 		ws_client.delete_workspace({'id' : ws_id})
 	else:
