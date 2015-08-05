@@ -145,7 +145,8 @@ def build_models():
 	modelobj = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]['data']
 	print type_string
 	print modelobj.keys()
-	print modelobj['modelreactions'][0]
+	print modelobj['modelreactions'][0]['reaction_ref']
+	print model['reactions'][0]['reaction']
 	return [model, recon, trans_model, trans_model_id, type_string]
 
 # label reactions in each model
