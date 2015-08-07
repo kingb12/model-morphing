@@ -7,10 +7,12 @@ from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.userandjobstate.client import UserAndJobState
 
+import copy
 import random
 import sys
 import argparse
 import time
+from operator import itemgetter
 desc1 = '''
 NAME
 	 mm-morphmodel - 'Morph' a model an existing model to fit a related genome
@@ -36,13 +38,36 @@ AUTHORS
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
-#Save model to geven workspace
-def save_model(model, workspace, name, model_type):
-	save_data = dict()
-	save_data['type'] = model_type
-	save_data['data'] = model
-	save_data['name'] = name
-	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
+#Create Reaction removal lists (these are ordered)
+def removal_lists():
+	gene_no_match = list()
+	for rxn in rxn_labels['gene-no-match']:
+		rxnprob = mm_ids[rxn]
+		gene_no_match.append((rxn, mm_ids[rxn], rxnprob))
+	gene_no_match_tuples = sorted(gene_no_match, key=itemgetter(2))
+	no_gene = list()
+	for rxn in rxn_labels['no-gene']:
+		rxnprob = mm_ids[rxn]
+		no_gene.append((rxn, mm_ids[rxn], rxnprob))
+	no_gene_tuples = sorted(no_gene, key=itemgetter(2))
+	return gene_no_match_tuples, no_gene_tuples
+
+# Process the reactions
+def process_reactions(rxn_list):
+	print morphed_model.keys()
+	for i in range(len(rxn_list)):
+		#Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
+		rxn_id = rxn_list[i][0]
+		new_model = dict() 
+		for key in morphed_model:
+			new_model[key] = copy.copy(morphed_model[key])
+#		new_model = copy.deepcopy(morphed_model)
+		removed_rxn = new_model['modelreactions'].pop(mm_ids[rxn_id])
+		new_model_id = save_model(new_model, ws_id, 'MM-' + str(i), model_info[2])
+		
+		
+
+
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -139,7 +164,6 @@ def build_models():
 	model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
 	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
 	trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
-	print model.keys()
 	return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
 
 # label reactions in each model
@@ -156,8 +180,6 @@ def label_reactions(): #model, recon, trans_model
 	rxn_labels['gene-no-match'] = set() 
 	rxn_labels['no-gene'] = set() 
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
-	for i in model['modelreactions'][-1].keys():
-		print i + ': ' + str(model['modelreactions'][-1][i])
 	for i in range(len(trans_model['modelreactions'])):
 		rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
 		trans_model_rxn_ids[rxn_id] = i
@@ -229,11 +251,20 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 		log.write('PROTEINS: ' + str(numprots))
 	return trans_model, id_hash['trans']
 
+#Save model to geven workspace
+def save_model(model, workspace, name, model_type):
+	save_data = dict()
+	save_data['type'] = model_type
+	save_data['data'] = model
+	save_data['name'] = name
+	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
+	return {'model' : name, 'model_workspace' : workspace}
+
 # Finishing/Cleanup  Steps 
 def finish():
 	with open('.mmlog.txt', 'r') as log:
 	#	print log.read()
-		print None
+		print 'Finished'
 	if ws_id is not None:
 		ws_client.delete_workspace({'id' : ws_id})
 	else:
@@ -269,7 +300,13 @@ try:
 	[rxn_labels, id_hash] = label_reactions() #model, recon)
 	print 'build supermodel...'
 	morphed_model, mm_ids = build_supermodel()
-	save_model(model, args['outputws'], 'MM-' + str(args['genome']), model_info[2]) #info[2] is 'type'
+	(gene_no_match_tuples, no_gene_tuples) = removal_lists()
+	print 'SAVING'
+	model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
+	print 'DONE SAVING'
+	print model_id
+	print 'process rxns'
+	process_reactions(gene_no_match_tuples)
 finally:
 	finish()
 # Clean up/Finish
