@@ -162,30 +162,31 @@ def label_reactions(): #model, recon, trans_model
 		rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
 		trans_model_rxn_ids[rxn_id] = i
 		mdlrxn = trans_model['modelreactions'][i]
-		if len(mdlrxn['modelReactionProteins']) == 1:
-			rxn_labels['no-gene'].add(mdlrxn['reaction_ref'])
+		rxn_prot = mdlrxn['modelReactionProteins']
+		if len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal':
+			rxn_labels['no-gene'].add(rxn_id)
 		else: 
-			rxn_labels['gene-match'].add(mdlrxn['reaction_ref'])
-	for j in range(len(model['modelreactions'])):
+			rxn_labels['gene-match'].add(rxn_id)
+	for i in range(len(model['modelreactions'])):
 		rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
 		model_rxn_ids[rxn_id] = i
-		mdlrxn = model['modelreactions'][j]
-		if mdlrxn['reaction_ref'] not in trans_model_rxn_ids:
-			rxn_labels['gene-no-match'].add(mdlrxn['reaction_ref'])
-	for k in range(len(recon['modelreactions'])):
-		rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+		mdlrxn = model['modelreactions'][i]
+		if rxn_id not in trans_model_rxn_ids:
+				rxn_labels['gene-no-match'].add(rxn_id)
+	for i in range(len(recon['modelreactions'])):
+		rxn_id = recon['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
 		recon_rxn_ids[rxn_id] = i
-		mdlrxn = recon['modelreactions'][k]
+		mdlrxn = recon['modelreactions'][i]
 		# if the recon reaction is already in the model
-		if mdlrxn['reaction_ref'] in model_rxn_ids:
-			rxn_labels['common'].add(mdlrxn['reaction_ref'])
+		if rxn_id in model_rxn_ids:
+			rxn_labels['common'].add(rxn_id)
 		else:
-			rxn_labels['recon'].add(mdlrxn['reaction_ref'])
+			rxn_labels['recon'].add(rxn_id)
 	with open(".mmlog.txt", "a") as log:
 		log.write("MODEL LABELING STATISTICS: \n")
 		log.write(str(len(model_rxn_ids)) + ' model reactions\n')
 		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions\n')
-		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions\n')
+		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions out of ' + str(len(recon['modelreactions'])) + '\n')
 		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions\n')
 		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions\n')
 		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
@@ -196,37 +197,37 @@ def label_reactions(): #model, recon, trans_model
 def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 #Add the GENE_NO_MATCH reactions:
 	i = 0 #an index for how many reactions are addded so provide new indices to the id hash
-	orig_size = len(trans_model['reactions'])
+	orig_size = len(trans_model['modelreactions'])
 	for rxn_id in rxn_labels['gene-no-match']:
-		# id_hash['model][rxn key] gives the index of the reaction in the model['reactions'] list to make this look up O(1) instead of O(n)
-		reaction = model['reactions'][id_hash['model'][rxn_id]]
-		trans_model['reactions'].append(reaction)
+		# id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+		reaction = model['modelreactions'][id_hash['model'][rxn_id]]
+		trans_model['modelreactions'].append(reaction)
 		id_hash['trans'][rxn_id] = orig_size + i
-		# assert trans_model['reactions'][id_hash['trans'][rxn_id]]['reaction'] is rxn_id #assert that value got added to end of the list and no changes occured 
+		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured 
 		i += 1
 	with open(".mmlog.txt", "a") as log:
 		log.write('MODEL REACTION ADDITION STATISTICS: \n')
 		log.write('Added ' +str(i) + '  gene-no-match reactions to translated model: ' + str(rxn_labels['gene-no-match']) + '\n')
 #Add the RECON reactions:
 	i = 0 #an index for how many reactions are addded so provide new indices to the id hash
-	orig_size = len(trans_model['reactions'])
+	orig_size = len(trans_model['modelreactions'])
 	for rxn_id in rxn_labels['recon']:
-		# id_hash['model][rxn key] gives the index of the reaction in the model['reactions'] list to make this look up O(1) instead of O(n)
-		reaction = recon['reactions'][id_hash['recon'][rxn_id]]
-		trans_model['reactions'].append(reaction)
+		# id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+		reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
+		trans_model['modelreactions'].append(reaction)
 		id_hash['trans'][rxn_id] = orig_size + i
-		assert trans_model['reactions'][id_hash['trans'][rxn_id]]['reaction'] is rxn_id #assert that value got added to end of the list and no changes occured 
+		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured 
 		i += 1
 	with open(".mmlog.txt", "a") as log:
 		log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
 		log.write('SUPERMODEL STATE: \n')
 		log.write('NAME: ' + trans_model['name'] + '\n')
-		numftrs = 0
-		for rxn in trans_model['reactions']:
-			numftrs += len(rxn['features'])	
-		log.write('REACTIONS: ' + str(len(trans_model['reactions'])))
-		log.write('FEATURES: ' + str(numftrs))
-	return trans_model
+		numprots = 0
+		for rxn in trans_model['modelreactions']:
+			numprots += len(rxn['modelReactionProteins'])	
+		log.write('REACTIONS: ' + str(len(trans_model['modelreactions'])))
+		log.write('PROTEINS: ' + str(numprots))
+	return trans_model, id_hash['trans']
 
 # Finishing/Cleanup  Steps 
 def finish():
@@ -267,7 +268,7 @@ try:
 	print 'label rxns...'
 	[rxn_labels, id_hash] = label_reactions() #model, recon)
 	print 'build supermodel...'
-#	morphed_model = build_supermodel()
+	morphed_model, mm_ids = build_supermodel()
 	save_model(model, args['outputws'], 'MM-' + str(args['genome']), model_info[2]) #info[2] is 'type'
 finally:
 	finish()
