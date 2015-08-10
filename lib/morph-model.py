@@ -64,8 +64,12 @@ def process_reactions(rxn_list):
 #		new_model = copy.deepcopy(morphed_model)
 		removed_rxn = new_model['modelreactions'].pop(mm_ids[rxn_id])
 		new_model_id = save_model(new_model, ws_id, 'MM-' + str(i), model_info[2])
-		
-		
+		fba_params = dict(new_model_id)	
+		fba_params['fba'] = 'FBA-' + str(i)
+		fba_params['workspace'] = ws_id
+		fbaMeta = fba_client.runfba(fba_params)
+		print fbaMeta
+		break		
 
 
 
