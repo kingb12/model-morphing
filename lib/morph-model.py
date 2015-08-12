@@ -54,11 +54,10 @@ def removal_lists():
 
 # Process the reactions
 def process_reactions(rxn_list):
-	fba_params = dict({'model' : args['model'], 'model_workspace' : args['modelws']})
+	fba_params = dict({'model' : '3320', 'model_workspace' : '2505'})
 	fba_params['fba'] = 'FBA-0'
 	fba_params['workspace'] = ws_id
-	fbaMeta = fba_client.runfba(fba_params)
-	print fbaMeta
+	# fbaMeta = fba_client.runfba(fba_params)
 	print morphed_model.keys()
 	for i in range(len(rxn_list)):
 		#Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
@@ -72,6 +71,7 @@ def process_reactions(rxn_list):
 		fba_params = dict(new_model_id)	
 		fba_params['fba'] = 'FBA-' + str(i)
 		fba_params['workspace'] = ws_id
+		print fba_params
 		fbaMeta = fba_client.runfba(fba_params)
 		print fbaMeta
 		break		
@@ -136,12 +136,12 @@ def parse_arguments():
 def init_clients():
 	clients = dict()
 	#clients['ws'] = Workspace()
-	clients['ws'] = Workspace(url='https://next.kbase.us/services/ws/')
+	clients['ws'] = Workspace(url='https://kbase.us/services/ws/')
 		# Get FBA Model Services URL parameter
 	with open (".kbase_fbaModelServicesURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
 	#clients['fba'] = fbaModelServices(url)
-	clients['fba'] = fbaModelServices(url='https://next.kbase.us/services/KBaseFBAModeling')
+	clients['fba'] = fbaModelServices(url='https://kbase.us/services/KBaseFBAModeling')
 		# Get Genome Comparison URL parameter
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')

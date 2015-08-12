@@ -11,3 +11,7 @@ Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'r
 SUPERMODEL STATE: 
 NAME: Methanosarcina acetivorans C2A
 REACTIONS: 709FEATURES: 1026
+======================================================================================================
+NEW IMPL
+======================================================================================================
+
