@@ -54,6 +54,11 @@ def removal_lists():
 
 # Process the reactions
 def process_reactions(rxn_list):
+	fba_params = dict({'model' : args['model'], 'model_workspace' : args['modelws']})
+	fba_params['fba'] = 'FBA-0'
+	fba_params['workspace'] = ws_id
+	fbaMeta = fba_client.runfba(fba_params)
+	print fbaMeta
 	print morphed_model.keys()
 	for i in range(len(rxn_list)):
 		#Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
@@ -130,11 +135,13 @@ def parse_arguments():
 #Initiate Clients Objects for Function
 def init_clients():
 	clients = dict()
-	clients['ws'] = Workspace()
+	#clients['ws'] = Workspace()
+	clients['ws'] = Workspace(url='https://next.kbase.us/services/ws/')
 		# Get FBA Model Services URL parameter
 	with open (".kbase_fbaModelServicesURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
-	clients['fba'] = fbaModelServices(url)
+	#clients['fba'] = fbaModelServices(url)
+	clients['fba'] = fbaModelServices(url='https://next.kbase.us/services/KBaseFBAModeling')
 		# Get Genome Comparison URL parameter
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
@@ -227,6 +234,9 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 	for rxn_id in rxn_labels['gene-no-match']:
 		# id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
 		reaction = model['modelreactions'][id_hash['model'][rxn_id]]
+		# aliasing destroys features in 'model'. This might be ok, but consider copying
+		# eliminate features from reaction
+		reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
 		trans_model['modelreactions'].append(reaction)
 		id_hash['trans'][rxn_id] = orig_size + i
 		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured 
