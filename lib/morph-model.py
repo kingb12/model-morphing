@@ -13,6 +13,7 @@ import sys
 import argparse
 import time
 from operator import itemgetter
+
 desc1 = '''
 NAME
 	 mm-morphmodel - 'Morph' a model an existing model to fit a related genome
@@ -23,7 +24,7 @@ desc2 = '''
 DESCRIPTION
 	Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' organism. It keeps reactions from the 'source' model for which there is at least one matching gene feature, and attempts to remove those in the source model that do not have BLAST hits in the second genome. It also adds reactions annotated within the target genome that are unique to the target organism. The model is never broken in the process, such that the Biomass reaction and any other specified reaction [insert how you flag this option] must always carry flux. If a reaction can't be removed without breaking the model, it is flagged again and a few options are available for handling these reactions [insert said options] 
 '''
-	#TODO: Fill in EXAMPLES section with actual model/genomek
+	#TODO: Fill in EXAMPLES section with actual model/genome
 desc3 = '''
 EXAMPLES
       Generate 'morphed' model for : 
@@ -52,12 +53,13 @@ def removal_lists():
 	no_gene_tuples = sorted(no_gene, key=itemgetter(2))
 	return gene_no_match_tuples, no_gene_tuples
 
-# Process the reactions
+# Process the reactions THIS METHOD IS IN DEVELOPMENT
 def process_reactions(rxn_list):
-	fba_params = dict({'model' : '3320', 'model_workspace' : '2505'})
-	fba_params['fba'] = 'FBA-0'
-	fba_params['workspace'] = ws_id
-	# fbaMeta = fba_client.runfba(fba_params)
+#	DEBUG: This is a debugging step 
+#	fba_params = dict({'model' : '3320', 'model_workspace' : '2505'})
+#	fba_params['fba'] = 'FBA-0'
+#	fba_params['workspace'] = ws_id
+#	fbaMeta = fba_client.runfba(fba_params)
 	print morphed_model.keys()
 	for i in range(len(rxn_list)):
 		#Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
@@ -74,13 +76,11 @@ def process_reactions(rxn_list):
 		print fba_params
 		fbaMeta = fba_client.runfba(fba_params)
 		print fbaMeta
-		break		
 
 
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
-	#TODO: replace sys.argv with appropriate replacement from bash script interface
 	#FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
 	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
 	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
@@ -135,14 +135,12 @@ def parse_arguments():
 #Initiate Clients Objects for Function
 def init_clients():
 	clients = dict()
-	#clients['ws'] = Workspace()
 	clients['ws'] = Workspace(url='https://kbase.us/services/ws/')
-		# Get FBA Model Services URL parameter
+	# Get FBA Model Services URL parameter
 	with open (".kbase_fbaModelServicesURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
-	#clients['fba'] = fbaModelServices(url)
 	clients['fba'] = fbaModelServices(url='https://kbase.us/services/KBaseFBAModeling')
-		# Get Genome Comparison URL parameter
+	# Get Genome Comparison URL parameter
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
 	clients['gencomp'] = GenomeComparison(url)
@@ -151,10 +149,10 @@ def init_clients():
 
 # initiate MMws workspace and clone in all needed objects
 def init_workspace():
-	ws_conflict = True
 	global ws_name
 	global ws_id
 	ws_name = 'MMws'
+	ws_conflict = True
 	while (ws_conflict):
 		create_ws_params = {'workspace' : ws_name, 'globalread' : 'r', 'description' : "A workspace for storing the FBA's and meta data of the algorithm"}
 		# Try to create a workspace, catch an error if the name is already in use
@@ -169,11 +167,12 @@ def init_workspace():
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
+	model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
 	recon_params = {'genome' : args['genome'], 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
 	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
-	trans_model_id = fba_client.translate_fbamodel({'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id})[0]
-	model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
 	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
+	trans_params = {'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id}
+	trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
 	trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
 	return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
 
@@ -181,12 +180,12 @@ def build_models():
 def label_reactions(): #model, recon, trans_model
 	# Dictionaries for ids => model.reactions list indices
 	model_rxn_ids = dict()
-	trans_model_rxn_ids = dict()
 	recon_rxn_ids = dict()
+	trans_model_rxn_ids = dict()
 	# Dictionary for all rxn ids and their 'labels'
 	rxn_labels = dict()
+	common_rxns = set() #Check: Is this a subset of gene-match (should be)
 	rxn_labels['recon'] = set()
-	rxn_labels['common'] = set() #Check: Is this a subset of gene-match (should be)
 	rxn_labels['gene-match'] = set() 
 	rxn_labels['gene-no-match'] = set() 
 	rxn_labels['no-gene'] = set() 
@@ -212,19 +211,21 @@ def label_reactions(): #model, recon, trans_model
 		mdlrxn = recon['modelreactions'][i]
 		# if the recon reaction is already in the model
 		if rxn_id in model_rxn_ids:
-			rxn_labels['common'].add(rxn_id)
+			common_rxns.add(rxn_id)
 		else:
 			rxn_labels['recon'].add(rxn_id)
+	# Log Results
 	with open(".mmlog.txt", "a") as log:
 		log.write("MODEL LABELING STATISTICS: \n")
 		log.write(str(len(model_rxn_ids)) + ' model reactions\n')
 		log.write(str(len(trans_model_rxn_ids)) + ' translated model reactions\n')
-		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions out of ' + str(len(recon['modelreactions'])) + '\n')
+		log.write(str(len(rxn_labels['recon'])) + ' reconstructed reactions out of ' + str(len(recon['modelreactions'])) + '. ' + str(len(common_rxns)) + ' in common\n')
 		log.write(str(len(rxn_labels['gene-no-match'])) + ' no-match reactions\n')
 		log.write(str(len(rxn_labels['gene-match'])) + ' gene-match reactions\n')
 		log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
-	ids = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
-	return rxn_labels, ids
+	#Return Results, include look-up ID dict for future use
+	id_hash = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
+	return rxn_labels, id_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
@@ -257,42 +258,34 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 	with open(".mmlog.txt", "a") as log:
 		log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
 		log.write('SUPERMODEL STATE: \n')
-		log.write('NAME: ' + trans_model['name'] + '\n')
+		log.write('	NAME: ' + trans_model['name'] + '\n')
 		numprots = 0
 		for rxn in trans_model['modelreactions']:
 			numprots += len(rxn['modelReactionProteins'])	
-		log.write('REACTIONS: ' + str(len(trans_model['modelreactions'])))
-		log.write('PROTEINS: ' + str(numprots))
+		log.write('	REACTIONS: ' + str(len(trans_model['modelreactions'])))
+		log.write('. PROTEINS: ' + str(numprots) + '\n')
 	return trans_model, id_hash['trans']
 
 #Save model to geven workspace
 def save_model(model, workspace, name, model_type):
-	save_data = dict()
-	save_data['type'] = model_type
-	save_data['data'] = model
-	save_data['name'] = name
+	save_data = {'type' : model_type, 'name' : name,  'data' : model}
 	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
 	return {'model' : name, 'model_workspace' : workspace}
 
 # Finishing/Cleanup  Steps 
 def finish():
 	with open('.mmlog.txt', 'r') as log:
-	#	print log.read()
 		print 'Finished'
 	if ws_id is not None:
 		ws_client.delete_workspace({'id' : ws_id})
 	else:
-		print "ws_id" is None
+		print 'ERROR: ' +  ws_id + ' workspace is None'
 
 # =================================================================================================
 # 						Script
 #
 # the scripted algorithm steps in order
 # =================================================================================================
-# init variables
-model = None
-recon = None
-ws_id = None
 try:
 	#parse command args
 	print 'parsing args'
@@ -319,8 +312,8 @@ try:
 	model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
 	print 'DONE SAVING'
 	print model_id
-	print 'process rxns'
-	process_reactions(gene_no_match_tuples)
+	print 'process rxns is NEXT STEP. FBA Implementation error'
+#	process_reactions(gene_no_match_tuples)
 finally:
 	finish()
 # Clean up/Finish
