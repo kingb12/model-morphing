@@ -1,5 +1,7 @@
 # This is the script that initiates the model morphing function. Interfacing to be addressed soon. TODO: Fix this description as you determine what this file will actioally do
 
+#IDEA: When findling more likely alternatives to gene-no-match and no-gene reactions, the new more likely pathway must be more likely than it's replacement AND and reactions that are now dead ends as a result of it's use
+
 #import necesary services
 from biokbase.workspace.client import Workspace 
 from biokbase.workspace.client import ServerError 
