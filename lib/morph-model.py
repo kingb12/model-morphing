@@ -137,11 +137,11 @@ def parse_arguments():
 #Initiate Clients Objects for Function
 def init_clients():
 	clients = dict()
-	clients['ws'] = Workspace(url='https://kbase.us/services/ws/')
+	clients['ws'] = Workspace()
 	# Get FBA Model Services URL parameter
 	with open (".kbase_fbaModelServicesURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
-	clients['fba'] = fbaModelServices(url='https://kbase.us/services/KBaseFBAModeling')
+	clients['fba'] = fbaModelServices(url)
 	# Get Genome Comparison URL parameter
 	with open (".kbase_genomecomparisonURL", "r") as myfile:
 		url = myfile.read().replace('\n','')
@@ -170,12 +170,13 @@ def init_workspace():
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
 	model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
-	recon_params = {'genome' : args['genome'], 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
-	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
-	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
 	trans_params = {'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id}
 	trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
 	trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
+	recon_params = {'genome' : 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
+	print recon_params
+	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
+	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
 	return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
 
 # label reactions in each model
