@@ -8,6 +8,7 @@ from biokbase.workspace.client import ServerError
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.userandjobstate.client import UserAndJobState
+
 import copy
 import random
 import sys
@@ -17,7 +18,7 @@ from operator import itemgetter
 
 desc1 = '''
 NAME
-	mm-morphmodel - 'Morph' a model an existing model to fit a related genome
+	 mm-morphmodel - 'Morph' a model an existing model to fit a related genome
 
 SYNOPSIS
 '''
@@ -82,23 +83,6 @@ def process_reactions(rxn_list):
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
-	#FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
-	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
-	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
-	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
-	parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
-	parser.add_argument('probanno', type=int,  help='ID of the ProbAnno object', action='store', default=None)
-	parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
-	parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
-	parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
-	parser.add_argument('--probannows', type=int, help='Workspace of the ProbAnno object', action='store', default=None, dest='probannows')
-	parser.add_argument('--outputws', type=int, help='Workspace for the morphed Model object', action='store', default=None, dest='outputws')
-		#TODO: ADD OTHER OPTION ARGUMENTS
-	usage = parser.format_usage()
-	parser.description = desc1 + '	' + usage + desc2
-	parser.usage = argparse.SUPPRESS
-	input_args = parser.parse_args()
-
 	#Prepare the argument dictionary
 	args = dict()
 	args['genome'] = input_args.genome
@@ -164,7 +148,7 @@ def init_workspace():
 			ws_name = new_ws[1]
 			ws_conflict = False
 		except ServerError:
-			ws_name += str(random.randint(1,9))
+			 ws_name += str(random.randint(1,9))
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
@@ -284,38 +268,47 @@ def finish():
 		print 'ERROR: ' +  ws_id + ' workspace is None'
 
 # =================================================================================================
-# 						Script
+#						Morph Function
 #
-# the scripted algorithm steps in order
+# Function that morphs the model
 # =================================================================================================
-try:
-	#parse command args
+def morph_model(model, genome, protcomp, probanno, modelws=None, genomews=None, protcompws=None, probanno=None):
+	# parse args
 	print 'parsing args'
-	args = parse_arguments()
-	#initiate clientslk
-	print 'init clients...'
-	clients = init_clients()
-	fba_client = clients['fba']
-	ws_client = clients['ws']
-	gencomp_client = clients['gencomp']
-	ujs_client = clients['ujs']
-	#initiate Model Morphing workspace
-	print 'init ws...'
-	init_workspace() # creates global vars ws_name and ws_id
-	# [args['protcomp'], args['protcompws']] = blast_proteomes()
-	print 'build models'
-	[model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
-	print 'label rxns...'
-	[rxn_labels, id_hash] = label_reactions() #model, recon)
-	print 'build supermodel...'
-	morphed_model, mm_ids = build_supermodel()
-	(gene_no_match_tuples, no_gene_tuples) = removal_lists()
-	print 'SAVING'
-	model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
-	print 'DONE SAVING'
-	print model_id
-	print 'process rxns is NEXT STEP. FBA Implementation error'
-#	process_reactions(gene_no_match_tuples)
-finally:
-	finish()
-# Clean up/Finish
+	if(modelws is None):
+		modelws = 9145
+	if(genomews is None):
+		genomews = 9145
+	if(protcompws is None):
+		protcompws = 9145
+	if(probannows is None):
+		probannows = 9145
+	args = {'model' : model, 'genome' : genome, 'protcomp' : protcomp, 'probanno' : probanno, 'modelws' : modelws, 'genomews' : genomews, 'protcompws' : protcompws, 'probannows' : probannows}
+	try:
+		#initiate clientslk
+		print 'init clients...'
+		clients = init_clients()
+		fba_client = clients['fba']
+		ws_client = clients['ws']
+		gencomp_client = clients['gencomp']
+		ujs_client = clients['ujs']
+		#initiate Model Morphing workspace
+		print 'init ws...'
+		init_workspace() # creates global vars ws_name and ws_id
+		# [args['protcomp'], args['protcompws']] = blast_proteomes()
+		print 'build models'
+		[model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
+		print 'label rxns...'
+		[rxn_labels, id_hash] = label_reactions() #model, recon)
+		print 'build supermodel...'
+		morphed_model, mm_ids = build_supermodel()
+		(gene_no_match_tuples, no_gene_tuples) = removal_lists()
+		print 'SAVING'
+		model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
+		print 'DONE SAVING'
+		print model_id
+		print 'process rxns is NEXT STEP. FBA Implementation error'
+	#	process_reactions(gene_no_match_tuples)
+	finally:
+		finish()
+	# Clean up/Finish
