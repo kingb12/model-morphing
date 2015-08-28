@@ -173,6 +173,7 @@ def build_models():
 	trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
 	trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
 	recon_params = {'genome' : 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
+	print recon_params
 	recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
 	recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
 	return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
@@ -189,7 +190,7 @@ def label_reactions(): #model, recon, trans_model
 	rxn_labels['recon'] = set()
 	rxn_labels['gene-match'] = set()
 	rxn_labels['gene-no-match'] = set()
-    rxn_labels['no-gene'] = set()
+	rxn_labels['no-gene'] = set()
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
 	for i in range(len(trans_model['modelreactions'])):
 		rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list

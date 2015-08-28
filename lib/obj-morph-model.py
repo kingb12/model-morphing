@@ -84,21 +84,6 @@ def process_reactions(rxn_list):
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#Prepare the argument dictionary
-	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
-	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
-	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
-	parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
-	parser.add_argument('probanno', type=int,  help='ID of the ProbAnno object', action='store', default=None)
-	parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
-	parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
-	parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
-	parser.add_argument('--probannows', type=int, help='Workspace of the ProbAnno object', action='store', default=None, dest='probannows')
-	parser.add_argument('--outputws', type=int, help='Workspace for the morphed Model object', action='store', default=None, dest='outputws')
-		#TODO: ADD OTHER OPTION ARGUMENTS
-	usage = parser.format_usage()
-	parser.description = desc1 + '	' + usage + desc2
-	parser.usage = argparse.SUPPRESS
-	input_args = parser.parse_args()
 	args = dict()
 	args['genome'] = input_args.genome
 	args['model'] = input_args.model
@@ -287,7 +272,7 @@ def finish():
 #
 # Function that morphs the model
 # =================================================================================================
-def morph_model(model, genome, protcomp, probanno, modelws=None, genomews=None, protcompws=None, probannows=None):
+def morph_model(model, genome, protcomp, probanno, modelws=None, genomews=None, protcompws=None, probanno=None):
 	# parse args
 	print 'parsing args'
 	if(modelws is None):
@@ -327,6 +312,3 @@ def morph_model(model, genome, protcomp, probanno, modelws=None, genomews=None, 
 	finally:
 		finish()
 	# Clean up/Finish
-args = parse_arguments()
-morph_model(args['model'], args['genome'],  args['protcomp'], args['probanno'])
-
