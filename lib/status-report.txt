@@ -1,4 +1,0 @@
-8/15/15 - Worked until call to FBA in process reactions
-8/24/15 - Now encounters an error in a previous portion of the code at build models @ fba_client.genome_to_fbamodel()
-8/25/15 - " "
-8/26/15 - " "

@@ -3,11 +3,12 @@
 #IDEA: When findling more likely alternatives to gene-no-match and no-gene reactions, the new more likely pathway must be more likely than it's replacement AND and reactions that are now dead ends as a result of it's use
 
 #import necesary services
-from biokbase.workspace.client import Workspace
-from biokbase.workspace.client import ServerError
+from biokbase.workspace.client import Workspace 
+from biokbase.workspace.client import ServerError 
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.userandjobstate.client import UserAndJobState
+
 import copy
 import random
 import sys
@@ -17,26 +18,26 @@ from operator import itemgetter
 
 desc1 = '''
 NAME
-	mm-morphmodel - 'Morph' a model an existing model to fit a related genome
+	 mm-morphmodel - 'Morph' a model an existing model to fit a related genome
 
 SYNOPSIS
 '''
 desc2 = '''
 DESCRIPTION
-	Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' organism. It keeps reactions from the 'source' model for which there is at least one matching gene feature, and attempts to remove those in the source model that do not have BLAST hits in the second genome. It also adds reactions annotated within the target genome that are unique to the target organism. The model is never broken in the process, such that the Biomass reaction and any other specified reaction [insert how you flag this option] must always carry flux. If a reaction can't be removed without breaking the model, it is flagged again and a few options are available for handling these reactions [insert said options]
+	Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' organism. It keeps reactions from the 'source' model for which there is at least one matching gene feature, and attempts to remove those in the source model that do not have BLAST hits in the second genome. It also adds reactions annotated within the target genome that are unique to the target organism. The model is never broken in the process, such that the Biomass reaction and any other specified reaction [insert how you flag this option] must always carry flux. If a reaction can't be removed without breaking the model, it is flagged again and a few options are available for handling these reactions [insert said options] 
 '''
 	#TODO: Fill in EXAMPLES section with actual model/genome
 desc3 = '''
 EXAMPLES
-      Generate 'morphed' model for :
-      > mm-morph-model kb|m.1.model kb|g.0.genome
+      Generate 'morphed' model for : 
+      > mm-morph-model kb|m.1.model kb|g.0.genome 
 AUTHORS
 	Brendan King, Vangelis Simeonidis, Matt Richards
 '''
 
 # =================================================================================================
 # 						Functions
-#
+# 
 # functions used in the algorithm script TODO: make these private
 # =================================================================================================
 
@@ -56,7 +57,7 @@ def removal_lists():
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
 def process_reactions(rxn_list):
-#	DEBUG: This is a debugging step
+#	DEBUG: This is a debugging step 
 #	fba_params = dict({'model' : '3320', 'model_workspace' : '2505'})
 #	fba_params['fba'] = 'FBA-0'
 #	fba_params['workspace'] = ws_id
@@ -65,13 +66,13 @@ def process_reactions(rxn_list):
 	for i in range(len(rxn_list)):
 		#Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
 		rxn_id = rxn_list[i][0]
-		new_model = dict()
+		new_model = dict() 
 		for key in morphed_model:
 			new_model[key] = copy.copy(morphed_model[key])
 #		new_model = copy.deepcopy(morphed_model)
 		removed_rxn = new_model['modelreactions'].pop(mm_ids[rxn_id])
 		new_model_id = save_model(new_model, ws_id, 'MM-' + str(i), model_info[2])
-		fba_params = dict(new_model_id)
+		fba_params = dict(new_model_id)	
 		fba_params['fba'] = 'FBA-' + str(i)
 		fba_params['workspace'] = ws_id
 		print fba_params
@@ -83,7 +84,7 @@ def process_reactions(rxn_list):
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
 	#FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
-	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
+	parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)	
 	parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
 	parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
 	parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
@@ -98,7 +99,7 @@ def parse_arguments():
 	parser.description = desc1 + '	' + usage + desc2
 	parser.usage = argparse.SUPPRESS
 	input_args = parser.parse_args()
-
+	
 	#Prepare the argument dictionary
 	args = dict()
 	args['genome'] = input_args.genome
@@ -164,7 +165,7 @@ def init_workspace():
 			ws_name = new_ws[1]
 			ws_conflict = False
 		except ServerError:
-			ws_name += str(random.randint(1,9))
+			 ws_name += str(random.randint(1,9))
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
@@ -188,9 +189,9 @@ def label_reactions(): #model, recon, trans_model
 	rxn_labels = dict()
 	common_rxns = set() #Check: Is this a subset of gene-match (should be)
 	rxn_labels['recon'] = set()
-	rxn_labels['gene-match'] = set()
-	rxn_labels['gene-no-match'] = set()
-	rxn_labels['no-gene'] = set()
+	rxn_labels['gene-match'] = set() 
+	rxn_labels['gene-no-match'] = set() 
+	rxn_labels['no-gene'] = set() 
 	#Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
 	for i in range(len(trans_model['modelreactions'])):
 		rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
@@ -199,7 +200,7 @@ def label_reactions(): #model, recon, trans_model
 		rxn_prot = mdlrxn['modelReactionProteins']
 		if len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal':
 			rxn_labels['no-gene'].add(rxn_id)
-		else:
+		else: 
 			rxn_labels['gene-match'].add(rxn_id)
 	for i in range(len(model['modelreactions'])):
 		rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
@@ -242,7 +243,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 		reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
 		trans_model['modelreactions'].append(reaction)
 		id_hash['trans'][rxn_id] = orig_size + i
-		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
+		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured 
 		i += 1
 	with open(".mmlog.txt", "a") as log:
 		log.write('MODEL REACTION ADDITION STATISTICS: \n')
@@ -255,7 +256,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 		reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
 		trans_model['modelreactions'].append(reaction)
 		id_hash['trans'][rxn_id] = orig_size + i
-		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
+		assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured 
 		i += 1
 	with open(".mmlog.txt", "a") as log:
 		log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
@@ -263,7 +264,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 		log.write('	NAME: ' + trans_model['name'] + '\n')
 		numprots = 0
 		for rxn in trans_model['modelreactions']:
-			numprots += len(rxn['modelReactionProteins'])
+			numprots += len(rxn['modelReactionProteins'])	
 		log.write('	REACTIONS: ' + str(len(trans_model['modelreactions'])))
 		log.write('. PROTEINS: ' + str(numprots) + '\n')
 	return trans_model, id_hash['trans']
@@ -274,7 +275,7 @@ def save_model(model, workspace, name, model_type):
 	ws_client.save_objects({'id' : workspace, 'objects' : [save_data]})
 	return {'model' : name, 'model_workspace' : workspace}
 
-# Finishing/Cleanup  Steps
+# Finishing/Cleanup  Steps 
 def finish():
 	with open('.mmlog.txt', 'r') as log:
 		print 'Finished'
