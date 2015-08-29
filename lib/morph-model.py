@@ -174,8 +174,6 @@ def build_models():
     trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
     trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
     recon_params = {'genome' : 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
-    print recon_params
-    print 'hello'
     recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
     recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
     return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
@@ -239,6 +237,8 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
     for rxn_id in rxn_labels['gene-no-match']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][id_hash['model'][rxn_id]]
+        print reaction
+        break
         # aliasing destroys features in 'model'. This might be ok, but consider copying
         # eliminate features from reaction
         reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
@@ -317,7 +317,7 @@ try:
     print 'DONE SAVING'
     print model_id
     print 'process rxns is NEXT STEP. FBA Implementation error'
-#    process_reactions(gene_no_match_tuples)
+    process_reactions(gene_no_match_tuples)
 finally:
     finish()
 # Clean up/Finish
