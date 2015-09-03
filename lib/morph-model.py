@@ -64,21 +64,18 @@ def process_reactions(rxn_list):
 #    fbaMeta = fba_client.runfba(fba_params)
     print morphed_model.keys()
     for i in range(len(rxn_list)):
-        #Create a 2-level copy. Copies the keys and the lists, but NOT a full recursive copy of list contents (we will be adding and removinf reactions from the list, not modifying their components. This will save a small amount of time PER RXN PROCESS
-        rxn_id = rxn_list[i][0]
-        new_model = dict()
-        for key in morphed_model:
-            new_model[key] = copy.copy(morphed_model[key])
-#        new_model = copy.deepcopy(morphed_model)
-        removed_rxn = new_model['modelreactions'].pop(mm_ids[rxn_id])
-        new_model_id = save_model(new_model, ws_id, 'MM-' + str(i), model_info[2])
-        fba_params = dict(new_model_id)
+        name = 'MM-' + str(i)
+        new_model_id = fba_client.remove_reactions({'model' : super_model_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i]]})[0]
+        fba_params = dict()
         fba_params['fba'] = 'FBA-' + str(i)
         fba_params['workspace'] = ws_id
+        fba_params['model'] = new_model_id
+        fba_params['model_workspace'] = ws_id
         print fba_params
         fbaMeta = fba_client.runfba(fba_params)
+        print fbaMeta.keys()
         print fbaMeta
-
+        break
 
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
@@ -260,7 +257,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
         id_hash['trans'][rxn_id] = orig_size + i
         assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
         i += 1
-    print fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : 'super_model', 'workspace' : ws_id, 'reactions' : super_rxns})
+    super_model_id = fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : 'super_model', 'workspace' : ws_id, 'reactions' : super_rxns})[0]
     with open(".mmlog.txt", "a") as log:
         log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
         log.write('SUPERMODEL STATE: \n')
@@ -270,7 +267,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
             numprots += len(rxn['modelReactionProteins'])
         log.write('    REACTIONS: ' + str(len(trans_model['modelreactions'])))
         log.write('. PROTEINS: ' + str(numprots) + '\n')
-    return trans_model, id_hash['trans']
+    return trans_model, id_hash['trans'], super_model_id
 
 #Save model to geven workspace
 def save_model(model, workspace, name, model_type):
@@ -312,7 +309,7 @@ try:
     print 'label rxns...'
     [rxn_labels, id_hash] = label_reactions() #model, recon)
     print 'build supermodel...'
-    morphed_model, mm_ids = build_supermodel()
+    morphed_model, mm_ids, super_model_id = build_supermodel()
     (gene_no_match_tuples, no_gene_tuples) = removal_lists()
     print 'SAVING'
     model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
