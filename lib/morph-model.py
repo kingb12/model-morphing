@@ -63,9 +63,10 @@ def process_reactions(rxn_list):
 #    fba_params['workspace'] = ws_id
 #    fbaMeta = fba_client.runfba(fba_params)
     print morphed_model.keys()
+    model_id = super_model_id
     for i in range(len(rxn_list)):
         name = 'MM-' + str(i)
-        new_model_id = fba_client.remove_reactions({'model' : super_model_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i]]})[0]
+        new_model_id = fba_client.remove_reactions({'model' : rodel_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i]]})[0]
         fba_params = dict()
         fba_params['fba'] = 'FBA-' + str(i)
         fba_params['workspace'] = ws_id
@@ -73,10 +74,10 @@ def process_reactions(rxn_list):
         fba_params['model_workspace'] = ws_id
         print fba_params
         fbaMeta = fba_client.runfba(fba_params)
-        print fbaMeta.keys()
-        print fbaMeta
-        break
-
+        flux = fbaMeta[-1]['Objective']
+        print flux
+        if (flux > 0):
+                model_id = new_model_id
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
