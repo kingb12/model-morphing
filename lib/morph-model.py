@@ -234,12 +234,14 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 #Add the GENE_NO_MATCH reactions:
     i = 0 #an index for how many reactions are addded so provide new indices to the id hash
     orig_size = len(trans_model['modelreactions'])
+    super_rxns = list()
     for rxn_id in rxn_labels['gene-no-match']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][id_hash['model'][rxn_id]]
         # aliasing destroys features in 'model'. This might be ok, but consider copying
         # eliminate features from reaction
         reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
         trans_model['modelreactions'].append(reaction)
         id_hash['trans'][rxn_id] = orig_size + i
         assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
@@ -253,10 +255,12 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
     for rxn_id in rxn_labels['recon']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1]), reaction['direction'], 'RECON', '', reaction['name']))
         trans_model['modelreactions'].append(reaction)
         id_hash['trans'][rxn_id] = orig_size + i
         assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
         i += 1
+    print fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : 'super_model', 'workspace' : ws_id, 'reactions' : super_rxns})
     with open(".mmlog.txt", "a") as log:
         log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
         log.write('SUPERMODEL STATE: \n')
