@@ -237,8 +237,6 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
     for rxn_id in rxn_labels['gene-no-match']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][id_hash['model'][rxn_id]]
-        print reaction
-        break
         # aliasing destroys features in 'model'. This might be ok, but consider copying
         # eliminate features from reaction
         reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
