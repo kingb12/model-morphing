@@ -15,19 +15,18 @@ from operator import itemgetter
 with open (".kbase_fbaModelServicesURL", "r") as myfile:
     url = myfile.read().replace('\n','')
 fba_client = fbaModelServices(url)
-rxns = [('rxn01316', 'c0','<',)]
+rxns = [('rxn01316', 'c','<',)]
+print fba_client.generate_model_stats({'model' : '9' , 'model_workspace' : '9145'})['total_reactions']
 params = {'model' : '9', 'model_workspace' : '9145', 'output_id' : 'testmodel', 'workspace' : '9145', 'reactions' : rxns}
 output = fba_client.add_reactions(params)
+print fba_client.generate_model_stats({'model' : '9' , 'model_workspace' : '9145'})['total_reactions']
 fba_client.runfba({'model' : '9', 'model_workspace' : '9145', 'workspace' : '9145', 'fba' : 'testFBAaddReaction'})
 ws_client = Workspace()
 model = ws_client.get_objects([{'objid' : '9' , 'wsid' : '9145'}])[0]['data']
-print model.keys()
-for i in model['modelreactions']:
-    for key in i.keys():
-        print str(key) + ': ' + str(i[key])
-rxns = ['rxn00670']
+rxns = ['rxn00670_c0']
 params = {'model' : '9', 'model_workspace' : '9145', 'output_id' : 'testmodel', 'workspace' : '9145', 'reactions' : rxns}
 output = fba_client.remove_reactions(params)
+print fba_client.generate_model_stats({'model' : '9' , 'model_workspace' : '9145'})['total_reactions']
 print '\n'
 for key in output:
     print str(key)

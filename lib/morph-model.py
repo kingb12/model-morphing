@@ -66,7 +66,8 @@ def process_reactions(rxn_list):
     model_id = super_model_id
     for i in range(len(rxn_list)):
         name = 'MM-' + str(i)
-        new_model_id = fba_client.remove_reactions({'model' : rodel_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i]]})[0]
+        print 'TO BE REMOVED: ' + str(rxn_list[i][0])
+        new_model_id = fba_client.remove_reactions({'model' : model_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i][0]]})[0]
         fba_params = dict()
         fba_params['fba'] = 'FBA-' + str(i)
         fba_params['workspace'] = ws_id
@@ -75,6 +76,8 @@ def process_reactions(rxn_list):
         print fba_params
         fbaMeta = fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
+        model_info = fba_client.generate_model_stats({'model' : new_model_id, 'model_workspace' : ws_id})
+        print model_info['total_reactions']
         print flux
         if (flux > 0):
                 model_id = new_model_id
@@ -191,7 +194,7 @@ def label_reactions(): #model, recon, trans_model
     rxn_labels['no-gene'] = set()
     #Build a dictionary of rxn_ids to their index in the list so future look ups can be run in constant-time instead of O(n)
     for i in range(len(trans_model['modelreactions'])):
-        rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+        rxn_id = trans_model['modelreactions'][i]['reaction_ref'].split('/')[-1] + '_' + str(trans_model['modelreactions'][i]['modelcompartment_ref'].split('/')[-1]) #-1 index gets the last in the list
         trans_model_rxn_ids[rxn_id] = i
         mdlrxn = trans_model['modelreactions'][i]
         rxn_prot = mdlrxn['modelReactionProteins']
@@ -200,13 +203,13 @@ def label_reactions(): #model, recon, trans_model
         else:
             rxn_labels['gene-match'].add(rxn_id)
     for i in range(len(model['modelreactions'])):
-        rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+        rxn_id = model['modelreactions'][i]['reaction_ref'].split('/')[-1] + '_' + str(model['modelreactions'][i]['modelcompartment_ref'].split('/')[-1]) #-1 index gets the last in the list
         model_rxn_ids[rxn_id] = i
         mdlrxn = model['modelreactions'][i]
         if rxn_id not in trans_model_rxn_ids:
                 rxn_labels['gene-no-match'].add(rxn_id)
     for i in range(len(recon['modelreactions'])):
-        rxn_id = recon['modelreactions'][i]['reaction_ref'].split('/')[-1] #-1 index gets the last in the list
+        rxn_id = recon['modelreactions'][i]['reaction_ref'].split('/')[-1] + '_' + str(recon['modelreactions'][i]['modelcompartment_ref'].split('/')[-1]) #-1 index gets the last in the list
         recon_rxn_ids[rxn_id] = i
         mdlrxn = recon['modelreactions'][i]
         # if the recon reaction is already in the model
@@ -239,10 +242,10 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
         # aliasing destroys features in 'model'. This might be ok, but consider copying
         # eliminate features from reaction
         reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref' : '', 'modelReactionProteinSubunits' : []}]
-        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
         trans_model['modelreactions'].append(reaction)
         id_hash['trans'][rxn_id] = orig_size + i
-        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
+        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1]+ '_' + trans_model['modelreactions'][id_hash['trans'][rxn_id]]['modelcompartment_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
         i += 1
     with open(".mmlog.txt", "a") as log:
         log.write('MODEL REACTION ADDITION STATISTICS: \n')
@@ -253,12 +256,14 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
     for rxn_id in rxn_labels['recon']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
-        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1]), reaction['direction'], 'RECON', '', reaction['name']))
+        print reaction['reaction_ref'].split('/')[-1]
+        print str(reaction['modelcompartment_ref'].split('/')[-1][0])
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'RECON', '', reaction['name']))
         trans_model['modelreactions'].append(reaction)
         id_hash['trans'][rxn_id] = orig_size + i
-        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
+        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1]+ '_' + trans_model['modelreactions'][id_hash['trans'][rxn_id]]['modelcompartment_ref'].split('/')[-1] == rxn_id #assert that value got added to end of the list and no changes occured
         i += 1
-    super_model_id = fba_client.add_reactions({'model' : trans_model_id, 'model_workspace' : ws_id, 'output_id' : 'super_model', 'workspace' : ws_id, 'reactions' : super_rxns})[0]
+    super_model_id = fba_client.add_reactions({'model': trans_model_id, 'model_workspace': ws_id, 'output_id': 'super_model', 'workspace': ws_id, 'reactions': super_rxns})[0]
     with open(".mmlog.txt", "a") as log:
         log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
         log.write('SUPERMODEL STATE: \n')
@@ -311,12 +316,10 @@ try:
     [rxn_labels, id_hash] = label_reactions() #model, recon)
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
+    print 'get reaction removal lists...'
     (gene_no_match_tuples, no_gene_tuples) = removal_lists()
-    print 'SAVING'
     model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
-    print 'DONE SAVING'
-    print model_id
-    print 'process rxns is NEXT STEP. FBA Implementation error'
+    print 'process reactions...'
     process_reactions(gene_no_match_tuples)
 finally:
     finish()

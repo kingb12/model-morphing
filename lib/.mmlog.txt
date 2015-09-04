@@ -170,3 +170,308 @@ Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'r
 SUPERMODEL STATE: 
     NAME: Methanosarcina acetivorans C2A
     REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn01316', u'rxn03052', u'rxn00827', u'rxn05426', u'rxn00172', u'rxn05422', u'rxn05461', u'rxn05297', u'rxn05405', u'rxn05397', u'rxn05401', u'rxn05376', u'rxn05298', u'rxn05372', u'rxn01025', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05312', u'rxn05393', u'rxn11944', u'rxn05380', u'rxn11268', u'rxn05338', u'rxn00669', u'rxn05430', u'rxn00717', u'rxn05414', u'rxn05368', u'rxn05410', u'rxn05385', u'rxn05389', u'rxn05360', u'rxn05418', u'rxn05364', u'rxn05340', u'rxn05341', u'rxn05342'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 709. PROTEINS: 832
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+679 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 679  gene-no-match reactions to translated model: set([u'rxn10122', u'rxn10123', u'rxn10124', u'rxn10042', u'rxn03150', u'rxn05616', u'rxn03159', u'rxn04954', u'rxn02402', u'rxn01025', u'rxn01022', u'rxn06874', u'rxn12645', u'rxn12644', u'rxn12646', u'rxn12641', u'rxn12640', u'rxn12643', u'rxn00371', u'rxn00792', u'rxn10227', u'rxn10226', u'rxn10221', u'rxn10220', u'rxn05957', u'rxn10954', u'rxn00835', u'rxn02774', u'rxn02775', u'rxn00832', u'rxn00839', u'rxn00931', u'rxn05040', u'rxn00515', u'rxn12008', u'rxn10571', u'rxn10449', u'rxn00474', u'rxn00471', u'rxn00470', u'rxn10259', u'rxn12225', u'rxn12633', u'rxn12634', u'rxn12635', u'rxn12636', u'rxn12637', u'rxn01270', u'rxn12639', u'rxn01682', u'rxn04139', u'rxn00350', u'rxn10336', u'rxn01151', u'rxn09111', u'rxn09110', u'rxn09113', u'rxn09112', u'rxn09114', u'rxn00799', u'rxn08194', u'rxn05438', u'rxn05439', u'rxn00011', u'rxn00159', u'rxn00409', u'rxn05430', u'rxn05436', u'rxn04132', u'rxn05434', u'rxn00151', u'rxn01977', u'rxn05381', u'rxn04133', u'rxn05384', u'rxn05385', u'rxn05386', u'rxn02056', u'rxn05388', u'rxn05389', u'rxn06022', u'rxn08954', u'rxn05267', u'rxn01268', u'rxn02831', u'rxn05148', u'rxn05149', u'rxn00085', u'rxn05144', u'rxn05145', u'rxn01302', u'rxn01303', u'rxn03057', u'rxn03052', u'rxn00707', u'rxn00704', u'rxn05506', u'rxn12851', u'rxn05504', u'rxn05319', u'rxn06937', u'rxn05312', u'rxn02508', u'rxn08975', u'rxn04385', u'rxn04384', u'rxn01127', u'rxn10857', u'rxn05722', u'rxn05645', u'rxn05533', u'rxn01018', u'rxn01019', u'rxn02835', u'rxn02834', u'rxn02832', u'rxn06299', u'rxn00206', u'rxn03916', u'rxn01333', u'rxn10214', u'rxn10215', u'rxn10229', u'rxn00806', u'rxn00800', u'rxn00802', u'rxn02177', u'rxn00966', u'rxn12642', u'rxn09205', u'rxn09207', u'rxn09206', u'rxn00337', u'rxn09209', u'rxn09208', u'rxn00119', u'rxn00117', u'rxn01200', u'rxn02465', u'rxn00293', u'rxn00295', u'rxn00299', u'rxn00686', u'rxn03540', u'rxn03541', u'rxn03421', u'rxn00830', u'rxn03012', u'rxn05440', u'rxn08709', u'rxn08708', u'rxn00747', u'rxn02269', u'rxn00743', u'rxn05542', u'rxn05543', u'rxn05540', u'rxn05541', u'rxn05546', u'rxn05557', u'rxn05544', u'rxn05545', u'rxn05461', u'rxn02305', u'rxn05467', u'rxn05466', u'rxn04308', u'rxn02063', u'rxn00838', u'rxn08019', u'rxn05359', u'rxn05358', u'rxn03904', u'rxn02374', u'rxn03901', u'rxn01513', u'rxn01512', u'rxn03644', u'rxn03643', u'rxn12648', u'rxn03167', u'rxn03164', u'rxn06493', u'rxn03085', u'rxn03084', u'rxn03080', u'rxn08711', u'rxn13661', u'rxn05363', u'rxn08333', u'rxn06848', u'rxn08843', u'rxn08336', u'rxn08335', u'rxn00914', u'rxn02166', u'rxn03020', u'rxn01602', u'rxn01607', u'rxn00929', u'rxn10147', u'rxn10832', u'rxn05679', u'rxn10118', u'rxn01286', u'rxn10338', u'rxn02938', u'rxn01465', u'rxn01466', u'rxn12217', u'rxn02011', u'rxn02507', u'rxn00395', u'rxn01269', u'rxn02113', u'rxn01301', u'rxn00640', u'rxn00641', u'rxn01265', u'rxn00649', u'rxn00851', u'rxn00858', u'rxn06672', u'rxn03513', u'rxn09997', u'rxn00245', u'rxn00527', u'rxn00248', u'rxn02988', u'rxn00364', u'rxn00782', u'rxn00781', u'rxn00029', u'rxn00786', u'rxn00785', u'rxn09163', u'rxn00789', u'rxn00141', u'rxn00412', u'rxn00410', u'rxn00416', u'rxn00147', u'rxn00414', u'rxn00148', u'rxn02431', u'rxn05426', u'rxn02341', u'rxn05422', u'rxn05393', u'rxn05392', u'rxn05390', u'rxn05397', u'rxn05396', u'rxn05394', u'rxn05252', u'rxn03512', u'rxn05250', u'rxn05251', u'rxn02187', u'rxn02186', u'rxn02185', u'rxn03514', u'rxn05151', u'rxn05150', u'rxn00097', u'rxn03126', u'rxn03127', u'rxn04457', u'rxn09562', u'rxn13160', u'rxn04456', u'rxn02339', u'rxn12849', u'rxn12848', u'rxn05515', u'rxn05514', u'rxn05517', u'rxn05452', u'rxn12847', u'rxn12846', u'rxn12845', u'rxn12844', u'rxn00670', u'rxn01644', u'rxn02898', u'rxn01643', u'rxn02895', u'rxn02897', u'rxn01520', u'rxn05735', u'rxn05734', u'rxn05736', u'rxn05733', u'rxn03638', u'rxn04675', u'rxn04674', u'rxn01485', u'rxn05398', u'rxn00392', u'rxn04045', u'rxn04046', u'rxn04047', u'rxn04048', u'rxn01000', u'rxn01739', u'rxn02159', u'rxn00609', u'rxn12663', u'rxn05029', u'rxn10206', u'rxn10205', u'rxn05181', u'rxn05187', u'rxn01636', u'rxn01637', u'rxn05189', u'rxn05740', u'rxn10261', u'rxn00952', u'rxn10199', u'rxn10262', u'rxn00321', u'rxn00898', u'rxn00459', u'rxn00105', u'rxn02380', u'rxn10266', u'rxn08619', u'rxn00100', u'rxn00102', u'rxn01454', u'rxn02476', u'rxn02475', u'rxn02474', u'rxn02473', u'rxn01353', u'rxn10337', u'rxn01459', u'rxn00692', u'rxn06077', u'rxn05297', u'rxn05119', u'rxn03419', u'rxn05117', u'rxn05116', u'rxn05298', u'rxn06078', u'rxn00192', u'rxn00193', u'rxn06729', u'rxn02480', u'rxn00194', u'rxn10233', u'rxn06723', u'rxn00213', u'rxn00214', u'rxn03004', u'rxn10231', u'rxn00770', u'rxn00776', u'rxn00777', u'rxn09135', u'rxn00775', u'rxn00179', u'rxn00077', u'rxn05555', u'rxn00172', u'rxn00173', u'rxn05551', u'rxn05414', u'rxn02666', u'rxn05368', u'rxn05369', u'rxn05410', u'rxn01917', u'rxn02373', u'rxn01851', u'rxn05360', u'rxn05361', u'rxn05418', u'rxn05367', u'rxn05364', u'rxn05365', u'rxn08020', u'rxn05206', u'rxn05209', u'rxn03917', u'rxn00790', u'rxn01073', u'rxn00791', u'rxn05454', u'rxn05192', u'rxn03175', u'rxn03174', u'rxn03919', u'rxn03918', u'rxn03075', u'rxn03079', u'rxn12638', u'rxn05457', u'rxn05528', u'rxn05255', u'rxn00065', u'rxn00062', u'rxn05547', u'rxn07588', u'rxn07589', u'rxn07586', u'rxn07587', u'rxn01678', u'rxn05939', u'rxn05938', u'rxn01675', u'rxn03511', u'rxn01673', u'rxn05064', u'rxn00910', u'rxn01575', u'rxn02264', u'rxn10094', u'rxn05663', u'rxn05667', u'rxn03181', u'rxn03182', u'rxn02290', u'rxn05468', u'rxn02853', u'rxn10806', u'rxn02175', u'rxn00225', u'rxn00555', u'rxn10481', u'rxn00650', u'rxn00558', u'rxn10482', u'rxn09296', u'rxn01316', u'rxn01258', u'rxn05433', u'rxn01257', u'rxn01255', u'rxn01208', u'rxn00863', u'rxn00985', u'rxn05437', u'rxn01388', u'rxn00250', u'rxn09225', u'rxn05435', u'rxn00313', u'rxn09177', u'rxn05380', u'rxn00988', u'rxn05596', u'rxn05383', u'rxn00423', u'rxn00420', u'rxn10577', u'rxn02405', u'rxn00138', u'rxn00139', u'rxn10474', u'rxn05249', u'rxn05248', u'rxn10473', u'rxn05247', u'rxn01790', u'rxn10161', u'rxn10060', u'rxn05351', u'rxn09450', u'rxn03135', u'rxn03137', u'rxn03136', u'rxn03130', u'rxn11946', u'rxn00048', u'rxn00461', u'rxn00727', u'rxn00726', u'rxn02000', u'rxn10228', u'rxn05499', u'rxn05443', u'rxn05442', u'rxn05441', u'rxn02320', u'rxn05444', u'rxn08815', u'rxn05335', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05338', u'rxn05232', u'rxn05234', u'rxn05235', u'rxn05236', u'rxn01106', u'rxn01100', u'rxn01101', u'rxn10113', u'rxn10052', u'rxn02916', u'rxn03146', u'rxn03147', u'rxn00060', u'rxn02811', u'rxn04052', u'rxn04050', u'rxn06865', u'rxn01219', u'rxn00611', u'rxn10232', u'rxn01213', u'rxn10230', u'rxn01211', u'rxn01740', u'rxn01217', u'rxn05195', u'rxn02667', u'rxn02789', u'rxn00827', u'rxn05193', u'rxn03491', u'rxn05054', u'rxn01629', u'rxn00947', u'rxn02929', u'rxn03393', u'rxn03395', u'rxn03397', u'rxn00509', u'rxn00508', u'rxn11944', u'rxn09449', u'rxn09448', u'rxn01997', u'rxn00506', u'rxn05289', u'rxn00669', u'rxn01362', u'rxn01360', u'rxn03407', u'rxn03406', u'rxn03409', u'rxn03408', u'rxn08620', u'rxn00187', u'rxn00186', u'rxn00260', u'rxn09310', u'rxn08710', u'rxn09108', u'rxn09109', u'rxn13781', u'rxn00763', u'rxn00762', u'rxn00006', u'rxn00001', u'rxn02286', u'rxn02287', u'rxn00355', u'rxn01964', u'rxn05406', u'rxn05405', u'rxn01967', u'rxn05379', u'rxn05402', u'rxn05401', u'rxn05400', u'rxn05375', u'rxn05377', u'rxn05376', u'rxn05371', u'rxn05373', u'rxn05372', u'rxn05179', u'rxn05175', u'rxn03843', u'rxn12664', u'rxn03108', u'rxn08618', u'rxn03062', u'rxn11268', u'rxn00710', u'rxn03068', u'rxn00714', u'rxn08583', u'rxn00717', u'rxn05539', u'rxn05538', u'rxn02285', u'rxn02213', u'rxn02212', u'rxn05537', u'rxn05536', u'rxn05535', u'rxn05534', u'rxn00493', u'rxn05507', u'rxn04147', u'rxn12510', u'rxn12512', u'rxn01664', u'rxn08669', u'rxn00907', u'rxn10163', u'rxn00903', u'rxn00902', u'rxn00908', u'rxn03194', u'rxn05651', u'rxn01069', u'rxn01068', u'rxn00251', u'rxn00544', u'rxn02484', u'rxn01329', u'rxn00237', u'rxn01486', u'rxn00543', u'rxn12860', u'rxn00549', u'rxn01241', u'rxn10260', u'rxn10263', u'rxn08976', u'rxn10265', u'rxn10264', u'rxn08971', u'rxn03446', u'rxn00973', u'rxn00974', u'rxn01207', u'rxn05316', u'rxn09210', u'rxn09211', u'rxn05315', u'rxn06591', u'rxn00302', u'rxn12850', u'rxn00438', u'rxn12224', u'rxn11938', u'rxn00126', u'rxn02008', u'rxn00122', u'rxn02003', u'rxn01434', u'rxn00283', u'rxn03439', u'rxn03535', u'rxn03537', u'rxn03536', u'rxn03538', u'rxn03435', u'rxn03436', u'rxn03437', u'rxn00881', u'rxn00882', u'rxn00883', u'rxn13360', u'rxn11544', u'rxn13783', u'rxn13782', u'rxn08712', u'rxn08713', u'rxn13784', u'rxn06979', u'rxn05404', u'rxn03893', u'rxn05229', u'rxn08766', u'rxn05340', u'rxn05341', u'rxn05342', u'rxn05223', u'rxn05221'])
+Added 30 recon reactions to translated model: set([u'rxn05602', u'rxn10236', u'rxn10237', u'rxn10234', u'rxn10235', u'rxn01544', u'rxn00926', u'rxn03962', u'rxn09199', u'rxn09198', u'rxn07438', u'rxn09197', u'rxn09201', u'rxn09200', u'rxn09203', u'rxn09202', u'rxn00211', u'rxn05172', u'rxn05171', u'rxn00547', u'rxn02483', u'rxn02937', u'rxn01519', u'rxn02914', u'rxn00292', u'rxn00297', u'rxn00915', u'rxn03445', u'rxn00182', u'rxn05305'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 1350. PROTEINS: 1473
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+30 reconstructed reactions out of 512. 482 in common
+679 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 679  gene-no-match reactions to translated model: set([u'rxn10122', u'rxn10123', u'rxn10124', u'rxn10042', u'rxn03150', u'rxn05616', u'rxn03159', u'rxn04954', u'rxn02402', u'rxn01025', u'rxn01022', u'rxn06874', u'rxn12645', u'rxn12644', u'rxn12646', u'rxn12641', u'rxn12640', u'rxn12643', u'rxn00371', u'rxn00792', u'rxn10227', u'rxn10226', u'rxn10221', u'rxn10220', u'rxn05957', u'rxn10954', u'rxn00835', u'rxn02774', u'rxn02775', u'rxn00832', u'rxn00839', u'rxn00931', u'rxn05040', u'rxn00515', u'rxn12008', u'rxn10571', u'rxn10449', u'rxn00474', u'rxn00471', u'rxn00470', u'rxn10259', u'rxn12225', u'rxn12633', u'rxn12634', u'rxn12635', u'rxn12636', u'rxn12637', u'rxn01270', u'rxn12639', u'rxn01682', u'rxn04139', u'rxn00350', u'rxn10336', u'rxn01151', u'rxn09111', u'rxn09110', u'rxn09113', u'rxn09112', u'rxn09114', u'rxn00799', u'rxn08194', u'rxn05438', u'rxn05439', u'rxn00011', u'rxn00159', u'rxn00409', u'rxn05430', u'rxn05436', u'rxn04132', u'rxn05434', u'rxn00151', u'rxn01977', u'rxn05381', u'rxn04133', u'rxn05384', u'rxn05385', u'rxn05386', u'rxn02056', u'rxn05388', u'rxn05389', u'rxn06022', u'rxn08954', u'rxn05267', u'rxn01268', u'rxn02831', u'rxn05148', u'rxn05149', u'rxn00085', u'rxn05144', u'rxn05145', u'rxn01302', u'rxn01303', u'rxn03057', u'rxn03052', u'rxn00707', u'rxn00704', u'rxn05506', u'rxn12851', u'rxn05504', u'rxn05319', u'rxn06937', u'rxn05312', u'rxn02508', u'rxn08975', u'rxn04385', u'rxn04384', u'rxn01127', u'rxn10857', u'rxn05722', u'rxn05645', u'rxn05533', u'rxn01018', u'rxn01019', u'rxn02835', u'rxn02834', u'rxn02832', u'rxn06299', u'rxn00206', u'rxn03916', u'rxn01333', u'rxn10214', u'rxn10215', u'rxn10229', u'rxn00806', u'rxn00800', u'rxn00802', u'rxn02177', u'rxn00966', u'rxn12642', u'rxn09205', u'rxn09207', u'rxn09206', u'rxn00337', u'rxn09209', u'rxn09208', u'rxn00119', u'rxn00117', u'rxn01200', u'rxn02465', u'rxn00293', u'rxn00295', u'rxn00299', u'rxn00686', u'rxn03540', u'rxn03541', u'rxn03421', u'rxn00830', u'rxn03012', u'rxn05440', u'rxn08709', u'rxn08708', u'rxn00747', u'rxn02269', u'rxn00743', u'rxn05542', u'rxn05543', u'rxn05540', u'rxn05541', u'rxn05546', u'rxn05557', u'rxn05544', u'rxn05545', u'rxn05461', u'rxn02305', u'rxn05467', u'rxn05466', u'rxn04308', u'rxn02063', u'rxn00838', u'rxn08019', u'rxn05359', u'rxn05358', u'rxn03904', u'rxn02374', u'rxn03901', u'rxn01513', u'rxn01512', u'rxn03644', u'rxn03643', u'rxn12648', u'rxn03167', u'rxn03164', u'rxn06493', u'rxn03085', u'rxn03084', u'rxn03080', u'rxn08711', u'rxn13661', u'rxn05363', u'rxn08333', u'rxn06848', u'rxn08843', u'rxn08336', u'rxn08335', u'rxn00914', u'rxn02166', u'rxn03020', u'rxn01602', u'rxn01607', u'rxn00929', u'rxn10147', u'rxn10832', u'rxn05679', u'rxn10118', u'rxn01286', u'rxn10338', u'rxn02938', u'rxn01465', u'rxn01466', u'rxn12217', u'rxn02011', u'rxn02507', u'rxn00395', u'rxn01269', u'rxn02113', u'rxn01301', u'rxn00640', u'rxn00641', u'rxn01265', u'rxn00649', u'rxn00851', u'rxn00858', u'rxn06672', u'rxn03513', u'rxn09997', u'rxn00245', u'rxn00527', u'rxn00248', u'rxn02988', u'rxn00364', u'rxn00782', u'rxn00781', u'rxn00029', u'rxn00786', u'rxn00785', u'rxn09163', u'rxn00789', u'rxn00141', u'rxn00412', u'rxn00410', u'rxn00416', u'rxn00147', u'rxn00414', u'rxn00148', u'rxn02431', u'rxn05426', u'rxn02341', u'rxn05422', u'rxn05393', u'rxn05392', u'rxn05390', u'rxn05397', u'rxn05396', u'rxn05394', u'rxn05252', u'rxn03512', u'rxn05250', u'rxn05251', u'rxn02187', u'rxn02186', u'rxn02185', u'rxn03514', u'rxn05151', u'rxn05150', u'rxn00097', u'rxn03126', u'rxn03127', u'rxn04457', u'rxn09562', u'rxn13160', u'rxn04456', u'rxn02339', u'rxn12849', u'rxn12848', u'rxn05515', u'rxn05514', u'rxn05517', u'rxn05452', u'rxn12847', u'rxn12846', u'rxn12845', u'rxn12844', u'rxn00670', u'rxn01644', u'rxn02898', u'rxn01643', u'rxn02895', u'rxn02897', u'rxn01520', u'rxn05735', u'rxn05734', u'rxn05736', u'rxn05733', u'rxn03638', u'rxn04675', u'rxn04674', u'rxn01485', u'rxn05398', u'rxn00392', u'rxn04045', u'rxn04046', u'rxn04047', u'rxn04048', u'rxn01000', u'rxn01739', u'rxn02159', u'rxn00609', u'rxn12663', u'rxn05029', u'rxn10206', u'rxn10205', u'rxn05181', u'rxn05187', u'rxn01636', u'rxn01637', u'rxn05189', u'rxn05740', u'rxn10261', u'rxn00952', u'rxn10199', u'rxn10262', u'rxn00321', u'rxn00898', u'rxn00459', u'rxn00105', u'rxn02380', u'rxn10266', u'rxn08619', u'rxn00100', u'rxn00102', u'rxn01454', u'rxn02476', u'rxn02475', u'rxn02474', u'rxn02473', u'rxn01353', u'rxn10337', u'rxn01459', u'rxn00692', u'rxn06077', u'rxn05297', u'rxn05119', u'rxn03419', u'rxn05117', u'rxn05116', u'rxn05298', u'rxn06078', u'rxn00192', u'rxn00193', u'rxn06729', u'rxn02480', u'rxn00194', u'rxn10233', u'rxn06723', u'rxn00213', u'rxn00214', u'rxn03004', u'rxn10231', u'rxn00770', u'rxn00776', u'rxn00777', u'rxn09135', u'rxn00775', u'rxn00179', u'rxn00077', u'rxn05555', u'rxn00172', u'rxn00173', u'rxn05551', u'rxn05414', u'rxn02666', u'rxn05368', u'rxn05369', u'rxn05410', u'rxn01917', u'rxn02373', u'rxn01851', u'rxn05360', u'rxn05361', u'rxn05418', u'rxn05367', u'rxn05364', u'rxn05365', u'rxn08020', u'rxn05206', u'rxn05209', u'rxn03917', u'rxn00790', u'rxn01073', u'rxn00791', u'rxn05454', u'rxn05192', u'rxn03175', u'rxn03174', u'rxn03919', u'rxn03918', u'rxn03075', u'rxn03079', u'rxn12638', u'rxn05457', u'rxn05528', u'rxn05255', u'rxn00065', u'rxn00062', u'rxn05547', u'rxn07588', u'rxn07589', u'rxn07586', u'rxn07587', u'rxn01678', u'rxn05939', u'rxn05938', u'rxn01675', u'rxn03511', u'rxn01673', u'rxn05064', u'rxn00910', u'rxn01575', u'rxn02264', u'rxn10094', u'rxn05663', u'rxn05667', u'rxn03181', u'rxn03182', u'rxn02290', u'rxn05468', u'rxn02853', u'rxn10806', u'rxn02175', u'rxn00225', u'rxn00555', u'rxn10481', u'rxn00650', u'rxn00558', u'rxn10482', u'rxn09296', u'rxn01316', u'rxn01258', u'rxn05433', u'rxn01257', u'rxn01255', u'rxn01208', u'rxn00863', u'rxn00985', u'rxn05437', u'rxn01388', u'rxn00250', u'rxn09225', u'rxn05435', u'rxn00313', u'rxn09177', u'rxn05380', u'rxn00988', u'rxn05596', u'rxn05383', u'rxn00423', u'rxn00420', u'rxn10577', u'rxn02405', u'rxn00138', u'rxn00139', u'rxn10474', u'rxn05249', u'rxn05248', u'rxn10473', u'rxn05247', u'rxn01790', u'rxn10161', u'rxn10060', u'rxn05351', u'rxn09450', u'rxn03135', u'rxn03137', u'rxn03136', u'rxn03130', u'rxn11946', u'rxn00048', u'rxn00461', u'rxn00727', u'rxn00726', u'rxn02000', u'rxn10228', u'rxn05499', u'rxn05443', u'rxn05442', u'rxn05441', u'rxn02320', u'rxn05444', u'rxn08815', u'rxn05335', u'rxn05337', u'rxn05336', u'rxn05339', u'rxn05338', u'rxn05232', u'rxn05234', u'rxn05235', u'rxn05236', u'rxn01106', u'rxn01100', u'rxn01101', u'rxn10113', u'rxn10052', u'rxn02916', u'rxn03146', u'rxn03147', u'rxn00060', u'rxn02811', u'rxn04052', u'rxn04050', u'rxn06865', u'rxn01219', u'rxn00611', u'rxn10232', u'rxn01213', u'rxn10230', u'rxn01211', u'rxn01740', u'rxn01217', u'rxn05195', u'rxn02667', u'rxn02789', u'rxn00827', u'rxn05193', u'rxn03491', u'rxn05054', u'rxn01629', u'rxn00947', u'rxn02929', u'rxn03393', u'rxn03395', u'rxn03397', u'rxn00509', u'rxn00508', u'rxn11944', u'rxn09449', u'rxn09448', u'rxn01997', u'rxn00506', u'rxn05289', u'rxn00669', u'rxn01362', u'rxn01360', u'rxn03407', u'rxn03406', u'rxn03409', u'rxn03408', u'rxn08620', u'rxn00187', u'rxn00186', u'rxn00260', u'rxn09310', u'rxn08710', u'rxn09108', u'rxn09109', u'rxn13781', u'rxn00763', u'rxn00762', u'rxn00006', u'rxn00001', u'rxn02286', u'rxn02287', u'rxn00355', u'rxn01964', u'rxn05406', u'rxn05405', u'rxn01967', u'rxn05379', u'rxn05402', u'rxn05401', u'rxn05400', u'rxn05375', u'rxn05377', u'rxn05376', u'rxn05371', u'rxn05373', u'rxn05372', u'rxn05179', u'rxn05175', u'rxn03843', u'rxn12664', u'rxn03108', u'rxn08618', u'rxn03062', u'rxn11268', u'rxn00710', u'rxn03068', u'rxn00714', u'rxn08583', u'rxn00717', u'rxn05539', u'rxn05538', u'rxn02285', u'rxn02213', u'rxn02212', u'rxn05537', u'rxn05536', u'rxn05535', u'rxn05534', u'rxn00493', u'rxn05507', u'rxn04147', u'rxn12510', u'rxn12512', u'rxn01664', u'rxn08669', u'rxn00907', u'rxn10163', u'rxn00903', u'rxn00902', u'rxn00908', u'rxn03194', u'rxn05651', u'rxn01069', u'rxn01068', u'rxn00251', u'rxn00544', u'rxn02484', u'rxn01329', u'rxn00237', u'rxn01486', u'rxn00543', u'rxn12860', u'rxn00549', u'rxn01241', u'rxn10260', u'rxn10263', u'rxn08976', u'rxn10265', u'rxn10264', u'rxn08971', u'rxn03446', u'rxn00973', u'rxn00974', u'rxn01207', u'rxn05316', u'rxn09210', u'rxn09211', u'rxn05315', u'rxn06591', u'rxn00302', u'rxn12850', u'rxn00438', u'rxn12224', u'rxn11938', u'rxn00126', u'rxn02008', u'rxn00122', u'rxn02003', u'rxn01434', u'rxn00283', u'rxn03439', u'rxn03535', u'rxn03537', u'rxn03536', u'rxn03538', u'rxn03435', u'rxn03436', u'rxn03437', u'rxn00881', u'rxn00882', u'rxn00883', u'rxn13360', u'rxn11544', u'rxn13783', u'rxn13782', u'rxn08712', u'rxn08713', u'rxn13784', u'rxn06979', u'rxn05404', u'rxn03893', u'rxn05229', u'rxn08766', u'rxn05340', u'rxn05341', u'rxn05342', u'rxn05223', u'rxn05221'])
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 710. PROTEINS: 833
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 710. PROTEINS: 833
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 710. PROTEINS: 833
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 710. PROTEINS: 833
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 710. PROTEINS: 833
