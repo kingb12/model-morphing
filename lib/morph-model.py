@@ -42,28 +42,19 @@ AUTHORS
 # =================================================================================================
 
 #Create Reaction removal lists (these are ordered)
-def removal_lists():
-    gene_no_match = list()
-    for rxn in rxn_labels['gene-no-match']:
-        rxnprob = mm_ids[rxn]
-        gene_no_match.append((rxn, mm_ids[rxn], rxnprob))
-    gene_no_match_tuples = sorted(gene_no_match, key=itemgetter(2))
-    no_gene = list()
-    for rxn in rxn_labels['no-gene']:
-        rxnprob = mm_ids[rxn]
-        no_gene.append((rxn, mm_ids[rxn], rxnprob))
-    no_gene_tuples = sorted(no_gene, key=itemgetter(2))
-    return gene_no_match_tuples, no_gene_tuples
+def removal_tuples(label_list):
+    tup_list = list()
+    for rxn in label_list:
+        rxnprob = mm_ids[rxn] #THIS IS WHERE YOU ADD PROBANNO SUPPORT
+        tup_list.append((rxn, mm_ids[rxn], rxnprob))
+    removal_tuples = sorted(tup_list, key=itemgetter(2))
+    return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
-def process_reactions(rxn_list):
-#    DEBUG: This is a debugging step
-#    fba_params = dict({'model' : '3320', 'model_workspace' : '2505'})
-#    fba_params['fba'] = 'FBA-0'
-#    fba_params['workspace'] = ws_id
-#    fbaMeta = fba_client.runfba(fba_params)
-    print morphed_model.keys()
-    model_id = super_model_id
+def process_reactions(model_id, rxn_list):
+    print "REMOVING GENE-NO-MATCH REACTIONS:"
+    model_info = fba_client.generate_model_stats({'model' : model_id, 'model_workspace' : ws_id})
+    print model_info['total_reactions']
     for i in range(len(rxn_list)):
         name = 'MM-' + str(i)
         print 'TO BE REMOVED: ' + str(rxn_list[i][0])
@@ -76,11 +67,14 @@ def process_reactions(rxn_list):
         print fba_params
         fbaMeta = fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
-        model_info = fba_client.generate_model_stats({'model' : new_model_id, 'model_workspace' : ws_id})
-        print model_info['total_reactions']
         print flux
         if (flux > 0):
+                print "Removed Successfully"
                 model_id = new_model_id
+        else:
+            print "Reaction is Essential. Not Removed"
+        model_info = fba_client.generate_model_stats({'model' : model_id, 'model_workspace' : ws_id})
+        print str(model_info['total_reactions']) + ' reactions in the model'
 
 # Parses Command Line arguments and TODO: assigns all values to ids for ease of use
 def parse_arguments():
@@ -152,8 +146,6 @@ def init_clients():
 
 # initiate MMws workspace and clone in all needed objects
 def init_workspace():
-    global ws_name
-    global ws_id
     ws_name = 'MMws'
     ws_conflict = True
     while (ws_conflict):
@@ -167,6 +159,7 @@ def init_workspace():
             ws_conflict = False
         except ServerError:
              ws_name += str(random.randint(1,9))
+    return ws_id, ws_name
 
 # Get the reactions for the comparison 'recon' model in Genome B
 def build_models():
@@ -256,8 +249,6 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
     for rxn_id in rxn_labels['recon']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
-        print reaction['reaction_ref'].split('/')[-1]
-        print str(reaction['modelcompartment_ref'].split('/')[-1][0])
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'RECON', '', reaction['name']))
         trans_model['modelreactions'].append(reaction)
         id_hash['trans'][rxn_id] = orig_size + i
@@ -308,7 +299,7 @@ try:
     ujs_client = clients['ujs']
     #initiate Model Morphing workspace
     print 'init ws...'
-    init_workspace() # creates global vars ws_name and ws_id
+    ws_id, ws_name = init_workspace() # creates global vars ws_name and ws_id
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
     print 'build models'
     [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
@@ -317,10 +308,14 @@ try:
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
     print 'get reaction removal lists...'
-    (gene_no_match_tuples, no_gene_tuples) = removal_lists()
-    model_id = save_model(model, ws_id, 'MM-0', model_info[2]) #info[2] is 'type'
+    print rxn_labels.keys()
+    gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
+    no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
+    # info[2] is 'type'
+    model_id = save_model(model, ws_id, 'MM-0', model_info[2])
     print 'process reactions...'
-    process_reactions(gene_no_match_tuples)
+    process_reactions(super_model_id, gene_no_match_tuples)
+    process_reactions(super_model_id, no_gene_tuples)
 finally:
     finish()
 # Clean up/Finish
