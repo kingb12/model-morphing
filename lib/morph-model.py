@@ -54,6 +54,7 @@ def removal_tuples(label_list):
 def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
     # Call generate model stats if more info is wanted
     removed_ids = list()
+    essential_ids = list()
     if ws is None:
         ws = ws_id
     for i in range(len(rxn_list)):
@@ -74,9 +75,12 @@ def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
                 # rxn12345_c0 in rxn_list => rxn12345 in removed_ids
                 removed_ids.append(rxn_list[i][0].split('_')[0])
         else:
+            essential_ids.append(rxn_list[i])
             print "Reaction is Essential. Not Removed"
         process_count += 1
-    return model_id, process_count, removed_ids
+        print 'Removed Reactions: ' + str(removed_ids)
+        print 'Essential Reactions: ' + str(essential_ids)
+    return model_id, process_count, removed_ids, essential_ids
 
 
 # Parses Command Line arguments into an argument dictionary for further use.
@@ -186,6 +190,7 @@ def build_models():
 # translated model, and a reconstruction (the output of build_models)
 def label_reactions(): #model, recon, trans_model
     # Dictionaries for ids => model.reactions list indices
+    label_time = time.time()
     model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
     trans_params = {'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id}
     trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
@@ -245,11 +250,13 @@ def label_reactions(): #model, recon, trans_model
         log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
     #Return Results, include look-up ID dict for future use
     id_hash = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
+    print "Model - build/reaction labeling time: "  + str(time.time() - label_time)
     return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
 #Add the GENE_NO_MATCH reactions:
+    super_time = time.time()
     i = 0 #an index for how many reactions are addded so provide new indices to the id hash
     orig_size = len(trans_model['modelreactions'])
     super_rxns = list()
@@ -288,6 +295,7 @@ def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
             numprots += len(rxn['modelReactionProteins'])
         log.write('    REACTIONS: ' + str(len(trans_model['modelreactions'])))
         log.write('. PROTEINS: ' + str(numprots) + '\n')
+    print "Add Reaction time: "  + str(time.time() - super_time)
     return trans_model, id_hash['trans'], super_model_id
 
 #Save model to geven workspace
@@ -302,6 +310,7 @@ def finish(save_ws=False):
         print 'Finished'
     if not save_ws:
         ws_client.delete_workspace({'id' : ws_id})
+        print 'Workspace: ' + str(ws_id)
     else:
         print 'ERROR:  workspace is None'
 
@@ -311,6 +320,8 @@ def finish(save_ws=False):
 # the scripted algorithm steps in order
 # =================================================================================================
 try:
+    start_time = time.time()
+    save = True
     #parse command args
     print 'parsing args'
     args = parse_arguments()
@@ -323,17 +334,20 @@ try:
     ujs_client = clients['ujs']
     #initiate Model Morphing workspace
     print 'init ws...'
-    ws_id, ws_name = init_workspace(ws='10232')
+    ws_id, ws_name = init_workspace()
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
     print 'label reactions...'
     [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash] = label_reactions()
+    print 'Time elapsed: ' + str(time.time() - start_time)
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
+    print 'Time elapsed: ' + str(time.time() - start_time)
     print 'get reaction removal lists...'''
     gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
     no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
     # info[2] is 'type'
     model_id = save_model(model, ws_id, 'MM-0', model_info[2])
+    print 'Time elapsed: ' + str(time.time() - start_time)
     print 'process reactions...'
     removed_ids = list()
     super_model_id, gnm, removed = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
@@ -345,8 +359,10 @@ try:
         log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
         for rxn in removed_reactions:
             log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
+    print 'Time elapsed: ' + str(time.time() - start_time)
     print 'output model...'
     ws_client.copy_objects({'from' : {'objid' : super_model_id, 'wsid' : ws_id}, 'to' : {'objid' : super_model_id, 'wsid' : args['modelws']}})
+    print 'Time elapsed for primary function: ' + str(time.time() - start_time)
     print 'further analysis...'
     removed_ids = list()
     i=0
@@ -354,5 +370,10 @@ try:
     removed_ids.append(removed)
     super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
     removed_ids.append(removed)
+    print 'Time elapsed: ' + str(time.time() - start_time)
+except Exception, e:
+        save = False
+        print e
+
 finally:
-    finish(save_ws=True)
+    finish(save_ws=save)
