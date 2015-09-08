@@ -51,19 +51,19 @@ def removal_tuples(label_list):
     return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
-def process_reactions(model_id, rxn_list):
-    print "REMOVING GENE-NO-MATCH REACTIONS:"
-    model_info = fba_client.generate_model_stats({'model' : model_id, 'model_workspace' : ws_id})
-    print model_info['total_reactions']
+def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
+    # Call generate model stats if more info is wanted
+    removed_ids = list()
+    if ws is None:
+        ws = ws_id
     for i in range(len(rxn_list)):
-        name = 'MM-' + str(i)
         print 'TO BE REMOVED: ' + str(rxn_list[i][0])
-        new_model_id = fba_client.remove_reactions({'model' : model_id, 'model_workspace' : ws_id, 'output_id' : name, 'workspace' : ws_id, 'reactions' : [rxn_list[i][0]]})[0]
+        new_model_id = fba_client.remove_reactions({'model' : model_id, 'model_workspace' : ws, 'output_id' : name + '-' + str(process_count), 'workspace' : ws_id, 'reactions' : [rxn_list[i][0]]})[0]
         fba_params = dict()
-        fba_params['fba'] = 'FBA-' + str(i)
+        fba_params['fba'] = name + '-FBA-' + str(process_count)
         fba_params['workspace'] = ws_id
         fba_params['model'] = new_model_id
-        fba_params['model_workspace'] = ws_id
+        fba_params['model_workspace'] = ws
         print fba_params
         fbaMeta = fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
@@ -71,12 +71,16 @@ def process_reactions(model_id, rxn_list):
         if (flux > 0):
                 print "Removed Successfully"
                 model_id = new_model_id
+                # rxn12345_c0 in rxn_list => rxn12345 in removed_ids
+                removed_ids.append(rxn_list[i][0].split('_')[0])
         else:
             print "Reaction is Essential. Not Removed"
-        model_info = fba_client.generate_model_stats({'model' : model_id, 'model_workspace' : ws_id})
-        print str(model_info['total_reactions']) + ' reactions in the model'
+        process_count += 1
+    return model_id, process_count, removed_ids
 
-# Parses Command Line arguments and TODO: assigns all values to ids for ease of use
+
+# Parses Command Line arguments into an argument dictionary for further use.
+# REQURED ARGUMENTS: model, genome, protcomp, probanno
 def parse_arguments():
     #FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
     parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
@@ -129,7 +133,7 @@ def parse_arguments():
         args['outputws'] = input_args.outputws
     return args
 
-#Initiate Clients Objects for Function
+#Initiate Clients Objects for KBase API services, including workspace, KBaseFBAModeling, Probabilistic Annotation, and UserandJobState. All are configured to the production URL, https://kbase.us
 def init_clients():
     clients = dict()
     clients['ws'] = Workspace()
@@ -144,24 +148,30 @@ def init_clients():
     clients['ujs'] = UserAndJobState()
     return clients
 
-# initiate MMws workspace and clone in all needed objects
-def init_workspace():
+# initiate MMws workspace for implementation side objects and pieces for analysis
+def init_workspace(ws = None):
+    global ws_id
+    global ws_name
+    ws_id = ws
     ws_name = 'MMws'
-    ws_conflict = True
-    while (ws_conflict):
-        create_ws_params = {'workspace' : ws_name, 'globalread' : 'r', 'description' : "A workspace for storing the FBA's and meta data of the algorithm"}
-        # Try to create a workspace, catch an error if the name is already in use
-        try:
-            new_ws = ws_client.create_workspace(create_ws_params)
-            # new_ws is type workspace_info, a tuple where 0, 1 are id, name
-            ws_id = new_ws[0]
-            ws_name = new_ws[1]
-            ws_conflict = False
-        except ServerError:
-             ws_name += str(random.randint(1,9))
+    if (ws is None):
+        ws_conflict = True
+        while (ws_conflict):
+            create_ws_params = {'workspace' : ws_name, 'globalread' : 'r', 'description' : "A workspace for storing the FBA's and meta data of the algorithm"}
+            # Try to create a workspace, catch an error if the name is already in use
+            try:
+                new_ws = ws_client.create_workspace(create_ws_params)
+                # new_ws is type workspace_info, a tuple where 0, 1 are id, name
+                ws_id = new_ws[0]
+                ws_name = new_ws[1]
+                ws_conflict = False
+            except ServerError:
+                 ws_name += str(random.randint(1,9))
     return ws_id, ws_name
 
-# Get the reactions for the comparison 'recon' model in Genome B
+# builds model data structures from the KBase API for each model object: The
+# model to be morph-translated, a general translation template, and a
+# reconstruction for the target genome.
 def build_models():
     model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
     trans_params = {'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id}
@@ -172,7 +182,8 @@ def build_models():
     recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
     return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
 
-# label reactions in each model
+# label reactions in each model triplet. Must be passed a Source model, a
+# translated model, and a reconstruction (the output of build_models)
 def label_reactions(): #model, recon, trans_model
     # Dictionaries for ids => model.reactions list indices
     model_rxn_ids = dict()
@@ -273,13 +284,13 @@ def save_model(model, workspace, name, model_type):
     return {'model' : name, 'model_workspace' : workspace}
 
 # Finishing/Cleanup  Steps
-def finish():
+def finish(save_ws=False):
     with open('.mmlog.txt', 'r') as log:
         print 'Finished'
-    if ws_id is not None:
+    if not save_ws:
         ws_client.delete_workspace({'id' : ws_id})
     else:
-        print 'ERROR: ' +  ws_id + ' workspace is None'
+        print 'ERROR:  workspace is None'
 
 # =================================================================================================
 #                         Script
@@ -299,7 +310,7 @@ try:
     ujs_client = clients['ujs']
     #initiate Model Morphing workspace
     print 'init ws...'
-    ws_id, ws_name = init_workspace() # creates global vars ws_name and ws_id
+    ws_id, ws_name = init_workspace(ws='8640')
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
     print 'build models'
     [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
@@ -307,15 +318,32 @@ try:
     [rxn_labels, id_hash] = label_reactions() #model, recon)
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
-    print 'get reaction removal lists...'
+    print 'get reaction removal lists...'''
     print rxn_labels.keys()
     gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
     no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
     # info[2] is 'type'
     model_id = save_model(model, ws_id, 'MM-0', model_info[2])
     print 'process reactions...'
-    process_reactions(super_model_id, gene_no_match_tuples)
-    process_reactions(super_model_id, no_gene_tuples)
+    removed_ids = list()
+    super_model_id, gnm, removed = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
+    removed_ids.append(removed)
+    super_model_id, total, removed = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
+    removed_ids.append(removed)
+    removed_reactions = fba_client.get_reactions({'reactions' : removed_ids})
+    with open('.mmlog.txt', 'a') as log:
+        log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
+        for rxn in removed_reactions:
+            log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
+    print 'output model...'
+    ws_client.copy_objects({'from' : {'objid' : super_model_id, 'wsid' : ws_id}, 'to' : {'objid' : super_model_id, 'wsid' : args['modelws']}})
+    print 'further analysis...'
+    removed_ids = list()
+    i=0
+    super_model_id, i, removed = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
+    removed_ids.append(removed)
+    super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
+    removed_ids.append(removed)
 finally:
-    finish()
+    finish(save_ws=True)
 # Clean up/Finish
