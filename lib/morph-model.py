@@ -186,6 +186,19 @@ def build_models():
 # translated model, and a reconstruction (the output of build_models)
 def label_reactions(): #model, recon, trans_model
     # Dictionaries for ids => model.reactions list indices
+    model = ws_client.get_objects([{'objid' : args['model'], 'wsid' : args['modelws']}])[0]
+    trans_params = {'keep_nogene_rxn' : 1, 'protcomp' : args['protcomp'], 'protcomp_workspace' : args['protcompws'], 'model' : args['model'], 'model_workspace' : args['modelws'], 'workspace' : ws_id}
+    trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
+    trans_model = ws_client.get_objects([{'objid' : trans_model_id, 'wsid' : ws_id}])[0]
+    recon_params = {'genome' : 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace' : args['genomews'], 'workspace' : ws_id}
+    recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
+    recon = ws_client.get_objects([{'objid' : recon_id, 'wsid' : ws_id}])[0]
+    model_info = model['info']
+    recon_info = recon['info']
+    trans_info = trans_model['info']
+    model = model['data']
+    recon = recon['data']
+    trans_model = trans_model['data']
     model_rxn_ids = dict()
     recon_rxn_ids = dict()
     trans_model_rxn_ids = dict()
@@ -232,7 +245,7 @@ def label_reactions(): #model, recon, trans_model
         log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
     #Return Results, include look-up ID dict for future use
     id_hash = {'model' : model_rxn_ids, 'trans' : trans_model_rxn_ids, 'recon' : recon_rxn_ids}
-    return rxn_labels, id_hash
+    return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): #model, recon, trans_model, rxn_labels, id_hash
@@ -310,22 +323,24 @@ try:
     ujs_client = clients['ujs']
     #initiate Model Morphing workspace
     print 'init ws...'
-    ws_id, ws_name = init_workspace(ws='8640')
+    ws_id, ws_name = init_workspace(ws='10232')
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
-    print 'build models'
-    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id] = build_models()
-    print 'label rxns...'
-    [rxn_labels, id_hash] = label_reactions() #model, recon)
+    print 'label reactions...'
+    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash] = label_reactions()
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
     print 'get reaction removal lists...'''
-    print rxn_labels.keys()
     gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
     no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
     # info[2] is 'type'
     model_id = save_model(model, ws_id, 'MM-0', model_info[2])
     print 'process reactions...'
     removed_ids = list()
+    super_model_id, i, removed = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
+    removed_ids.append(removed)
+    super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
+    removed_ids.append(removed)
+    i=0
     super_model_id, gnm, removed = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
     removed_ids.append(removed)
     super_model_id, total, removed = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
@@ -339,11 +354,6 @@ try:
     ws_client.copy_objects({'from' : {'objid' : super_model_id, 'wsid' : ws_id}, 'to' : {'objid' : super_model_id, 'wsid' : args['modelws']}})
     print 'further analysis...'
     removed_ids = list()
-    i=0
-    super_model_id, i, removed = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
-    removed_ids.append(removed)
-    super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
-    removed_ids.append(removed)
 finally:
     finish(save_ws=True)
 # Clean up/Finish

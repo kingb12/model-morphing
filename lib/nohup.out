@@ -1,0 +1,38 @@
+parsing args
+init clients...
+init ws...
+label reactions...
+Finished
+ERROR:  workspace is None
+Traceback (most recent call last):
+  File "morph-model.py", line 329, in <module>
+    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash] = label_reactions()
+  File "morph-model.py", line 191, in label_reactions
+    trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
+  File "/home/bking/model-morphing/lib/biokbase/fbaModelServices/Client.py", line 761, in translate_fbamodel
+    ret = urllib2.urlopen(request, timeout=self.timeout)
+  File "/usr/lib/python2.7/urllib2.py", line 127, in urlopen
+    return _opener.open(url, data, timeout)
+  File "/usr/lib/python2.7/urllib2.py", line 404, in open
+    response = self._open(req, data)
+  File "/usr/lib/python2.7/urllib2.py", line 422, in _open
+    '_open', req)
+  File "/usr/lib/python2.7/urllib2.py", line 382, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python2.7/urllib2.py", line 1222, in https_open
+    return self.do_open(httplib.HTTPSConnection, req)
+  File "/usr/lib/python2.7/urllib2.py", line 1187, in do_open
+    r = h.getresponse(buffering=True)
+  File "/usr/lib/python2.7/httplib.py", line 1045, in getresponse
+    response.begin()
+  File "/usr/lib/python2.7/httplib.py", line 409, in begin
+    version, status, reason = self._read_status()
+  File "/usr/lib/python2.7/httplib.py", line 365, in _read_status
+    line = self.fp.readline(_MAXLINE + 1)
+  File "/usr/lib/python2.7/socket.py", line 476, in readline
+    data = self._sock.recv(self._rbufsize)
+  File "/usr/lib/python2.7/ssl.py", line 341, in recv
+    return self.read(buflen)
+  File "/usr/lib/python2.7/ssl.py", line 260, in read
+    return self._sslobj.read(len)
+KeyboardInterrupt
