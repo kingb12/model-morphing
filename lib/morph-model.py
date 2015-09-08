@@ -336,11 +336,6 @@ try:
     model_id = save_model(model, ws_id, 'MM-0', model_info[2])
     print 'process reactions...'
     removed_ids = list()
-    super_model_id, i, removed = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
-    removed_ids.append(removed)
-    super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
-    removed_ids.append(removed)
-    i=0
     super_model_id, gnm, removed = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
     removed_ids.append(removed)
     super_model_id, total, removed = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
@@ -354,6 +349,10 @@ try:
     ws_client.copy_objects({'from' : {'objid' : super_model_id, 'wsid' : ws_id}, 'to' : {'objid' : super_model_id, 'wsid' : args['modelws']}})
     print 'further analysis...'
     removed_ids = list()
+    i=0
+    super_model_id, i, removed = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
+    removed_ids.append(removed)
+    super_model_id, i, removed = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
+    removed_ids.append(removed)
 finally:
     finish(save_ws=True)
-# Clean up/Finish

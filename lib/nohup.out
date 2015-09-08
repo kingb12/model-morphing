@@ -36,3 +36,116 @@ Traceback (most recent call last):
   File "/usr/lib/python2.7/ssl.py", line 260, in read
     return self._sslobj.read(len)
 KeyboardInterrupt
+parsing args
+init clients...
+init ws...
+label reactions...
+build supermodel...
+get reaction removal lists...
+process reactions...
+TO BE REMOVED: rxn05461_c0
+{'fba': 'Aonly-FBA-0', 'model_workspace': '10232', 'model': u'318', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn00172_c0
+{'fba': 'Aonly-FBA-1', 'model_workspace': '10232', 'model': u'320', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn00669_c0
+{'fba': 'Aonly-FBA-2', 'model_workspace': '10232', 'model': u'322', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05380_c0
+{'fba': 'Aonly-FBA-3', 'model_workspace': '10232', 'model': u'324', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05338_c0
+{'fba': 'Aonly-FBA-4', 'model_workspace': '10232', 'model': u'326', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05297_c0
+{'fba': 'Aonly-FBA-5', 'model_workspace': '10232', 'model': u'328', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05364_c0
+{'fba': 'Aonly-FBA-6', 'model_workspace': '10232', 'model': u'330', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05337_c0
+{'fba': 'Aonly-FBA-7', 'model_workspace': '10232', 'model': u'332', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn01316_c0
+{'fba': 'Aonly-FBA-8', 'model_workspace': '10232', 'model': u'334', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05397_c0
+{'fba': 'Aonly-FBA-9', 'model_workspace': '10232', 'model': u'336', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05312_c0
+{'fba': 'Aonly-FBA-10', 'model_workspace': '10232', 'model': u'338', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05401_c0
+{'fba': 'Aonly-FBA-11', 'model_workspace': '10232', 'model': u'340', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn11944_c0
+{'fba': 'Aonly-FBA-12', 'model_workspace': '10232', 'model': u'342', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05430_c0
+{'fba': 'Aonly-FBA-13', 'model_workspace': '10232', 'model': u'344', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05393_c0
+{'fba': 'Aonly-FBA-14', 'model_workspace': '10232', 'model': u'346', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05385_c0
+{'fba': 'Aonly-FBA-15', 'model_workspace': '10232', 'model': u'348', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05368_c0
+{'fba': 'Aonly-FBA-16', 'model_workspace': '10232', 'model': u'350', 'workspace': '10232'}
+0
+Reaction is Essential. Not Removed
+TO BE REMOVED: rxn05422_c0
+{'fba': 'Aonly-FBA-17', 'model_workspace': '10232', 'model': u'352', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn03052_c0
+{'fba': 'Aonly-FBA-18', 'model_workspace': '10232', 'model': u'354', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05426_c0
+{'fba': 'Aonly-FBA-19', 'model_workspace': '10232', 'model': u'356', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn00827_c0
+{'fba': 'Aonly-FBA-20', 'model_workspace': '10232', 'model': u'358', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn11268_c0
+{'fba': 'Aonly-FBA-21', 'model_workspace': '10232', 'model': u'360', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05339_c0
+{'fba': 'Aonly-FBA-22', 'model_workspace': '10232', 'model': u'362', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05418_c0
+{'fba': 'Aonly-FBA-23', 'model_workspace': '10232', 'model': u'364', 'workspace': '10232'}
+64.3317
+Removed Successfully
+TO BE REMOVED: rxn05298_c0
+{'fba': 'Aonly-FBA-24', 'model_workspace': '10232', 'model': u'366', 'workspace': '10232'}
+64.0653
+Removed Successfully
+TO BE REMOVED: rxn05340_c0
+{'fba': 'Aonly-FBA-25', 'model_workspace': '10232', 'model': u'368', 'workspace': '10232'}
+64.0653
+Removed Successfully
+TO BE REMOVED: rxn05342_c0
+{'fba': 'Aonly-FBA-26', 'model_workspace': '10232', 'model': u'370', 'w
