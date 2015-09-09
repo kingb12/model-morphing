@@ -139,14 +139,14 @@ def parse_arguments():
 
 # Initiate Clients Objects for KBase API services, including workspace, KBaseFBAModeling.
 # .kbase_*URL files are configured to the production URL, https://kbase.us
-# .kbase_*URL files are configured to the development URL, https://next.kbase.us
+# .kbase_*URL_next files are configured to the development URL, https://next.kbase.us
 def init_clients():
-    # Get workspace service URL parameter
-    with open (".kbase_workspaceURL", "r") as myfile:
+    # Get workspace service url parameter
+    with open (".kbase_workspaceURL_next", "r") as myfile:
         url = myfile.read().replace('\n','')
     ws_client = Workspace(url)
-    # Get FBA Model Services URL parameter
-    with open (".kbase_fbaModelServicesURL", "r") as myfile:
+    # Get FBA Model Services url parameter
+    with open (".kbase_fbaModelServicesURL_next", "r") as myfile:
         url = myfile.read().replace('\n','')
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
