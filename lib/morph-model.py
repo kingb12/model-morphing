@@ -12,7 +12,6 @@ from biokbase.fbaModelServices.Client import fbaModelServices
 import random
 import argparse
 import time
-import sys
 import traceback
 from operator import itemgetter
 
@@ -45,16 +44,16 @@ AUTHORS
 def removal_tuples(label_list):
     tup_list = list()
     for rxn in label_list:
-        rxnprob = mm_ids[rxn] # THIS IS WHERE YOU ADD PROBANNO SUPPORT
-        tup_list.append((rxn, mm_ids[rxn], rxnprob))
-    removal_tuples = sorted(tup_list, key=itemgetter(2))
+        rxnprob =  1 #PUT PROBANNO HERE
+        tup_list.append((rxn, rxnprob))
+    removal_tuples = sorted(tup_list, key=itemgetter(1))
     return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
 def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
     # Call generate model stats if more info is wanted
-    removed_ids = list()
-    essential_ids = list()
+    removed_ids = set()
+    essential_ids = set()
     if ws is None:
         ws = ws_id
     for i in range(len(rxn_list)):
@@ -73,9 +72,9 @@ def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
                 print "Removed Successfully"
                 model_id = new_model_id
                 # rxn12345_c0 in rxn_list => rxn12345 in removed_ids
-                removed_ids.append(rxn_list[i][0].split('_')[0])
+                removed_ids.add(rxn_list[i][0].split('_')[0])
         else:
-            essential_ids.append(rxn_list[i])
+            essential_ids.add(rxn_list[i])
             print "Reaction is Essential. Not Removed"
         process_count += 1
         print 'Removed Reactions: ' + str(removed_ids)
@@ -260,37 +259,22 @@ def label_reactions(): # model, recon, trans_model
 def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
 # Add the GENE_NO_MATCH reactions:
     super_time = time.time()
-    i = 0 # an index for how many reactions are addded so provide new indices to the id hash
-    orig_size = len(trans_model['modelreactions'])
     super_rxns = list()
     for rxn_id in rxn_labels['gene-no-match']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][id_hash['model'][rxn_id]]
-        # aliasing destroys features in 'model'. This might be ok, but consider copying
-        # eliminate features from reaction
-        reaction['modelReactionProteins'] = [{'note':'Manually Specified GPR', 'complex_ref': '', 'modelReactionProteinSubunits': []}]
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
-        trans_model['modelreactions'].append(reaction)
-        id_hash['trans'][rxn_id] = orig_size + i
-        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1]+ '_' + trans_model['modelreactions'][id_hash['trans'][rxn_id]]['modelcompartment_ref'].split('/')[-1] == rxn_id # assert that value got added to end of the list and no changes occured
-        i += 1
     with open(".mmlog.txt", "a") as log:
         log.write('MODEL REACTION ADDITION STATISTICS: \n')
-        log.write('Added ' +str(i) + '  gene-no-match reactions to translated model: ' + str(rxn_labels['gene-no-match']) + '\n')
+        log.write('Added ' + str(len(super_rxns)) + '  gene-no-match reactions to translated model: ' + str(rxn_labels['gene-no-match']) + '\n')
 # Add the RECON reactions:
-    i = 0 # an index for how many reactions are addded so provide new indices to the id hash
-    orig_size = len(trans_model['modelreactions'])
     for rxn_id in rxn_labels['recon']:
         # id_hash['model][rxn key] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][id_hash['recon'][rxn_id]]
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'RECON', '', reaction['name']))
-        trans_model['modelreactions'].append(reaction)
-        id_hash['trans'][rxn_id] = orig_size + i
-        assert trans_model['modelreactions'][id_hash['trans'][rxn_id]]['reaction_ref'].split('/')[-1]+ '_' + trans_model['modelreactions'][id_hash['trans'][rxn_id]]['modelcompartment_ref'].split('/')[-1] == rxn_id # assert that value got added to end of the list and no changes occured
-        i += 1
     super_model_id = fba_client.add_reactions({'model': trans_model_id, 'model_workspace': ws_id, 'output_id': 'super_model', 'workspace': ws_id, 'reactions': super_rxns})[0]
     with open(".mmlog.txt", "a") as log:
-        log.write('Added ' + str(i) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
+        log.write('Added ' + str(len(rxn_labels['recon'])) + ' recon reactions to translated model: ' + str(rxn_labels['recon']) + '\n')
         log.write('SUPERMODEL STATE: \n')
         log.write('    NAME: ' + trans_model['name'] + '\n')
         numprots = 0
@@ -301,11 +285,6 @@ def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
     print "Add Reaction time: "  + str(time.time() - super_time)
     return trans_model, id_hash['trans'], super_model_id
 
-# Save model to geven workspace
-def save_model(model, workspace, name, model_type):
-    save_data = {'type': model_type, 'name': name,  'data': model}
-    ws_client.save_objects({'id': workspace, 'objects': [save_data]})
-    return {'model': name, 'model_workspace': workspace}
 
 # Finishing/Cleanup  Steps
 def finish(save_ws=False):
@@ -345,15 +324,16 @@ try:
     gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
     no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
     # info[2] is 'type'
-    model_id = save_model(model, ws_id, 'MM-0', model_info[2])
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'process reactions...'
-    removed_ids = list()
-    essential_ids = list()
+    removed_ids = set()
+    essential_ids = set()
     super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
-    removed_ids.append(removed)
+    removed_ids.add(removed)
+    essential_ids.add(essential)
     super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
-    removed_ids.append(removed)
+    removed_ids.add(removed)
+    essential_ids.add(essential)
     removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
     with open('.mmlog.txt', 'a') as log:
         log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
@@ -366,15 +346,15 @@ try:
     print 'further analysis...'
     i=0
     super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
-    removed_ids.append(removed)
-    essential_ids.append(removed)
+    removed_ids.add(removed)
+    essential_ids.add(essential)
     super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
-    removed_ids.append(removed)
-    essential_ids.append(removed)
+    removed_ids.add(removed)
+    essential_ids.add(essential)
     print 'Time elapsed: ' + str(time.time() - start_time)
 except Exception, e:
     save = False
     print e
-    traceback.print_tb(sys.last_traceback)
+    print (traceback.format_exc())
 finally:
     finish(save_ws=save)
