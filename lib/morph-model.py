@@ -197,6 +197,7 @@ def label_reactions(): # model, recon, trans_model
     trans_params = {'keep_nogene_rxn': 1, 'protcomp': args['protcomp'], 'protcomp_workspace': args['protcompws'], 'model': args['model'], 'model_workspace': args['modelws'], 'workspace': ws_id}
     trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
     trans_model = ws_client.get_objects([{'objid': trans_model_id, 'wsid': ws_id}])[0]
+    probanno = ws_client.get_objects([{'objid' : args['probanno'], 'wsid' : args['probannows']}])[0]
     recon_params = {'genome': 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace': args['genomews'], 'workspace': ws_id}
     recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
     recon = ws_client.get_objects([{'objid': recon_id, 'wsid': ws_id}])[0]
@@ -253,7 +254,7 @@ def label_reactions(): # model, recon, trans_model
     # Return Results, include look-up ID dict for future use
     id_hash = {'model': model_rxn_ids, 'trans': trans_model_rxn_ids, 'recon': recon_rxn_ids}
     print "Model - build/reaction labeling time: "  + str(time.time() - label_time)
-    return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash
+    return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno['data']
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
@@ -315,7 +316,8 @@ try:
     ws_id, ws_name = init_workspace()
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
     print 'label reactions...'
-    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash] = label_reactions()
+    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno] = label_reactions()
+    print probanno['reaction_probabilities'][0]
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
@@ -326,31 +328,32 @@ try:
     # info[2] is 'type'
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'process reactions...'
-    removed_ids = set()
-    essential_ids = set()
-    super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
-    removed_ids.add(removed)
-    essential_ids.add(essential)
-    super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
-    removed_ids.add(removed)
-    essential_ids.add(essential)
-    removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
-    with open('.mmlog.txt', 'a') as log:
-        log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
-        for rxn in removed_reactions:
-            log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
-    print 'Time elapsed: ' + str(time.time() - start_time)
-    print 'output model...'
-    ws_client.copy_objects({'from': {'objid': super_model_id, 'wsid': ws_id}, 'to': {'objid': super_model_id, 'wsid': args['modelws']}})
-    print 'Time elapsed for primary function: ' + str(time.time() - start_time)
-    print 'further analysis...'
-    i=0
-    super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
-    removed_ids.add(removed)
-    essential_ids.add(essential)
-    super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
-    removed_ids.add(removed)
-    essential_ids.add(essential)
+    if (False):
+        removed_ids = set()
+        essential_ids = set()
+        super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
+        removed_ids.add(removed)
+        essential_ids.add(essential)
+        super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
+        removed_ids.add(removed)
+        essential_ids.add(essential)
+        removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
+        with open('.mmlog.txt', 'a') as log:
+            log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
+            for rxn in removed_reactions:
+                log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
+        print 'Time elapsed: ' + str(time.time() - start_time)
+        print 'output model...'
+        ws_client.copy_objects({'from': {'objid': super_model_id, 'wsid': ws_id}, 'to': {'objid': super_model_id, 'wsid': args['modelws']}})
+        print 'Time elapsed for primary function: ' + str(time.time() - start_time)
+        print 'further analysis...'
+        i=0
+        super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
+        removed_ids.add(removed)
+        essential_ids.add(essential)
+        super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
+        removed_ids.add(removed)
+        essential_ids.add(essential)
     print 'Time elapsed: ' + str(time.time() - start_time)
 except Exception, e:
     save = False
