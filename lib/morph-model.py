@@ -41,7 +41,7 @@ AUTHORS
 # =================================================================================================
 
 # Create Reaction removal lists (these are ordered)
-def removal_tuples(label_list, probanno_hash):
+def _removal_tuples(label_list, probanno_hash):
     tup_list = list()
     for rxn in label_list:
         try:
@@ -57,7 +57,7 @@ def removal_tuples(label_list, probanno_hash):
     return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
-def process_reactions(model_id, rxn_list, probanno_hash, name = '', process_count=0, ws=None):
+def _process_reactions(model_id, rxn_list, probanno_hash, name = '', process_count=0, ws=None):
     # Call generate model stats if more info is wanted
     removed_ids = list()
     essential_ids = list()
@@ -92,7 +92,7 @@ def process_reactions(model_id, rxn_list, probanno_hash, name = '', process_coun
 
 # Parses Command Line arguments into an argument dictionary for further use.
 # REQURED ARGUMENTS: model, genome, protcomp, probanno
-def parse_arguments():
+def _parse_arguments():
     # FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
     parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
     parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
@@ -148,7 +148,7 @@ def parse_arguments():
 # Initiate Clients Objects for KBase API services, including workspace, KBaseFBAModeling.
 # .kbase_*URL files are configured to the production URL, https://kbase.us
 # .kbase_*URL files are configured to the development URL, https://next.kbase.us
-def init_clients():
+def _init_clients():
     # Get workspace service URL parameter
     with open (".kbase_workspaceURL", "r") as myfile:
         url = myfile.read().replace('\n','')
@@ -161,7 +161,7 @@ def init_clients():
 
 
 # initiate MMws workspace for implementation side objects and pieces for analysis
-def init_workspace(ws = None):
+def _init_workspace(ws = None):
     global ws_id
     global ws_name
     ws_id = ws
@@ -182,23 +182,9 @@ def init_workspace(ws = None):
                  ws_name += str(random.randint(1,9))
     return ws_id, ws_name
 
-
-# builds model data structures from the KBase API for each model object: The
-# model to be morph-translated, a general translation template, and a
-# reconstruction for the target genome.
-def build_models():
-    model = ws_client.get_objects([{'objid': args['model'], 'wsid': args['modelws']}])[0]
-    trans_params = {'keep_nogene_rxn': 1, 'protcomp': args['protcomp'], 'protcomp_workspace': args['protcompws'], 'model': args['model'], 'model_workspace': args['modelws'], 'workspace': ws_id}
-    trans_model_id = fba_client.translate_fbamodel(trans_params)[0]
-    trans_model = ws_client.get_objects([{'objid': trans_model_id, 'wsid': ws_id}])[0]
-    recon_params = {'genome': 'Methanosarcina_barkeri_str._fusaro', 'genome_workspace': args['genomews'], 'workspace': ws_id}
-    recon_id = fba_client.genome_to_fbamodel(recon_params)[0]
-    recon = ws_client.get_objects([{'objid': recon_id, 'wsid': ws_id}])[0]
-    return [model['data'], recon['data'], trans_model['data'], model['info'], recon['info'], trans_model['info'], trans_model_id]
-
 # label reactions in each model triplet. Must be passed a Source model, a
 # translated model, and a reconstruction (the output of build_models)
-def label_reactions(): # model, recon, trans_model
+def _label_reactions(): # model, recon, trans_model
     # Dictionaries for ids => model.reactions list indices
     label_time = time.time()
     model = ws_client.get_objects([{'objid': args['model'], 'wsid': args['modelws']}])[0]
@@ -268,7 +254,7 @@ def label_reactions(): # model, recon, trans_model
     return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
-def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
+def _build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
 # Add the GENE_NO_MATCH reactions:
     super_time = time.time()
     super_rxns = list()
@@ -297,9 +283,8 @@ def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
     print "Add Reaction time: "  + str(time.time() - super_time)
     return trans_model, id_hash['trans'], super_model_id
 
-
 # Finishing/Cleanup  Steps
-def finish(save_ws=False):
+def _finish(save_ws=False):
     with open('.mmlog.txt', 'r') as log:
         print 'Finished'
     if not save_ws:
@@ -307,68 +292,67 @@ def finish(save_ws=False):
         print 'Workspace: ' + str(ws_id)
     else:
         print 'ERROR:  workspace is None'
-
-# =================================================================================================
-#                         Script
-#
-# the scripted algorithm steps in order
-# =================================================================================================
-try:
-    start_time = time.time()
-    save = True
-    # parse command args
-    print 'parsing args'
-    args = parse_arguments()
-    # initiate clients
-    print 'init clients...'
-    ws_client, fba_client = init_clients()
-    # initiate Model Morphing workspace
-    print 'init ws...'
-    ws_id, ws_name = init_workspace()
-    # [args['protcomp'], args['protcompws']] = blast_proteomes()
-    print 'label reactions...'
-    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash] = label_reactions()
-    print 'Time elapsed: ' + str(time.time() - start_time)
-    print 'build supermodel...'
-    morphed_model, mm_ids, super_model_id = build_supermodel()
-    print 'Time elapsed: ' + str(time.time() - start_time)
-    print 'get reaction removal lists...'''
-    gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
-    no_gene_tuples = removal_tuples(rxn_labels['no-gene'], probanno_hash)
-    # info[2] is 'type'
-    print 'Time elapsed: ' + str(time.time() - start_time)
-    print 'process reactions...'
-    # Condition here is just for debugging processes
-    if (True):
-        removed_ids = list()
-        essential_ids = list()
-        super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
-        removed_ids.append(removed)
-        essential_ids.append(essential)
-        super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, probanno_hash, name = 'MM', process_count=gnm)
-        removed_ids.append(removed)
-        essential_ids.append(essential)
-        removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
-        with open('.mmlog.txt', 'a') as log:
-            log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
-            for rxn in removed_reactions:
-                log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
+def morph_model():
+    try:
+        start_time = time.time()
+        save = True
+        # parse command args
+        print 'parsing args'
+        args = _parse_arguments()
+        # initiate clients
+        print 'init clients...'
+        ws_client, fba_client = _init_clients()
+        # initiate Model Morphing workspace
+        print 'init ws...'
+        ws_id, ws_name = _init_workspace()
+        # [args['protcomp'], args['protcompws']] = blast_proteomes()
+        print 'label reactions...'
+        [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash] = _label_reactions()
         print 'Time elapsed: ' + str(time.time() - start_time)
-        print 'output model...'
-        ws_client.copy_objects({'from': {'objid': super_model_id, 'wsid': ws_id}, 'to': {'objid': super_model_id, 'wsid': args['modelws']}})
-        print 'Time elapsed for primary function: ' + str(time.time() - start_time)
-        print 'further analysis...'
-        i=0
-        super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, probanno_hash, name = 'Aonly')
-        removed_ids.append(removed)
-        essential_ids.append(essential)
-        super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
-        removed_ids.append(removed)
-        essential_ids.append(essential)
-    print 'Time elapsed: ' + str(time.time() - start_time)
-except Exception, e:
-    save = False
-    print e
-    print (traceback.format_exc())
-finally:
-    finish(save_ws=save)
+        print 'build supermodel...'
+        morphed_model, mm_ids, super_model_id = _build_supermodel()
+        print 'Time elapsed: ' + str(time.time() - start_time)
+        print 'get reaction removal lists...'''
+        gene_no_match_tuples = _removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
+        no_gene_tuples = _removal_tuples(rxn_labels['no-gene'], probanno_hash)
+        # info[2] is 'type'
+        print 'Time elapsed: ' + str(time.time() - start_time)
+        print 'process reactions...'
+        # Condition here is just for debugging processes
+        if (True):
+            removed_ids = list()
+            essential_ids = list()
+            super_model_id, gnm, removed, essential = _process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
+            removed_ids.append(removed)
+            essential_ids.append(essential)
+            super_model_id, total, removed, essential = _process_reactions(super_model_id, no_gene_tuples, probanno_hash, name = 'MM', process_count=gnm)
+            removed_ids.append(removed)
+            essential_ids.append(essential)
+            removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
+            with open('.mmlog.txt', 'a') as log:
+                log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
+                for rxn in removed_reactions:
+                    log.write('id: ' + str(rxn['id']) + ' name: ' + str(rxn['name']) + ' Equation: ' + str(rxn['equation']) )
+            print 'Time elapsed: ' + str(time.time() - start_time)
+            print 'output model...'
+            ws_client.copy_objects({'from': {'objid': super_model_id, 'wsid': ws_id}, 'to': {'objid': super_model_id, 'wsid': args['modelws']}})
+            print 'Time elapsed for primary function: ' + str(time.time() - start_time)
+            print 'further analysis...'
+            i=0
+            super_model_id, i, removed, essential = _process_reactions(args['model'], gene_no_match_tuples, probanno_hash, name = 'Aonly')
+            removed_ids.append(removed)
+            essential_ids.append(essential)
+            super_model_id, i, removed, essential = _process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
+            removed_ids.append(removed)
+            essential_ids.append(essential)
+        print 'Time elapsed: ' + str(time.time() - start_time)
+    except Exception, e:
+        save = False
+        print e
+        print (traceback.format_exc())
+    finally:
+        _finish(save_ws=save)
+# ============================================================
+#               MORPH MODEL WORKFLOW
+# ============================================================
+morph_model()
