@@ -41,16 +41,23 @@ AUTHORS
 # =================================================================================================
 
 # Create Reaction removal lists (these are ordered)
-def removal_tuples(label_list):
+def removal_tuples(label_list, probanno_hash):
     tup_list = list()
     for rxn in label_list:
-        rxnprob =  1 #PUT PROBANNO HERE
+        try:
+            rxnprob = probanno_hash[rxn.split('_')[0]]
+# Reaction is not in ProbAnno Object, presumed to have 0.0 likelihood. Evaluate
+# as needed
+        except KeyError:
+            rxnprob = 0
         tup_list.append((rxn, rxnprob))
     removal_tuples = sorted(tup_list, key=itemgetter(1))
+    for r in removal_tuples:
+        print r
     return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
-def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
+def process_reactions(model_id, rxn_list, probanno_hash, name = '', process_count=0, ws=None):
     # Call generate model stats if more info is wanted
     removed_ids = set()
     essential_ids = set()
@@ -76,6 +83,7 @@ def process_reactions(model_id, rxn_list, name = '', process_count=0, ws=None):
         else:
             essential_ids.add(rxn_list[i])
             print "Reaction is Essential. Not Removed"
+            # INSERT PROBANNO DECISION MAKING HERE?
         process_count += 1
         print 'Removed Reactions: ' + str(removed_ids)
         print 'Essential Reactions: ' + str(essential_ids)
@@ -90,11 +98,11 @@ def parse_arguments():
     parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
     parser.add_argument('genome', type=int,  help='ID of the Genome object', action='store', default=None)
     parser.add_argument('protcomp', type=int,  help='ID of the Proteome Comparison object', action='store', default=None)
-    parser.add_argument('probanno', type=int,  help='ID of the ProbAnno object', action='store', default=None)
+    parser.add_argument('probanno', type=int,  help='ID of the Target ProbAnno object', action='store', default=None)
     parser.add_argument('--genomews', type=int, help='Workspace of the Genome object', action='store', default=None, dest='genomews')
     parser.add_argument('--modelws', type=int, help='Workspace of the Model object', action='store', default=None, dest='modelws')
     parser.add_argument('--protcompws', type=int, help='Workspace of the Proteome Comparison object', action='store', default=None, dest='protcompws')
-    parser.add_argument('--probannows', type=int, help='Workspace of the ProbAnno object', action='store', default=None, dest='probannows')
+    parser.add_argument('--probannows', type=int, help='Workspace of the Target ProbAnno object', action='store', default=None, dest='probannows')
     parser.add_argument('--outputws', type=int, help='Workspace for the morphed Model object', action='store', default=None, dest='outputws')
         # TODO: ADD OTHER OPTION ARGUMENTS
     usage = parser.format_usage()
@@ -253,8 +261,11 @@ def label_reactions(): # model, recon, trans_model
         log.write(str(len(rxn_labels['no-gene'])) + ' no-gene reactions\n')
     # Return Results, include look-up ID dict for future use
     id_hash = {'model': model_rxn_ids, 'trans': trans_model_rxn_ids, 'recon': recon_rxn_ids}
+    probanno_hash = dict()
+    for rxn in probanno['data']['reaction_probabilities']:
+        probanno_hash[rxn[0]] = rxn[1]
     print "Model - build/reaction labeling time: "  + str(time.time() - label_time)
-    return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno['data']
+    return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
@@ -316,25 +327,25 @@ try:
     ws_id, ws_name = init_workspace()
     # [args['protcomp'], args['protcompws']] = blast_proteomes()
     print 'label reactions...'
-    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno] = label_reactions()
-    print probanno['reaction_probabilities'][0]
+    [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash] = label_reactions()
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'build supermodel...'
     morphed_model, mm_ids, super_model_id = build_supermodel()
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'get reaction removal lists...'''
-    gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'])
-    no_gene_tuples = removal_tuples(rxn_labels['no-gene'])
+    gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
+    no_gene_tuples = removal_tuples(rxn_labels['no-gene'], probanno_hash)
     # info[2] is 'type'
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'process reactions...'
-    if (False):
+    # Condition here is just for debugging processes
+    if (True):
         removed_ids = set()
         essential_ids = set()
-        super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, name = 'MM')
+        super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
         removed_ids.add(removed)
         essential_ids.add(essential)
-        super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, name = 'MM', process_count=gnm)
+        super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, probanno_hash, name = 'MM', process_count=gnm)
         removed_ids.add(removed)
         essential_ids.add(essential)
         removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
@@ -348,10 +359,10 @@ try:
         print 'Time elapsed for primary function: ' + str(time.time() - start_time)
         print 'further analysis...'
         i=0
-        super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, name = 'Aonly')
+        super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, probanno_hash, name = 'Aonly')
         removed_ids.add(removed)
         essential_ids.add(essential)
-        super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, name = 'Aonly', process_count=i)
+        super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
         removed_ids.add(removed)
         essential_ids.add(essential)
     print 'Time elapsed: ' + str(time.time() - start_time)
