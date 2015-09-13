@@ -49,18 +49,18 @@ def removal_tuples(label_list, probanno_hash):
 # Reaction is not in ProbAnno Object, presumed to have 0.0 likelihood. Evaluate
 # as needed
         except KeyError:
-            rxnprob = 0
+            # This is a non-sensical value used to mark those that were not in
+            # the probanno object. Why are these values not included?
+            rxnprob = -1.0
         tup_list.append((rxn, rxnprob))
     removal_tuples = sorted(tup_list, key=itemgetter(1))
-    for r in removal_tuples:
-        print r
     return removal_tuples
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
 def process_reactions(model_id, rxn_list, probanno_hash, name = '', process_count=0, ws=None):
     # Call generate model stats if more info is wanted
-    removed_ids = set()
-    essential_ids = set()
+    removed_ids = list()
+    essential_ids = list()
     if ws is None:
         ws = ws_id
     for i in range(len(rxn_list)):
@@ -79,9 +79,9 @@ def process_reactions(model_id, rxn_list, probanno_hash, name = '', process_coun
                 print "Removed Successfully"
                 model_id = new_model_id
                 # rxn12345_c0 in rxn_list => rxn12345 in removed_ids
-                removed_ids.add(rxn_list[i][0].split('_')[0])
+                removed_ids.append(rxn_list[i][0].split('_')[0])
         else:
-            essential_ids.add(rxn_list[i])
+            essential_ids.append(rxn_list[i])
             print "Reaction is Essential. Not Removed"
             # INSERT PROBANNO DECISION MAKING HERE?
         process_count += 1
@@ -340,14 +340,14 @@ try:
     print 'process reactions...'
     # Condition here is just for debugging processes
     if (True):
-        removed_ids = set()
-        essential_ids = set()
+        removed_ids = list()
+        essential_ids = list()
         super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
-        removed_ids.add(removed)
-        essential_ids.add(essential)
+        removed_ids.append(removed)
+        essential_ids.append(essential)
         super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, probanno_hash, name = 'MM', process_count=gnm)
-        removed_ids.add(removed)
-        essential_ids.add(essential)
+        removed_ids.append(removed)
+        essential_ids.append(essential)
         removed_reactions = fba_client.get_reactions({'reactions': removed_ids})
         with open('.mmlog.txt', 'a') as log:
             log.write('\n\n Removed ' + str(total) + ' Reactions: ' + str(gnm) + ' Gene-no-match, ' + str(total - gnm) + ' No-Gene')
@@ -360,11 +360,11 @@ try:
         print 'further analysis...'
         i=0
         super_model_id, i, removed, essential = process_reactions(args['model'], gene_no_match_tuples, probanno_hash, name = 'Aonly')
-        removed_ids.add(removed)
-        essential_ids.add(essential)
+        removed_ids.append(removed)
+        essential_ids.append(essential)
         super_model_id, i, removed, essential = process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
-        removed_ids.add(removed)
-        essential_ids.add(essential)
+        removed_ids.append(removed)
+        essential_ids.append(essential)
     print 'Time elapsed: ' + str(time.time() - start_time)
 except Exception, e:
     save = False
