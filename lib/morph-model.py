@@ -15,6 +15,12 @@ import time
 import traceback
 from operator import itemgetter
 
+
+global ws_id
+global ws_client, args
+global fba_client
+ws_id = None
+
 desc1 = '''
 NAME
      mm-morphmodel - 'Morph' a model an existing model to fit a related genome
@@ -42,6 +48,9 @@ AUTHORS
 
 # Create Reaction removal lists (these are ordered)
 def _removal_tuples(label_list, probanno_hash):
+    global ws_client, args
+    global fba_client
+    global ws_id
     tup_list = list()
     for rxn in label_list:
         try:
@@ -58,6 +67,9 @@ def _removal_tuples(label_list, probanno_hash):
 
 # Process the reactions THIS METHOD IS IN DEVELOPMENT
 def _process_reactions(model_id, rxn_list, probanno_hash, name = '', process_count=0, ws=None):
+    global ws_client, args
+    global fba_client
+    global ws_id
     # Call generate model stats if more info is wanted
     removed_ids = list()
     essential_ids = list()
@@ -93,6 +105,9 @@ def _process_reactions(model_id, rxn_list, probanno_hash, name = '', process_cou
 # Parses Command Line arguments into an argument dictionary for further use.
 # REQURED ARGUMENTS: model, genome, protcomp, probanno
 def _parse_arguments():
+    global ws_client, args
+    global fba_client
+    global ws_id
     # FIXME: make it so arguments can be passed as names, then find a way to convert interior to IDs
     parser = argparse.ArgumentParser(formatter_class = argparse.RawDescriptionHelpFormatter, prog='mm-morph-model', epilog=desc3)
     parser.add_argument('model', type=int, help='ID of the Model object', action='store', default=None)
@@ -149,6 +164,9 @@ def _parse_arguments():
 # .kbase_*URL files are configured to the production URL, https://kbase.us
 # .kbase_*URL files are configured to the development URL, https://next.kbase.us
 def _init_clients():
+    global ws_client, args
+    global fba_client
+    global ws_id
     # Get workspace service URL parameter
     with open (".kbase_workspaceURL", "r") as myfile:
         url = myfile.read().replace('\n','')
@@ -162,6 +180,8 @@ def _init_clients():
 
 # initiate MMws workspace for implementation side objects and pieces for analysis
 def _init_workspace(ws = None):
+    global ws_client, args
+    global fba_client
     global ws_id
     global ws_name
     ws_id = ws
@@ -185,6 +205,9 @@ def _init_workspace(ws = None):
 # label reactions in each model triplet. Must be passed a Source model, a
 # translated model, and a reconstruction (the output of build_models)
 def _label_reactions(): # model, recon, trans_model
+    global ws_client, args
+    global fba_client
+    global ws_id
     # Dictionaries for ids => model.reactions list indices
     label_time = time.time()
     model = ws_client.get_objects([{'objid': args['model'], 'wsid': args['modelws']}])[0]
@@ -255,6 +278,9 @@ def _label_reactions(): # model, recon, trans_model
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
 def _build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
+    global ws_client, args
+    global fba_client
+    global ws_id
 # Add the GENE_NO_MATCH reactions:
     super_time = time.time()
     super_rxns = list()
@@ -285,6 +311,9 @@ def _build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
 
 # Finishing/Cleanup  Steps
 def _finish(save_ws=False):
+    global ws_client, args
+    global fba_client
+    global ws_id
     with open('.mmlog.txt', 'r') as log:
         print 'Finished'
     if not save_ws:
@@ -293,6 +322,9 @@ def _finish(save_ws=False):
     else:
         print 'ERROR:  workspace is None'
 def morph_model():
+    global ws_client, args
+    global fba_client
+    global ws_id
     try:
         start_time = time.time()
         save = True
