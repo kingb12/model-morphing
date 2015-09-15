@@ -308,6 +308,11 @@ def finish(save_ws=False):
     else:
         print 'ERROR:  workspace is None'
 
+def _find_alternative(model_id, rxn_tuple, formulation):
+    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'reactions': [rxn_tuple[0]]})[0]
+    fill_id = fba_client.gapfill_model({'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : False})
+    for key in fill_id:
+        print key
 # =================================================================================================
 #                         Script
 #
@@ -335,16 +340,20 @@ try:
     print 'get reaction removal lists...'''
     gene_no_match_tuples = removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
     no_gene_tuples = removal_tuples(rxn_labels['no-gene'], probanno_hash)
+    formulation = {'probabilisticAnnotation' : args['probanno'], 'probabilisticAnnotation_workspace' : args['probannows']}
+    _find_alternative(super_model_id, gene_no_match_tuples[0], formulation)
     # info[2] is 'type'
     print 'Time elapsed: ' + str(time.time() - start_time)
     print 'process reactions...'
     # Condition here is just for debugging processes
-    if (True):
+    if (False):
         removed_ids = list()
         essential_ids = list()
         super_model_id, gnm, removed, essential = process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
         removed_ids.append(removed)
         essential_ids.append(essential)
+        for rxn in essential_ids:
+            _find_alternative(rxn)
         super_model_id, total, removed, essential = process_reactions(super_model_id, no_gene_tuples, probanno_hash, name = 'MM', process_count=gnm)
         removed_ids.append(removed)
         essential_ids.append(essential)
