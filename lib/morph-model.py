@@ -309,6 +309,12 @@ def _build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
     print "Add Reaction time: "  + str(time.time() - super_time)
     return trans_model, id_hash['trans'], super_model_id
 
+def _find_alternative(model_id, rxn_tuple, formulation):
+    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'reactions': [rxn_tuple[0]]})[0]
+    fill_id = fba_client.gapfill_model({'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : False})
+    for key in fill_id:
+        print key
+
 # Finishing/Cleanup  Steps
 def _finish(save_ws=False):
     global ws_client, args
@@ -321,6 +327,7 @@ def _finish(save_ws=False):
         print 'Workspace: ' + str(ws_id)
     else:
         print 'ERROR:  workspace is None'
+<<<<<<< HEAD
 def morph_model():
     global ws_client, args
     global fba_client
@@ -347,11 +354,13 @@ def morph_model():
         print 'get reaction removal lists...'''
         gene_no_match_tuples = _removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
         no_gene_tuples = _removal_tuples(rxn_labels['no-gene'], probanno_hash)
+        formulation = {'probabilisticAnnotation' : args['probanno'], 'probabilisticAnnotation_workspace' : args['probannows']}
+        _find_alternative(super_model_id, gene_no_match_tuples[0], formulation)
         # info[2] is 'type'
         print 'Time elapsed: ' + str(time.time() - start_time)
         print 'process reactions...'
         # Condition here is just for debugging processes
-        if (True):
+        if (False):
             removed_ids = list()
             essential_ids = list()
             super_model_id, gnm, removed, essential = _process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
@@ -377,14 +386,3 @@ def morph_model():
             super_model_id, i, removed, essential = _process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
             removed_ids.append(removed)
             essential_ids.append(essential)
-        print 'Time elapsed: ' + str(time.time() - start_time)
-    except Exception, e:
-        save = False
-        print e
-        print (traceback.format_exc())
-    finally:
-        _finish(save_ws=save)
-# ============================================================
-#               MORPH MODEL WORKFLOW
-# ============================================================
-morph_model()
