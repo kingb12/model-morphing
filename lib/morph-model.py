@@ -327,7 +327,6 @@ def _finish(save_ws=False):
         print 'Workspace: ' + str(ws_id)
     else:
         print 'ERROR:  workspace is None'
-<<<<<<< HEAD
 def morph_model():
     global ws_client, args
     global fba_client
