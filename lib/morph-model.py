@@ -277,7 +277,7 @@ def _label_reactions(): # model, recon, trans_model
     return model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash
 
 # Build a model composed of ALL reactions (gene matching, non matching, no-gne, and recon rxns)
-def _build_supermodel(): # model, recon, trans_model, rxn_labels, id_hash
+def _build_supermodel(model, rxn_labels): # model, recon, trans_model, rxn_labels, id_hash
     global ws_client, args
     global fba_client
     global ws_id
@@ -348,20 +348,23 @@ def morph_model():
         [model, recon, trans_model, model_info, recon_info, trans_info, trans_model_id, rxn_labels, id_hash, probanno_hash] = _label_reactions()
         print 'Time elapsed: ' + str(time.time() - start_time)
         print 'build supermodel...'
-        morphed_model, mm_ids, super_model_id = _build_supermodel()
+        morphed_model, mm_ids, super_model_id = _build_supermodel(model, rxn_labels)
         print 'Time elapsed: ' + str(time.time() - start_time)
         print 'get reaction removal lists...'''
         gene_no_match_tuples = _removal_tuples(rxn_labels['gene-no-match'], probanno_hash)
         no_gene_tuples = _removal_tuples(rxn_labels['no-gene'], probanno_hash)
         formulation = {'probabilisticAnnotation' : args['probanno'], 'probabilisticAnnotation_workspace' : args['probannows']}
-        _find_alternative(super_model_id, gene_no_match_tuples[0], formulation)
+        # _find_alternative(super_model_id, gene_no_match_tuples[0], formulation)
         # info[2] is 'type'
         print 'Time elapsed: ' + str(time.time() - start_time)
         print 'process reactions...'
         # Condition here is just for debugging processes
-        if (False):
+        if (True):
             removed_ids = list()
             essential_ids = list()
+            names = dir()
+            for n in names:
+                print n
             super_model_id, gnm, removed, essential = _process_reactions(super_model_id, gene_no_match_tuples, probanno_hash, name = 'MM')
             removed_ids.append(removed)
             essential_ids.append(essential)
@@ -391,5 +394,5 @@ def morph_model():
         print e
         print (traceback.format_exc())
     finally:
-        finish(save_ws=save)
+        _finish(save_ws=save)
 morph_model()
