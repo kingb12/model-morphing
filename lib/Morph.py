@@ -10,10 +10,22 @@ from operator import itemgetter
 
 class Morph():
 
-    def __init__(self, model, genome, protcomp=None, probanno=None, modelws=None, genomews=None, protcompws=None, probannows=None):
-        self.args = _parse_arguments(model, genome, protcomp, probanno, modelws, genomews, protcompws, probannows)
-        # rxn_labels, essentials, removed, _id_hash. Make properties?
-        self.ws_id = _init_workspace()
-        self.save_ws = False
-        rxn_labels = {'gene-match' :
-
+    # These are the allowed properties of a morph object. VAlues not specified
+    # by user are set to None
+    # This is an Abstract Object representing the Morph of a metabolic model
+    # from one species to a close relative genome. It has information related to
+    # the source model, the target genome, the reactions in the model as it is
+    # morphed from source import to target, and the set of
+    properties = set('model', 'modelws', 'genome', 'genomews', 'probanno', 'probannows', 'protcomp', 'protcompws', 'rxn_labels')
+    def __init__(self, *arg_hash, **kwargs):
+          for dictionary in arg_hash:
+              for key in dictionary:
+                  if (key in Morph.properties):
+                      setattr(self, key, dictionary[key])
+          for key in kwargs:
+              if (key in Morph.properties):
+                  setattr(self, key, kwargs[key])
+          for prop in Morph.properties:
+              if (!hasattr(self, prop)):
+                  print prop
+                  setattr(self, prop, None)
