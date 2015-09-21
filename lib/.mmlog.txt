@@ -698,3 +698,16 @@ Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0
 SUPERMODEL STATE: 
     NAME: Methanosarcina acetivorans C2A
     REACTIONS: 641. PROTEINS: 764
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
+MODEL REACTION ADDITION STATISTICS: 
+Added 38  gene-no-match reactions to translated model: set([u'rxn05461_c0', u'rxn00172_c0', u'rxn00669_c0', u'rxn05380_c0', u'rxn05338_c0', u'rxn05297_c0', u'rxn05364_c0', u'rxn05337_c0', u'rxn01316_c0', u'rxn05397_c0', u'rxn05312_c0', u'rxn05401_c0', u'rxn11944_c0', u'rxn05430_c0', u'rxn05393_c0', u'rxn05385_c0', u'rxn05368_c0', u'rxn05422_c0', u'rxn03052_c0', u'rxn05426_c0', u'rxn00827_c0', u'rxn11268_c0', u'rxn05339_c0', u'rxn05418_c0', u'rxn05298_c0', u'rxn05340_c0', u'rxn05342_c0', u'rxn05360_c0', u'rxn01025_c0', u'rxn05341_c0', u'rxn05372_c0', u'rxn05410_c0', u'rxn05336_c0', u'rxn05376_c0', u'rxn05414_c0', u'rxn05405_c0', u'rxn00717_c0', u'rxn05389_c0'])
+Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0', u'rxn10235_c0', u'rxn05305_c0', u'rxn09198_c0', u'rxn09201_c0', u'rxn02937_c0', u'rxn09203_c0', u'rxn00292_c0', u'rxn07438_c0', u'rxn09200_c0', u'rxn05172_c0', u'rxn03445_c0', u'rxn00182_c0', u'rxn10236_c0', u'rxn09199_c0', u'rxn05514_c0', u'rxn03962_c0', u'rxn00926_c0', u'rxn00211_c0', u'rxn05171_c0', u'rxn00915_c0', u'rxn09197_c0', u'rxn02483_c0', u'rxn00547_c0', u'rxn01519_c0', u'rxn09202_c0', u'rxn02914_c0', u'rxn10234_c0', u'rxn05602_c0', u'rxn00297_c0'])
+SUPERMODEL STATE: 
+    NAME: Methanosarcina acetivorans C2A
+    REACTIONS: 641. PROTEINS: 764
