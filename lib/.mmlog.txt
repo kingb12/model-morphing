@@ -698,3 +698,10 @@ Added 31 recon reactions to translated model: set([u'rxn10237_c0', u'rxn01544_c0
 SUPERMODEL STATE: 
     NAME: Methanosarcina acetivorans C2A
     REACTIONS: 641. PROTEINS: 764
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions

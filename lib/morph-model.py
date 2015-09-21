@@ -385,3 +385,11 @@ def morph_model():
             super_model_id, i, removed, essential = _process_reactions(args['model'], no_gene_tuples, probanno_hash, name = 'Aonly', process_count=i)
             removed_ids.append(removed)
             essential_ids.append(essential)
+        print 'Time elapsed: ' + str(time.time() - start_time)
+    except Exception, e:
+        save = False
+        print e
+        print (traceback.format_exc())
+    finally:
+        finish(save_ws=save)
+morph_model()
