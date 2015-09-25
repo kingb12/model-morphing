@@ -719,3 +719,10 @@ MODEL LABELING STATISTICS:
 38 no-match reactions
 462 gene-match reactions
 179 no-gene reactions
+MODEL LABELING STATISTICS: 
+679 model reactions
+641 translated model reactions
+31 reconstructed reactions out of 512. 481 in common
+38 no-match reactions
+462 gene-match reactions
+179 no-gene reactions
