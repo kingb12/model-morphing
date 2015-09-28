@@ -35,8 +35,12 @@ def _init_clients():
 
 def morph_model(args):
     morph = Morph()
+    _translate_features(morph)
+    _reconstruct_genome(morph)
+    _get_objects(morph)
     _label_reactions(morph)
-
+    _build_supermodel(morph)
+    _process_reactions(morph, morph.model, 'gene-no-match')
 def _translate_features(morph):
     """
     Translates the features in the source model to matches in the target genome
@@ -49,12 +53,13 @@ def _translate_features(morph):
     Modifies:
         morph - morph.trans_model
     """
+ # import necesary services# import necesary service
     if (debug):
         assert morph.protcomp is not None, "protcomp is None"
         assert morph.protcompws is not None, "protcompws is None"
         assert morph.src_model is not None, "src_model is None"
         assert morph.src_modelws is not None, "src_modelws is None"
-    trans_params = {'keep_nogene_rxn': 1, 'protcomp': morph.protcomp, 'protcomp_workspace': morph.protcompws, 'model': morph.src_model, 'model_workspace': morph.src_modelws, 'workspace': ws_id}
+    trans_params = {'keep_nogene_rxn': 1, 'protcomp': morph.protcomp, 'protcomp_workspace': morph.protcompws, 'model': morph.src_model, 'model_workspace': morph.src_modelws, 'workspace': morph.ws_id}
     morph.trans_model = fba_client.translate_fbamodel(trans_params)[0]
 
 def _reconstruct_genome(morph):
@@ -72,7 +77,7 @@ def _reconstruct_genome(morph):
     if (debug):
         assert morph.genome is not None, "genome is None"
         assert morph.genomews is not None, "genomews is None"
-    recon_params = {'genome': morph.genome, 'genome_workspace': morph.genomews, 'workspace': ws_id}
+    recon_params = {'genome': morph.genome, 'genome_workspace': morph.genomews, 'workspace': morph.ws_id}
     morph.recon_model = fba_client.genome_to_fbamodel(recon_params)[0]
 
 def _get_objects(morph):
@@ -113,7 +118,7 @@ def _label_reactions(morph):
     """
     Labels the reactions in the translated model and the reconstruction
 
-    Populates the rxn_labels attribute in the Morph object with a Dictionary of four dictionaries of reactrion_id -> value tuples. 
+    Populates the rxn_labels attribute in the Morph object with a Dictionary of four dictionaries of reactrion_id -> value tuples.
     The first level dicts are named with the keys:
         - gene-match
         - gene-no-match
@@ -145,7 +150,7 @@ def _label_reactions(morph):
     model = morph.objects['source_model']
     recon = morph.objects['recon_model']
     probanno = morph.objects['probanno']
-    # create the rxn_labels dictionary 
+    # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict()}
     # Build a hash of rxn_ids to probability to save look up time
     probanno_hash = dict()
@@ -215,4 +220,73 @@ def _build_supermodel(morph):
         #TODO: See what more you can fix/add (gpr?)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'recon', '', reaction['name']))
     morph.model = fba_client.add_reactions({'model': trans_model_id, 'model_workspace': ws_id, 'output_id': 'super_model', 'workspace': ws_id, 'reactions': super_rxns})[0]
-ws_client, fba_client  _init_clients()
+
+def _process_reactions(morph, label, model_id=None, name='', ws=None, process_count=0):
+    """
+    Processes the reactions of a given label type in morph (i.e. morph.rxn_labels[label])
+
+    Attempts removal of each reaction of a given label type, keeping it only if it is essential to the objective function
+    of a given FBA formulation. Populates morph.essential_ids with the reaction_ids that could not be removed without breaking FBA
+    simulation. morph.removed_ids is populated with the ids of the reactions that were removed. Both are populated as a dictionary of
+    reaction_ids to their model_index and probability
+
+    Requires:
+        if rxn_labels[label] is not None, it must be a dictionary of reaction_ids -> (model_index, probability). Behavior uncertain if model_id
+        and rxn_labels are not related to the same model as morph.
+
+    Modifies:
+       morph - morph.essential_ids, morph.removed_ids, morph.rxn_labels[label]
+    Raises:
+        KeyError if (label not in rxn_labels)
+    """
+    if (ws is None):
+        ws = morph.ws_id
+    if (model_id is None):
+        model_id = morph.model
+    removal_list = sorted(rxn_labels[label].items(), key=getKey)
+    # Sort by probanno. items() returns (K, V=(model_index, prob))
+    def get_key(item):
+        return item[1][1]
+    for i in range(len(removal_list) - 1) :
+        assert removal_list[i][2] < removal_list[i + 1][2]
+    # instantiate lists only if needed
+    if morph.essential_ids is None:
+        morph.essential_ids = dict()
+    if morph.removed_ids is None:
+        morph.removed_ids = dict()
+    for i in range(len(removal_list)):
+        reaction_id = removal_list[i][0]
+        #TODO Find someway to fix the behaivior bug if model_id is not in ws, etc.
+        new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':ws_id, 'reactions':[reaction_id]})[0]
+        fba_params = {'fba': str(name + '-FBA-' + str(process_count)), 'workspace': ws, 'model' : new_model_id, 'model_workspace':ws}
+        fbaMeta = fba_client.runfba(fba_params)
+        flux = fbaMeta[-1]['Objective']
+        if (flux > 0.0):
+            # removed successfully
+            model_id = new_model_id
+            morph.removed_ids[reaction_id] = rxn_labels[label][reaction_id]
+        else:
+            # essential
+            morph.essential_ids[reaction_id] = rxn_labels[label][reaction_id]
+    morph.model = model_id
+    return  model_id, process_count
+
+
+def _find_alternative(reaction, formulation, morph=None, model_id=None, ws_id=None):
+    if (morph is not None):
+        model_id = morph.model
+        ws_id = morph.ws_id
+    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'reactions': [reaction]})[0]
+    fill_id = fba_client.gapfill_model({'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : True})
+    print "DEBUGGING STEP"
+    for key in fill_id:
+        print key
+
+# Finishing/Cleanup  Steps
+def _finish(morph, save_ws=False):
+    if not save_ws:
+        ws_client.delete_workspace({'id': morph.ws_id})
+    else:
+        print 'Saved'
+
+ws_client, fba_client =  _init_clients()
