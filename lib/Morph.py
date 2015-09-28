@@ -17,7 +17,7 @@ class Morph():
     # the source model, the target genome, the reactions in the model as it is
     # morphed from source import to target, and the set of
     ws_client, fba_client = _init_clients()
-    properties = set(['model', 'modelws', 'genome', 'genomews', 'probanno', 'probannows', 'protcomp', 'protcompws', 'rxn_labels', 'objects', 'info', 'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon'])
+    properties = set(['src_model', 'src_modelws', 'genome', 'genomews', 'probanno', 'probannows', 'protcomp', 'protcompws','model', 'rxn_labels', 'objects', 'info', 'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model'])
 
     def __init__(self, *arg_hash, **kwargs):
           for dictionary in arg_hash:
