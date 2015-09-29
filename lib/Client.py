@@ -33,14 +33,13 @@ def _init_clients():
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
 
-def morph_model(args):
-    morph = Morph()
+def morph_model(morph):
     _translate_features(morph)
     _reconstruct_genome(morph)
     _get_objects(morph)
     _label_reactions(morph)
     _build_supermodel(morph)
-    _process_reactions(morph, morph.model, 'gene-no-match')
+    return morph
 def _translate_features(morph):
     """
     Translates the features in the source model to matches in the target genome
@@ -97,16 +96,21 @@ def _get_objects(morph):
 
    :param morph: the Morph object with the associated objects.
     """
+    # make the objects and info dictionaries
+    if (not isinstance(morph.objects, dict)):
+        morph.objects = dict()
+    if (not isinstance(morph.info, dict)):
+        morph.info = dict()
     # Get the src_model
     obj  = ws_client.get_objects([{'objid': morph.src_model, 'wsid': morph.src_modelws}])[0]
     morph.objects['source_model'] = obj['data']
     morph.info['source_model'] = obj['info']
     # Get the translate model
-    obj  = ws_client.get_objects([{'objid': morph.trans_model, 'wsid': ws_id}])[0]
+    obj  = ws_client.get_objects([{'objid': morph.trans_model, 'wsid': morph.ws_id}])[0]
     morph.objects['trans_model'] = obj['data']
     morph.info['trans_model'] = obj['info']
     # Get the recon model
-    obj  = ws_client.get_objects([{'objid': morph.recon_model, 'wsid': ws_id}])[0]
+    obj  = ws_client.get_objects([{'objid': morph.recon_model, 'wsid': morph.ws_id}])[0]
     morph.objects['recon_model'] = obj['data']
     morph.info['recon_model'] = obj['info']
     # Get the probanno
@@ -153,12 +157,12 @@ def _label_reactions(morph):
     # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict()}
     # Build a hash of rxn_ids to probability to save look up time
-    probanno_hash = dict()
+    prob_hash = dict()
     for rxn in probanno['reaction_probabilities']:
         prob_hash[rxn[0]] = rxn[1]
     # label gene-match and no-gene from translation
     for i in range(len(trans_model['modelreactions'])):
-        # e.g. rxn_id = rxn01316_c0
+        #anni e.g. rxn_id = rxn01316_c0
         mdlrxn = trans_model['modelreactions'][i]
         rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
         rxn_prot = mdlrxn['modelReactionProteins']
@@ -191,10 +195,10 @@ def _label_reactions(morph):
                 rxn_labels['recon'][rxn_id] = (i, prob_hash[rxn_id])
             except KeyError:
                 rxn_labels['recon'][rxn_id] = (i, -1.0)
-
+    morph.rxn_labels = rxn_labels
 def _build_supermodel(morph):
     """
-    Sets morph.model to a superset of all reaction types in rxn_labels
+    Sets morph.model to a superset of all reaction types in morph.rxn_labels
 
     Builds a model with the reactions unique to the target genome added and sets the morph.model attribute to this 'super-model'
 
@@ -206,32 +210,40 @@ def _build_supermodel(morph):
     """
     super_time = time.time()
     model = morph.objects['source_model']
+    recon = morph.objects['recon_model']
     super_rxns = list()
     # Add the GENE_NO_MATCH reactions:
-    for rxn_id in rxn_labels['gene-no-match']:
-        # rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
-        reaction = model['modelreactions'][rxn_id[0]]
+    for rxn_id in morph.rxn_labels['gene-no-match']:
+        # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+        reaction = model['modelreactions'][morph.rxn_labels['gene-no-match'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
     # Add the recon reactions:
-    for rxn_id in rxn_labels['recon']:
-        # rxn_labels['recon'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
-        reaction = model['modelreactions'][rxn_id[0]]
+    print 'recon'
+    for rxn_id in morph.rxn_labels['recon']:
+        # morph.rxn_labels['recon'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+        reaction = recon['modelreactions'][morph.rxn_labels['recon'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'recon', '', reaction['name']))
-    morph.model = fba_client.add_reactions({'model': trans_model_id, 'model_workspace': ws_id, 'output_id': 'super_model', 'workspace': ws_id, 'reactions': super_rxns})[0]
+    try:
+        morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
+    finally:
+        return super_rxns
 
-def _process_reactions(morph, label, model_id=None, name='', ws=None, process_count=0):
+def _process_reactions(morph, rxn_list=None, label=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
     """
-    Processes the reactions of a given label type in morph (i.e. morph.rxn_labels[label])
+    Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
-    Attempts removal of each reaction of a given label type, keeping it only if it is essential to the objective function
+    Attempts removal of each reaction , keeping it only if it is essential to the objective function
     of a given FBA formulation. Populates morph.essential_ids with the reaction_ids that could not be removed without breaking FBA
     simulation. morph.removed_ids is populated with the ids of the reactions that were removed. Both are populated as a dictionary of
     reaction_ids to their model_index and probability
 
+    if label is a key to morph.rxn_labels AND rxn_list is None, the function behaves as if morph.rxn_labels[label] was the rxn_list argument
+
     Requires:
-        if rxn_labels[label] is not None, it must be a dictionary of reaction_ids -> (model_index, probability). Behavior uncertain if model_id
+        -You must set keyword label to a valid key of morph.rxn_labels OR keyword rxn_list to a list of tuples
+        - if rxn_labels[label] is not None, it must be a dictionary of reaction_ids -> (model_index, probability). Behavior uncertain if model_id
         and rxn_labels are not related to the same model as morph.
 
     Modifies:
@@ -243,31 +255,43 @@ def _process_reactions(morph, label, model_id=None, name='', ws=None, process_co
         ws = morph.ws_id
     if (model_id is None):
         model_id = morph.model
-    removal_list = sorted(rxn_labels[label].items(), key=getKey)
+    # label argument behavior
+    if ((rxn_list is None) and (label in morph.rxn_labels)):
+        rxn_list = morph.rxn_labels[label]
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return item[1][1]
-    for i in range(len(removal_list) - 1) :
-        assert removal_list[i][2] < removal_list[i + 1][2]
+    removal_list = sorted(rxn_list.items(), key=get_key)
+    for i in range(len(removal_list) - 1):
+        assert removal_list[i][1][1] <= removal_list[i + 1][1][1]
     # instantiate lists only if needed
     if morph.essential_ids is None:
         morph.essential_ids = dict()
     if morph.removed_ids is None:
         morph.removed_ids = dict()
+    #Give objs a general name if none is provided
+    if name == '':
+        name = 'MM'
     for i in range(len(removal_list)):
         reaction_id = removal_list[i][0]
+        print 'Reaction to remove: ' + str(removal_list[i])
         #TODO Find someway to fix the behaivior bug if model_id is not in ws, etc.
-        new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':ws_id, 'reactions':[reaction_id]})[0]
+        new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]
+        if iterative_models:
+            process_count += 1
         fba_params = {'fba': str(name + '-FBA-' + str(process_count)), 'workspace': ws, 'model' : new_model_id, 'model_workspace':ws}
         fbaMeta = fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
+        print 'FBA Flux: ' + str(flux)
         if (flux > 0.0):
             # removed successfully
+            print 'Removed ' + str(reaction_id)
             model_id = new_model_id
-            morph.removed_ids[reaction_id] = rxn_labels[label][reaction_id]
+            morph.removed_ids[reaction_id] = morph.rxn_labels[label][reaction_id]
         else:
             # essential
-            morph.essential_ids[reaction_id] = rxn_labels[label][reaction_id]
+            print str(reaction_id) + ' is Essential'
+            morph.essential_ids[reaction_id] = morph.rxn_labels[label][reaction_id]
     morph.model = model_id
     return  model_id, process_count
 

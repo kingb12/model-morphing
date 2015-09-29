@@ -11,3 +11,4 @@ def make_morph():
     args['probannows'] = '9145'
     args['protcompws'] = '9145'
     return Morph(args)
+

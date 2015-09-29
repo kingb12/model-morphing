@@ -67,4 +67,29 @@ class Morph():
           if (self.ws_id is None):
               self.ws_id, self.ws_name = _init_workspace()
 
+    # Overridden Functions to produce unique output
+    def __str__(self):
+        output = ''
+        for key in vars(self):
+            attr = getattr(self, key)
+            if (isinstance(attr, dict)):
+                attr = attr.keys()
+            output += str(key) + ': ' + str(attr) + '\n'
+        return output
+    def __repr__(self):
+        output = ''
+        for key in vars(self):
+            attr = getattr(self, key)
+            if (isinstance(attr, dict)):
+                attr = attr.keys()
+            output += str(key) + ': ' + str(attr) + '\n'
+        return output
+    def __unicode__(self):
+        output = ''
+        for key in vars(self):
+            attr = getattr(self, key)
+            if (isinstance(attr, dict)):
+                attr = attr.keys()
+            output += str(key) + ': ' + str(attr) + '\n'
+        return output
 ws_client, fba_client = _init_clients()
