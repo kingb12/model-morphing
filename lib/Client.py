@@ -168,12 +168,12 @@ def _label_reactions(morph):
         rxn_prot = mdlrxn['modelReactionProteins']
         if (len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal'):
             try:
-                rxn_labels['no-gene'][rxn_id] = (i, prob_hash[rxn_id])
+                rxn_labels['no-gene'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
                 rxn_labels['no-gene'][rxn_id] = (i, -1.0)
         else:
             try:
-                rxn_labels['gene-match'][rxn_id] = (i, prob_hash[rxn_id])
+                rxn_labels['gene-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
                 rxn_labels['gene-match'][rxn_id] = (i, -1.0)
     # Label gene-no-match as those unique to model compared with translation
@@ -219,7 +219,6 @@ def _build_supermodel(morph):
         #TODO: See what more you can fix/add (gpr?)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
     # Add the recon reactions:
-    print 'recon'
     for rxn_id in morph.rxn_labels['recon']:
         # morph.rxn_labels['recon'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][morph.rxn_labels['recon'][rxn_id][0]]
@@ -230,7 +229,24 @@ def _build_supermodel(morph):
     finally:
         return super_rxns
 
-def _process_reactions(morph, rxn_list=None, label=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
+def _removal_list(rxn_dict, list_range=None):
+    """
+    Generates a removal list from the import rxn_dict (e.g. morph.rxn_labels['no-gene'])
+
+    Accepts a dictionary of reactions -> (index, probability) as is given by morph.rxn_labels[label] and returns a sorted
+    list of tuples that can be passed as the rxn_list parameter to the _process_reactions function. This allows for processing
+    of only some reactions from the model at a time. Tuples are in the form (reaction_id, index, probability). Setting the range keyword
+    arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).
+    """
+    # Sort by probanno. items() returns (K, V=(model_index, prob))
+    def get_key(item):
+        return item[1][1]
+    removal_list = sorted(rxn_dict.items(), key=get_key)
+    if list_range is not None:
+        removal_list = removal_list[list_range[0]:list_range[1]]
+    return removal_list
+
+def _process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
@@ -255,15 +271,20 @@ def _process_reactions(morph, rxn_list=None, label=None, model_id=None, name='',
         ws = morph.ws_id
     if (model_id is None):
         model_id = morph.model
-    # label argument behavior
-    if ((rxn_list is None) and (label in morph.rxn_labels)):
-        rxn_list = morph.rxn_labels[label]
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return item[1][1]
-    removal_list = sorted(rxn_list.items(), key=get_key)
-    for i in range(len(removal_list) - 1):
-        assert removal_list[i][1][1] <= removal_list[i + 1][1][1]
+    # label argument behavior
+    if (rxn_list is None):
+        rxn_dict = morph.rxn_labels['gene-no-match']
+        removal_list = sorted(rxn_dict.items(), key=get_key)
+        if (debug):
+            for i in range(len(removal_list) - 1):
+                assert removal_list[i][1][1] <= removal_list[i + 1][1][1]
+        rxn_dict = morph.rxn_labels['no-gene']
+        removal_list.append(sorted(rxn_dict.items(), key=get_key))
+    else:
+        removal_list = rxn_list
     # instantiate lists only if needed
     if morph.essential_ids is None:
         morph.essential_ids = dict()
@@ -287,24 +308,25 @@ def _process_reactions(morph, rxn_list=None, label=None, model_id=None, name='',
             # removed successfully
             print 'Removed ' + str(reaction_id)
             model_id = new_model_id
-            morph.removed_ids[reaction_id] = morph.rxn_labels[label][reaction_id]
+            morph.removed_ids[reaction_id] = removal_list[i]
         else:
             # essential
             print str(reaction_id) + ' is Essential'
-            morph.essential_ids[reaction_id] = morph.rxn_labels[label][reaction_id]
+            morph.essential_ids[reaction_id] = removal_list[i]
     morph.model = model_id
     return  model_id, process_count
 
-
-def _find_alternative(reaction, formulation, morph=None, model_id=None, ws_id=None):
+def _find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
     if (morph is not None):
         model_id = morph.model
         ws_id = morph.ws_id
+    formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows}
     new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'reactions': [reaction]})[0]
     fill_id = fba_client.gapfill_model({'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : True})
     print "DEBUGGING STEP"
     for key in fill_id:
         print key
+    return fill_id
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
