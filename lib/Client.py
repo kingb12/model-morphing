@@ -6,6 +6,7 @@ import random
 import argparse
 import time
 import traceback
+import copy
 from operator import itemgetter
 from Morph import Morph
 
@@ -34,11 +35,11 @@ def _init_clients():
     return ws_client, fba_client
 
 def morph_model(morph):
-    _translate_features(morph)
-    _reconstruct_genome(morph)
-    _get_objects(morph)
-    _label_reactions(morph)
-    _build_supermodel(morph)
+    morph = _translate_features(morph)
+    morph = _reconstruct_genome(morph)
+    morph = _get_objects(morph)
+    morph = _label_reactions(morph)
+    morph = _build_supermodel(morph)
     return morph
 def _translate_features(morph):
     """
@@ -58,8 +59,10 @@ def _translate_features(morph):
         assert morph.protcompws is not None, "protcompws is None"
         assert morph.src_model is not None, "src_model is None"
         assert morph.src_modelws is not None, "src_modelws is None"
+    morph = copy.deepcopy(morph)
     trans_params = {'keep_nogene_rxn': 1, 'protcomp': morph.protcomp, 'protcomp_workspace': morph.protcompws, 'model': morph.src_model, 'model_workspace': morph.src_modelws, 'workspace': morph.ws_id}
     morph.trans_model = fba_client.translate_fbamodel(trans_params)[0]
+    return morph
 
 def _reconstruct_genome(morph):
     """
@@ -73,11 +76,13 @@ def _reconstruct_genome(morph):
     Modifies:
         morph - morph.recon_model
     """
+    morph = copy.deepcopy(morph)
     if (debug):
         assert morph.genome is not None, "genome is None"
         assert morph.genomews is not None, "genomews is None"
     recon_params = {'genome': morph.genome, 'genome_workspace': morph.genomews, 'workspace': morph.ws_id}
     morph.recon_model = fba_client.genome_to_fbamodel(recon_params)[0]
+    return morph
 
 def _get_objects(morph):
     """
@@ -96,6 +101,7 @@ def _get_objects(morph):
 
    :param morph: the Morph object with the associated objects.
     """
+    morph = copy.deepcopy(morph)
     # make the objects and info dictionaries
     if (not isinstance(morph.objects, dict)):
         morph.objects = dict()
@@ -117,7 +123,7 @@ def _get_objects(morph):
     obj  = ws_client.get_objects([{'objid': morph.probanno, 'wsid': morph.probannows}])[0]
     morph.objects['probanno'] = obj['data']
     morph.info['probanno'] = obj['info']
-
+    return morph
 def _label_reactions(morph):
     """
     Labels the reactions in the translated model and the reconstruction
@@ -148,6 +154,7 @@ def _label_reactions(morph):
 
     :param morph: the Morph object for labeling as described above
     """
+    morph = copy.deepcopy(morph)
     label_time = time.time()
     # create local vars for parts of the morph
     trans_model = morph.objects['trans_model']
@@ -196,6 +203,7 @@ def _label_reactions(morph):
             except KeyError:
                 rxn_labels['recon'][rxn_id] = (i, -1.0)
     morph.rxn_labels = rxn_labels
+    return morph
 def _build_supermodel(morph):
     """
     Sets morph.model to a superset of all reaction types in morph.rxn_labels
@@ -208,6 +216,7 @@ def _build_supermodel(morph):
     Modifies:
     morph.model
     """
+    morph = copy.deepcopy(morph)
     super_time = time.time()
     model = morph.objects['source_model']
     recon = morph.objects['recon_model']
@@ -224,10 +233,8 @@ def _build_supermodel(morph):
         reaction = recon['modelreactions'][morph.rxn_labels['recon'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'recon', '', reaction['name']))
-    try:
-        morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
-    finally:
-        return super_rxns
+    morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
+    return morph
 
 def _removal_list(rxn_dict, list_range=None):
     """
@@ -267,6 +274,7 @@ def _process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pr
     Raises:
         KeyError if (label not in rxn_labels)
     """
+    morph = copy.deepcopy(morph)
     if (ws is None):
         ws = morph.ws_id
     if (model_id is None):
@@ -314,19 +322,27 @@ def _process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pr
             print str(reaction_id) + ' is Essential'
             morph.essential_ids[reaction_id] = removal_list[i]
     morph.model = model_id
-    return  model_id, process_count
+    return  morph, model_id, process_count
 
 def _find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
     if (morph is not None):
+        morph = copy.deepcopy(morph)
         model_id = morph.model
         ws_id = morph.ws_id
     formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows}
-    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'reactions': [reaction]})[0]
-    fill_id = fba_client.gapfill_model({'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : True})
-    print "DEBUGGING STEP"
-    for key in fill_id:
-        print key
-    return fill_id
+    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': 'findalt', 'reactions': [reaction]})[0]
+    params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : True, 'gapFill' : 'gf'}
+    model_info = fba_client.gapfill_model(params)
+    filled_model = model_info[0]
+    object = ws_client.get_objects([{'name': model_info[0] + '.gffba', 'wsid': params['workspace']}])[0]
+    gapfill = object['data']['gapfillingSolutions'][0]
+    rxn_dicts = gapfill['gapfillingSolutionReactions']
+    gap_reactions = [a['reaction_ref'].split('/')[-1] + '_' + a['compartment_ref'].split('/')[-1] + str(0) for a in rxn_dicts]
+    modelreactions = set()
+    for key in morph.rxn_labels:
+        modelreactions |= set(morph.rxn_labels[key].keys())
+    new_reactions = [r for r in gap_reactions if r not in modelreactions]
+    return morph, params['gapFill'], new_reactions
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
@@ -336,3 +352,62 @@ def _finish(morph, save_ws=False):
         print 'Saved'
 
 ws_client, fba_client =  _init_clients()
+
+def get_mdlrxn_info(morph, reaction_ids=None):
+    """
+    Returns a list of dict() of informtation about reactions in the model and it's relation to the morph
+
+    Returns a dictionary with the following information for each reaction specified. If no reaction_ids key
+    word is set, examines all reactions in morph.model
+
+    'label' - the morph classification of the reaction: (gene-match, gene-no-match, no-gene, recon)
+    'equation' - the equation for the reaction returned in terms of compound_ids
+    'definition' - the equation for the reaction returned in terms of coumpound names
+    """
+    allreactions = False
+    not_in_morph = list()
+    if reaction_ids is None:
+        all_reactions = True
+        reaction_ids = list()
+        for key in morph.rxn_labels.keys():
+            reaction_ids.extend(morph.rxn_labels[key].items())
+    else:
+        # Make tuples like rxN_labels[key].items()
+        for i in range(len(reaction_ids)):
+            rxn = reaction_ids[i]
+            for key in morph.rxn_labels.keys():
+                if (rxn in morph.rxn_labels[key]):
+                    value = morph.rxn_labels[key][rxn]
+                    reaction_ids[i] = (rxn, value[0], value[1])
+    results = list()
+    reactions = fba_client.get_reactions({'reactions': [rxntup[0].split('_')[0] for rxntup in reaction_ids]})
+    # WARNING: This assumes lists are identically ordered
+    for i in range(len(reaction_ids)):
+        try:
+            rxn = reactions[i]
+        except:
+            print i
+        mdlrxn = reaction_ids[i]
+        model = morph.objects['source_model']
+        if (mdlrxn[0] in morph.rxn_labels['recon']):
+            model = morph.objects['recon_model']
+        ans = dict()
+        for key in morph.rxn_labels.keys():
+            if (mdlrxn[0] in morph.rxn_labels[key]):
+               ans['label'] = str(key)
+        ans['id'] = mdlrxn[0]
+        ans['definiton'] = rxn['definition']
+        ans['equation'] = rxn['equation']
+        index = mdlrxn[1]
+        results.append(ans)
+    return results
+
+def analyze_alternative(morph, reaction, new_reactions):
+    """
+    Returns information related to what was added to the model when finding alternative reactions
+    """
+    results = dict()
+    results['reaction_re-added'] = reaction in new_reactions
+    results['removed_reactions'] = [r for r in new_reactions if r in morph.removed_ids]
+    results['essential_reactions'] = [r for r in new_reactions if r in morph.essential_ids]
+    return results
