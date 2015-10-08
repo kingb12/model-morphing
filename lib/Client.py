@@ -25,11 +25,11 @@ debug = True
 
 def _init_clients():
     # Get workspace service URL parameter
-    with open (".kbase_workspaceURL", "r") as myfile:
+    with open ("./urls/.kbase_workspaceURL", "r") as myfile:
         url = myfile.read().replace('\n','')
     ws_client = Workspace(url)
     # Get FBA Model Services URL parameter
-    with open (".kbase_fbaModelServicesURL", "r") as myfile:
+    with open (".urls/.kbase_fbaModelServicesURL", "r") as myfile:
         url = myfile.read().replace('\n','')
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
