@@ -29,7 +29,7 @@ def _init_clients():
         url = myfile.read().replace('\n','')
     ws_client = Workspace(url)
     # Get FBA Model Services URL parameter
-    with open (".urls/.kbase_fbaModelServicesURL", "r") as myfile:
+    with open ("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
         url = myfile.read().replace('\n','')
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
