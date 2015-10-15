@@ -76,7 +76,7 @@ def pp_eval_rxns(reactions):
              print type(rxn)
     return reactions
 
-def get_object(objid, wsid):
+def get_object(objid, wsid, name=None):
     '''
     Returns an object and it's associated KBase information
 
@@ -120,7 +120,10 @@ def get_object(objid, wsid):
 	} ObjectData;
 
     '''
-    return Client.ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
+    if (name is None):
+        return Client.ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
+    else:
+        return Client.ws_client.get_objects([{'name':name, 'wsid':wsid}])[0]
 def dump(object, filepath):
     with open(filepath, 'w') as f:
         pickle.dump(object, f)
@@ -128,7 +131,7 @@ def dump(object, filepath):
 def load(filepath):
     with open(filepath, 'rb') as f:
         return pickle.load(f)
-def save_object(data, type, wsid):
+def save_object(data, type, wsid, objid=None):
     sv = {u'data':data, u'type':type}
     if objid is not None:
         sv[u'objid'] = objid
@@ -138,4 +141,28 @@ def load_morph():
     Loads a morph that has completed
     """
     return load('../data/morph_data.pkl')
+def check_for_duplicates(model_id, ws_id):
+    object = get_object(model_id, ws_id)
+    model = object['data']
+    cpds = [(c['compound_ref'], c['modelcompartment_ref']) for c in model['modelcompounds']]
+    compound_dict = dict()
+    for cpd in cpds:
+        cpd_id = cpd[0].split('/')[-1]
+        if (cpd_id not in compound_dict):
+            compound_dict[cpd_id] = [cpd]
+        else:
+            compound_dict[cpd_id].append(cpd)
+    dups = list()
+    for i in compound_dict:
+        compartments = [j[1] for j in compound_dict[i]]
+        # Sets can only have unique values, so if there is a duplicate
+        # compartment, it woll cause a change in length from list -> set
+        compset = set(compartments)
+        if(len(compset) != len(compartments)):
+            dups.append(i)
+    duplicates = dict()
+    for i in dups:
+        duplicates[i] = compound_dict[i]
+    mdl = model
+    return duplicates, mdl
 morph = load_morph()
