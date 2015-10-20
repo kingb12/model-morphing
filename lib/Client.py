@@ -35,13 +35,45 @@ def _init_clients():
     return ws_client, fba_client
 
 def morph_model(morph):
-    morph = _translate_features(morph)
-    morph = _reconstruct_genome(morph)
-    morph = _get_objects(morph)
-    morph = _label_reactions(morph)
-    morph = _build_supermodel(morph)
+    morph = translate_features(morph)
+    morph = reconstruct_genome(morph)
+    morph = get_objects(morph)
+    morph = label_reactions(morph)
+    morph = build_supermodel(morph)
     return morph
-def _translate_features(morph):
+
+def fill_to_media(morph):
+    """
+    Takes a morph and produces a model filled to the provided media
+
+    Fills a model to a given media. This is an important step if the source model does not grow initially on the media. NOTE: THIS OVERWRITES SRC_MODEL IN THE MORPH
+    However, it does not overwrite the actual source model in KBase. It is imported to morph.ws_id, and morph.src_modelws is changed to match ws_id. Therefore, the data of the source
+    model is preserved as is, but the reference is lost from the morph.
+
+    Requires:
+        morph.media, morph.mediaws is a valid ObjectIdentity for a media capable of allowing growth for the organisms in question.
+           This is an important distinction that is left to the discretion of the user. If no media is known, complete can likely be used.
+        morph.src_model, morph.src_modelws is a valid ObjectIdentity for a source model
+    Returns:
+        a morph. with morph.src_model set to a filled version of the source organism model. Guarantees that the resulting model can grow on media or
+        an Exception is thrown declariing the source model and media incompatible
+    """
+    # Copy the source model to the new workspace
+    morph = copy.deepcopy(morph)
+    srccopy = ws_client.copy_object({'from': {'wsid':morph.src_modelws, 'objid':morph.src_model}, 'to': {'wsid':morph.ws_id, 'name': u'srccopy'}})
+    morph.src_model = srccopy[0]
+    morph.src_modelws = srccopy[6]
+
+    # Gapfill the model and reset the src_model and src_modelws attributes of
+    # the morph
+    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation}
+    params = {u'model': morph.src_model, u'model_workspace': morph.src_modelws, u'out_model' : u'source_filled', u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
+    model_info = fba_client.gapfill_model(params)
+    morph.src_model = model_info[0]
+    morph.src_modelws = model_info[6]
+    return morph
+def translate_features(morph):
     """
     Translates the features in the source model to matches in the target genome
 
@@ -64,7 +96,7 @@ def _translate_features(morph):
     morph.trans_model = fba_client.translate_fbamodel(trans_params)[0]
     return morph
 
-def _reconstruct_genome(morph):
+def reconstruct_genome(morph):
     """
     Builds a draft reconstruction from the genome in the morph.
 
@@ -84,7 +116,7 @@ def _reconstruct_genome(morph):
     morph.recon_model = fba_client.genome_to_fbamodel(recon_params)[0]
     return morph
 
-def _get_objects(morph):
+def get_objects(morph):
     """
     Gets the model and probanno objects associated with the morph.
 
@@ -124,7 +156,7 @@ def _get_objects(morph):
     morph.objects['probanno'] = obj['data']
     morph.info['probanno'] = obj['info']
     return morph
-def _label_reactions(morph):
+def label_reactions(morph):
     """
     Labels the reactions in the translated model and the reconstruction
 
@@ -189,7 +221,7 @@ def _label_reactions(morph):
         rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
         if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']):
             try:
-                rxn_labels['gene-no-match'][rxn_id] = (i, prob_hash[rxn_id])
+                rxn_labels['gene-no-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
                 rxn_labels['gene-no-match'][rxn_id] = (i, -1.0)
     # label recon as those unique to recon compared with model (model = gene-match + gene-no-match + no-gene)
@@ -204,7 +236,7 @@ def _label_reactions(morph):
                 rxn_labels['recon'][rxn_id] = (i, -1.0)
     morph.rxn_labels = rxn_labels
     return morph
-def _build_supermodel(morph):
+def build_supermodel(morph):
     """
     Sets morph.model to a superset of all reaction types in morph.rxn_labels
 
@@ -236,7 +268,7 @@ def _build_supermodel(morph):
     morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
     return morph
 
-def _removal_list(rxn_dict, list_range=None):
+def removal_list(rxn_dict, list_range=None):
     """
     Generates a removal list from the import rxn_dict (e.g. morph.rxn_labels['no-gene'])
 
@@ -253,7 +285,7 @@ def _removal_list(rxn_dict, list_range=None):
         removal_list = removal_list[list_range[0]:list_range[1]]
     return removal_list
 
-def _process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
+def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
@@ -324,7 +356,7 @@ def _process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pr
     morph.model = model_id
     return  morph, model_id, process_count
 
-def _find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
+def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
     if (morph is not None):
         morph = copy.deepcopy(morph)
         model_id = morph.model

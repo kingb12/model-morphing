@@ -5,13 +5,15 @@ import os
 def make_morph():
     args = dict()
     args['genome'] = '3'
-    args['src_model'] = '5'
+    args['src_model'] = '19'
     args['probanno'] = '15'
     args['protcomp'] = '6'
     args['genomews'] = '9145'
     args['src_modelws'] = '9145'
     args['probannows'] = '9145'
     args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '18'
     return Morph(args)
 def modelargs(morph):
     args = dict()
@@ -23,7 +25,7 @@ def essential_test(morph, rxn_list):
     results = dict()
     for rxn in rxn_list:
         print rxn
-        a,b,c = Client._find_alternative(rxn, morph=morph)
+        a,b,c = Client.find_alternative(rxn, morph=morph)
         analysis = Client.analyze_alternative(morph, rxn, c)
         results[rxn] = (a, b, c, analysis)
         filename = "essential_results/" + str(rxn) + ".pkl"
