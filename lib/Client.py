@@ -309,8 +309,6 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
     morph = copy.deepcopy(morph)
     if (ws is None):
         ws = morph.ws_id
-    if (model_id is None):
-        model_id = morph.model
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return item[1][1]
@@ -337,24 +335,24 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
         reaction_id = removal_list[i][0]
         print 'Reaction to remove: ' + str(removal_list[i])
         #TODO Find someway to fix the behaivior bug if model_id is not in ws, etc.
-        new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]
+        new_model_id = fba_client.remove_reactions({'model': morph.model, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]
         if iterative_models:
             process_count += 1
-        fba_params = {'fba': str(name + '-FBA-' + str(process_count)), 'workspace': ws, 'model' : new_model_id, 'model_workspace':ws}
+        fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+        fba_params = {'fba': str(name + '-FBA-' + str(process_count)), 'workspace': ws, 'model' : new_model_id, 'model_workspace':ws, 'formulation': fba_formulation}
         fbaMeta = fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
         print 'FBA Flux: ' + str(flux)
         if (flux > 0.0):
             # removed successfully
             print 'Removed ' + str(reaction_id)
-            model_id = new_model_id
+            morph.model = new_model_id
             morph.removed_ids[reaction_id] = removal_list[i]
         else:
             # essential
             print str(reaction_id) + ' is Essential'
             morph.essential_ids[reaction_id] = removal_list[i]
-    morph.model = model_id
-    return  morph, model_id, process_count
+    return  morph, process_count
 
 def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
     if (morph is not None):

@@ -167,4 +167,20 @@ def check_for_duplicates(model_id, ws_id):
         duplicates[i] = compound_dict[i]
     mdl = model
     return duplicates, mdl
-morph = load_morph()
+def process_iterated(morph):
+    gnm = Client.removal_list(morph.rxn_labels['gene-no-match'])
+    for i in gnm:
+        (morph, a, b) = Client.process_reactions(morph, rxn_list=[i])
+        dump(morph, '../data/morph-Hsmedia.pkl')
+    ng = Client.removal_list(morph.rxn_labels['no-gene'])
+    for i in ng:
+        (morph, a, b) = Client.process_reactions(morph, rxn_list=[i])
+        dump(morph, '../data/morph-Hsmedia.pkl')
+    return morph
+
+def runfba(morph):
+    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    fba_params = {'workspace': morph.ws_id, 'model' : morph.model, 'model_workspace':morph.ws_id,
+                  'formulation': fba_formulation}
+    fbaMeta = Client.fba_client.runfba(fba_params)
+    return fbaMeta
