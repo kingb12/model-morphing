@@ -359,9 +359,10 @@ def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_i
         morph = copy.deepcopy(morph)
         model_id = morph.model
         ws_id = morph.ws_id
-    formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows}
+    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation, u'blacklisted_rxns':[i.split('_')[0] for i in morph.removed_ids]}
     new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': 'findalt', 'reactions': [reaction]})[0]
-    params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : formulation, 'integrate_solution' : True, 'gapFill' : 'gf'}
+    params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : gap_formulation, 'integrate_solution' : True, 'gapFill' : 'gf'}
     model_info = fba_client.gapfill_model(params)
     filled_model = model_info[0]
     object = ws_client.get_objects([{'name': model_info[0] + '.gffba', 'wsid': params['workspace']}])[0]
@@ -373,6 +374,33 @@ def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_i
         modelreactions |= set(morph.rxn_labels[key].keys())
     new_reactions = [r for r in gap_reactions if r not in modelreactions]
     return morph, params['gapFill'], new_reactions
+
+def probanno_optimization(morph, rxn_list=None):
+    morph = copy.deepcopy(morph)
+    if rxn_list is None:
+        rxn_list = morph.essential_ids.keys()
+    #Build Massive Probanno Hash. Consider doing this elsewhere
+    #Its actually not terribly massive, but 2000+ items is still too many to iterate over more than once
+    probhash= dict()
+    for rxn in morph.objects['probanno']['reaction_probabilities']:
+        probhash[rxn[0]] = rxn[1]
+    a = 0.0
+    b = 0.0
+    for reaction in rxn_list:
+        print reaction
+        m, model_id, new_reactions = find_alternative(reaction, morph=morph)
+        rmv_probability = probhash[reaction.split('_')[0]]
+        probsum  = 0.0
+        for i in new_reactions:
+            print i
+            print i.split('_')[0]
+            probsum += probhash[i.split('_')[0]]
+        new_probability = probsum / (0.0 + len(new_reactions))
+        if new_probability > rmv_probability:
+            morph = m
+        a = rmv_probability
+        b = new_probability
+    return morph, a, b
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
