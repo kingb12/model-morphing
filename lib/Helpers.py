@@ -1,7 +1,13 @@
 from Morph import Morph
+import copy
+import json
 import pickle
+import random
 import Client
+from firebase import firebase
 import os
+
+
 def make_morph():
     args = dict()
     args['genome'] = '3'
@@ -142,7 +148,22 @@ def load_morph():
     """
     Loads a morph that has completed
     """
-    return load('../data/morph_data.pkl')
+    data_unicode = fb.get('standard_morph', 'acebar')
+    data = json.loads(data_unicode, object_hook=Morph)
+    return data
+
+def put(url, key, value):
+    """
+    Puts value at the givenkey at url in the Firebase
+
+    (the url is just the subdirectory within firebase, ie. to store "Morty" at 'https://my_base/firebaseio.com/BestCats'
+    call put('/BestCats', "Morty")
+    """
+    try:
+        fb.put(url, key, value.to_JSON())
+    except AttributeError:
+        fb.put(url, key, value)
+
 def check_for_duplicates(model_id, ws_id):
     object = get_object(model_id, ws_id)
     model = object['data']
@@ -184,3 +205,10 @@ def runfba(morph):
                   'formulation': fba_formulation}
     fbaMeta = Client.fba_client.runfba(fba_params)
     return fbaMeta
+
+def clone_morph(morph):
+    morph = copy.deepcopy(morph)
+    info = Client.ws_client.clone_workspace({'wsi': {'id': morph.ws_id}, 'workspace':str('morphclone' + str(morph.ws_id) + str(random.randint(0, 1000000)))})
+    morph.ws_id = info[0]
+    return morph
+fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)

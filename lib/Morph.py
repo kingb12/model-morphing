@@ -3,6 +3,7 @@ from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
 import random
+import json
 import argparse
 import time
 import traceback
@@ -67,6 +68,8 @@ class Morph():
           if (self.ws_id is None):
               self.ws_id, self.ws_name = _init_workspace()
 
+    def to_JSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
     # Overridden Functions to produce unique output
     def __str__(self):
         output = ''

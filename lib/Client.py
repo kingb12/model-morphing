@@ -347,11 +347,11 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
             # removed successfully
             print 'Removed ' + str(reaction_id)
             morph.model = new_model_id
-            morph.removed_ids[reaction_id] = removal_list[i]
+            morph.removed_ids[reaction_id] = removal_list[i][1]
         else:
             # essential
             print str(reaction_id) + ' is Essential'
-            morph.essential_ids[reaction_id] = removal_list[i]
+            morph.essential_ids[reaction_id] = removal_list[i][1]
     return  morph, process_count
 
 def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
@@ -386,21 +386,28 @@ def probanno_optimization(morph, rxn_list=None):
         probhash[rxn[0]] = rxn[1]
     a = 0.0
     b = 0.0
-    for reaction in rxn_list:
-        print reaction
-        m, model_id, new_reactions = find_alternative(reaction, morph=morph)
-        rmv_probability = probhash[reaction.split('_')[0]]
-        probsum  = 0.0
-        for i in new_reactions:
-            print i
-            print i.split('_')[0]
-            probsum += probhash[i.split('_')[0]]
-        new_probability = probsum / (0.0 + len(new_reactions))
-        if new_probability > rmv_probability:
-            morph = m
-        a = rmv_probability
-        b = new_probability
-    return morph, a, b
+    if (False):
+        for reaction in rxn_list:
+            print reaction
+            # m, model_id, new_reactions = find_alternative(reaction, morph=morph)
+            rmv_probability = probhash[reaction.split('_')[0]]
+            probsum  = 0.0
+            for i in new_reactions:
+                print i
+                print i.split('_')[0]
+                try:
+                    probsum += probhash[i.split('_')[0]]
+                except KeyError:
+                    # THIS NEEDS TO BE CHANGED IF YOU ARE SAVING THE HASH OUTSIDE OF
+                    # THIS FUNCTION
+                    probhash[i.split('_')[0]] = 0.0
+            new_probability = probsum / (0.0 + len(new_reactions))
+            if new_probability > rmv_probability:
+                morph = m
+            a = rmv_probability
+            b = new_probability
+    return probhash # morph, a, b, new_reactions
+
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
@@ -469,3 +476,20 @@ def analyze_alternative(morph, reaction, new_reactions):
     results['removed_reactions'] = [r for r in new_reactions if r in morph.removed_ids]
     results['essential_reactions'] = [r for r in new_reactions if r in morph.essential_ids]
     return results
+def remove_reactions_by_dict(morph, rxn_dict):
+    """
+    Removes reactions provided in a dictionary of a style like morph.rxn_labels['gene-no-match'] or morph.essential_ids
+    """
+    morph = copy.deepcopy(morph)
+    morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_dict.keys()})[0]
+    return morph
+def probanno_fill(morph):
+    morph = copy.deepcopy(morph)
+    # Gapfill the model and reset the model and modelws attributes of
+    # the morph
+    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation}
+    params = {u'model': morph.model, u'model_workspace': morph.ws_id, u'out_model' : u'morph_filled', u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
+    model_info = fba_client.gapfill_model(params)
+    morph.model = model_info[0]
+    return morph
