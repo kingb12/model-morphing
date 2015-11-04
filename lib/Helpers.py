@@ -139,10 +139,12 @@ def dump(object, filepath):
 def load(filepath):
     with open(filepath, 'rb') as f:
         return pickle.load(f)
-def save_object(data, type, wsid, objid=None):
-    sv = {u'data':data, u'type':type}
+def save_object(data, type, wsid, objid=None, name=None):
+    sv = {u'data':data, u'type':type, u'name':name}
     if objid is not None:
         sv[u'objid'] = objid
+    if name is not None:
+        sv[u'name'] = name
     return Client.ws_client.save_objects({u'id':wsid, u'objects':[sv]})
 def load_morph():
     """

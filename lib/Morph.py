@@ -51,7 +51,7 @@ class Morph():
     # the source model, the target genome, the reactions in the model as it is
     # morphed from source import to target, and the set of
     properties = set(['src_model', 'src_modelws', 'genome', 'genomews', 'probanno', 'probannows', 'protcomp', 'protcompws',
-                      'model', 'rxn_labels', 'objects', 'info', 'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model', 'media', 'mediaws'])
+                      'model', 'rxn_labels', 'objects', 'info', 'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model', 'media', 'mediaws', 'probhash'])
 
 
     def __init__(self, *arg_hash, **kwargs):

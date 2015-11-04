@@ -155,6 +155,9 @@ def get_objects(morph):
     obj  = ws_client.get_objects([{'objid': morph.probanno, 'wsid': morph.probannows}])[0]
     morph.objects['probanno'] = obj['data']
     morph.info['probanno'] = obj['info']
+    morph.probhash= dict()
+    for rxn in morph.objects['probanno']['reaction_probabilities']:
+        morph.probhash[rxn[0]] = rxn[1]
     return morph
 def label_reactions(morph):
     """
@@ -354,14 +357,15 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
             morph.essential_ids[reaction_id] = removal_list[i][1]
     return  morph, process_count
 
-def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_id=None):
-    if (morph is not None):
-        morph = copy.deepcopy(morph)
-        model_id = morph.model
-        ws_id = morph.ws_id
+def find_alternative(morph, reaction):
+    morph = copy.deepcopy(morph)
+    model_id = morph.model
+    ws_id = morph.ws_id
     fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    a = 0.0
+    b = 0.0
     gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation, u'blacklisted_rxns':[i.split('_')[0] for i in morph.removed_ids]}
-    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': 'findalt', 'reactions': [reaction]})[0]
+    new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': str('findalt' + str(reaction)), 'reactions': [reaction]})[0]
     params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : gap_formulation, 'integrate_solution' : True, 'gapFill' : 'gf'}
     model_info = fba_client.gapfill_model(params)
     filled_model = model_info[0]
@@ -371,9 +375,26 @@ def find_alternative(reaction, formulation=None, morph=None, model_id=None, ws_i
     gap_reactions = [a['reaction_ref'].split('/')[-1] + '_' + a['compartment_ref'].split('/')[-1] + str(0) for a in rxn_dicts]
     modelreactions = set()
     for key in morph.rxn_labels:
+        if reaction in morph.rxn_labels[key].keys():
+            del eorph.rxn_labels[key][reaction]
+    for key in morph.rxn_labels:
         modelreactions |= set(morph.rxn_labels[key].keys())
     new_reactions = [r for r in gap_reactions if r not in modelreactions]
-    return morph, params['gapFill'], new_reactions
+    rmv_probability = morph.probhash[reaction.split('_')[0]]
+    probsum  = 0.0
+    for i in new_reactions:
+        print i
+        print i.split('_')[0]
+        try:
+            probsum += morph.probhash[i.split('_')[0]]
+        except KeyError:
+            morph.probhash[i.split('_')[0]] = 0.0
+    new_probability = probsum / (0.0 + len(new_reactions))
+    if new_probability > rmv_probability:
+        morph.model = filled_model
+    a = rmv_probability
+    b = new_probability
+    return morph, params['gapFill'], new_reactions, filled_model
 
 def probanno_optimization(morph, rxn_list=None):
     morph = copy.deepcopy(morph)
@@ -386,27 +407,26 @@ def probanno_optimization(morph, rxn_list=None):
         probhash[rxn[0]] = rxn[1]
     a = 0.0
     b = 0.0
-    if (False):
-        for reaction in rxn_list:
-            print reaction
-            # m, model_id, new_reactions = find_alternative(reaction, morph=morph)
-            rmv_probability = probhash[reaction.split('_')[0]]
-            probsum  = 0.0
-            for i in new_reactions:
-                print i
-                print i.split('_')[0]
-                try:
-                    probsum += probhash[i.split('_')[0]]
-                except KeyError:
-                    # THIS NEEDS TO BE CHANGED IF YOU ARE SAVING THE HASH OUTSIDE OF
-                    # THIS FUNCTION
-                    probhash[i.split('_')[0]] = 0.0
-            new_probability = probsum / (0.0 + len(new_reactions))
-            if new_probability > rmv_probability:
-                morph = m
-            a = rmv_probability
-            b = new_probability
-    return probhash # morph, a, b, new_reactions
+    for reaction in rxn_list:
+        print reaction
+        m, model_id, new_reactions = find_alternative(reaction, morph=morph)
+        rmv_probability = probhash[reaction.split('_')[0]]
+        probsum  = 0.0
+        for i in new_reactions:
+            print i
+            print i.split('_')[0]
+            try:
+                probsum += probhash[i.split('_')[0]]
+            except KeyError:
+                # THIS NEEDS TO BE CHANGED IF YOU ARE SAVING THE HASH OUTSIDE OF
+                # THIS FUNCTION
+                probhash[i.split('_')[0]] = 0.0
+        new_probability = probsum / (0.0 + len(new_reactions))
+        if new_probability > rmv_probability:
+            morph = m
+        a = rmv_probability
+        b = new_probability
+    return morph, m, a, b, new_reactions, probhash
 
 
 # Finishing/Cleanup  Steps
