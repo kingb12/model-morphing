@@ -6,7 +6,7 @@ Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' org
 
 ### Installation
 1. Clone this repository: `git clone https://github.com/kingb12/model-morphing.git`
-2. Add path-to-the-cloned-repo/model-morphing/lib/ to your PYTHONPATH environment variable
+2. Add `path-to-the-cloned-repo/model-morphing/lib/` to your `PYTHONPATH` environment variable
 3. From the model-morphing directory, run in shell: `python lib/httplib2/setup.py install`
 4. run in shell `sudo pip install python-firebase`
 
