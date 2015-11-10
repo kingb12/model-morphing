@@ -11,7 +11,7 @@ Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' org
 4. run in shell `sudo pip install python-firebase`
 
 ### Running from the Interpretter
-1. Navigate to model-morphing/lib/
+1. Navigate to `model-morphing/lib/`
 2. run in shell `python`
 3. `from Helpers import *`
 
