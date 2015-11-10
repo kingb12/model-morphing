@@ -357,16 +357,30 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
             morph.essential_ids[reaction_id] = removal_list[i][1]
     return  morph, process_count
 
-def find_alternative(morph, reaction):
-    morph = copy.deepcopy(morph)
-    model_id = morph.model
-    ws_id = morph.ws_id
-    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+def find_alternative(morph, reaction_item):
+    """
+    attemps to find an alternative to a reaction given by reaction item of the form (reaction_id, (model_index, probanno value))
+
+    An example reaction_item would be morph.essential_ids.items()[0]
+    """
+    m = copy.deepcopy(morph)
+    reaction = reaction_item[0]
+    model_id = m.model
+    ws_id = m.ws_id
+    fba_formulation = {'media': m.media, 'media_workspace': m.mediaws}
     a = 0.0
     b = 0.0
-    gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation, u'blacklisted_rxns':[i.split('_')[0] for i in morph.removed_ids]}
+    # blacklist reactions we've already removed and the one we are removing now
     new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': str('findalt' + str(reaction)), 'reactions': [reaction]})[0]
-    params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : gap_formulation, 'integrate_solution' : True, 'gapFill' : 'gf'}
+    m.removed_ids[reaction] = reaction_item[1]
+    blacklisted_rxns = [i.split('_')[0] for i in m.removed_ids]
+    gap_formulation = {'probabilisticAnnotation' : m.probanno, 'probabilisticAnnotation_workspace' : m.probannows, u'formulation': fba_formulation, u'blacklisted_rxns':blacklisted_rxns}
+    for i in gap_formulation['blacklisted_rxns']:
+        print i
+    print "\n\n" + str(reaction)
+    print m.removed_ids[reaction]
+    assert reaction.split('_')[0] in gap_formulation['blacklisted_rxns']
+    params = {'model': new_model_id, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : gap_formulation, 'integrate_solution' : True, 'gapFill' : 'gf', 'completeGapfill': False}
     model_info = fba_client.gapfill_model(params)
     filled_model = model_info[0]
     object = ws_client.get_objects([{'name': model_info[0] + '.gffba', 'wsid': params['workspace']}])[0]
@@ -374,27 +388,27 @@ def find_alternative(morph, reaction):
     rxn_dicts = gapfill['gapfillingSolutionReactions']
     gap_reactions = [a['reaction_ref'].split('/')[-1] + '_' + a['compartment_ref'].split('/')[-1] + str(0) for a in rxn_dicts]
     modelreactions = set()
-    for key in morph.rxn_labels:
-        if reaction in morph.rxn_labels[key].keys():
-            del eorph.rxn_labels[key][reaction]
-    for key in morph.rxn_labels:
-        modelreactions |= set(morph.rxn_labels[key].keys())
+    for key in m.rxn_labels:
+        if reaction in m.rxn_labels[key].keys():
+            del m.rxn_labels[key][reaction]
+    for key in m.rxn_labels:
+        modelreactions |= set(m.rxn_labels[key].keys())
     new_reactions = [r for r in gap_reactions if r not in modelreactions]
-    rmv_probability = morph.probhash[reaction.split('_')[0]]
+    rmv_probability = m.probhash[reaction.split('_')[0]]
     probsum  = 0.0
     for i in new_reactions:
         print i
         print i.split('_')[0]
         try:
-            probsum += morph.probhash[i.split('_')[0]]
+            probsum += m.probhash[i.split('_')[0]]
         except KeyError:
-            morph.probhash[i.split('_')[0]] = 0.0
+            m.probhash[i.split('_')[0]] = 0.0
     new_probability = probsum / (0.0 + len(new_reactions))
     if new_probability > rmv_probability:
-        morph.model = filled_model
+        m.model = filled_model
     a = rmv_probability
     b = new_probability
-    return morph, params['gapFill'], new_reactions, filled_model
+    return m, params['gapFill'], new_reactions, filled_model
 
 def probanno_optimization(morph, rxn_list=None):
     morph = copy.deepcopy(morph)

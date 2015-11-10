@@ -11,8 +11,8 @@ def alternative_shotgun():
     stats = list()
     morphs = list()
 
-    for n in range(1, 3, 3):
-        m, a, b, c = Client.find_alternative(morph, morph.essential_ids.keys()[n])
+    for n in range(1, 40, 3):
+        m, a, b, c = Client.find_alternative(morph, morph.essential_ids.items()[n])
         models.append(m.model)
         morphs.append(m)
         probs = list()
@@ -60,3 +60,9 @@ def move_models(result, ws):
         obj = get_object(m, result['morph'].ws_id)
         save_object(obj['data'], obj['info'][2], ws, name=obj['info'][1])
 
+def check_essentiality(result, index):
+    for s in result['stats'][index]['new_reactions']:
+        m = copy.deepcopy(result['morphs'][index])
+        m.model = Client.fba_client.remove_reactions({'model': result['models'][index], 'model_workspace': result['morphs'][index].ws_id, 'output_id': 'essncheck', 'workspace':result['morphs'][index].ws_id, 'reactions':[s]})[0]
+        a = runfba(m)
+        print a[10]['Objective']
