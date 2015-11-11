@@ -21,6 +21,20 @@ def make_morph():
     args['mediaws'] = '9145'
     args['media'] = '18'
     return Morph(args)
+def make_morph(ws_id):
+    args = dict()
+    args['genome'] = '3'
+    args['src_model'] = '19'
+    args['probanno'] = '15'
+    args['protcomp'] = '6'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '18'
+    args['ws_id'] = ws_id
+    return Morph(args)
 def modelargs(morph):
     args = dict()
     args['model'] = morph.model

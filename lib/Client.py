@@ -6,6 +6,7 @@ import random
 import argparse
 import time
 import traceback
+import Helpers
 import copy
 from operator import itemgetter
 from Morph import Morph
@@ -34,10 +35,20 @@ def _init_clients():
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
 
-def morph_model(morph):
+def prepare_supermodel(morph, fill_src=True):
+    """
+    Composition of the first several steps in the algorithm
+
+    1) Fill the source model to media using probabilistic gapfilling (can be skipped if fill_src keyword arg is set to False)
+    2) Translate the src_model to a pouplate morph.trans_model
+    3) Draft reconstruction of target genome fills morph.recon_model field
+    4) label reactions in the morph (populates morph.rxn_labels)
+    5) Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function
+    """
+    if(fill_src):
+        morph = fill_to_media(morph)
     morph = translate_features(morph)
     morph = reconstruct_genome(morph)
-    morph = get_objects(morph)
     morph = label_reactions(morph)
     morph = build_supermodel(morph)
     return morph
@@ -116,7 +127,7 @@ def reconstruct_genome(morph):
     morph.recon_model = fba_client.genome_to_fbamodel(recon_params)[0]
     return morph
 
-def get_objects(morph):
+def _get_objects(morph):
     """
     Gets the model and probanno objects associated with the morph.
 
@@ -189,6 +200,7 @@ def label_reactions(morph):
 
     :param morph: the Morph object for labeling as described above
     """
+    morph = _get_objects(morph)
     morph = copy.deepcopy(morph)
     label_time = time.time()
     # create local vars for parts of the morph
@@ -239,6 +251,7 @@ def label_reactions(morph):
                 rxn_labels['recon'][rxn_id] = (i, -1.0)
     morph.rxn_labels = rxn_labels
     return morph
+
 def build_supermodel(morph):
     """
     Sets morph.model to a superset of all reaction types in morph.rxn_labels
@@ -288,7 +301,7 @@ def removal_list(rxn_dict, list_range=None):
         removal_list = removal_list[list_range[0]:list_range[1]]
     return removal_list
 
-def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, process_count=0, iterative_models=True):
+def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
@@ -310,8 +323,7 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
         KeyError if (label not in rxn_labels)
     """
     morph = copy.deepcopy(morph)
-    if (ws is None):
-        ws = morph.ws_id
+    ws = morph.ws_id
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return item[1][1]
@@ -355,7 +367,9 @@ def process_reactions(morph, rxn_list=None, model_id=None, name='', ws=None, pro
             # essential
             print str(reaction_id) + ' is Essential'
             morph.essential_ids[reaction_id] = removal_list[i][1]
-    return  morph, process_count
+    if get_count:
+        return  morph, process_count
+    return morph
 
 def find_alternative(morph, reaction_item):
     """
@@ -368,8 +382,6 @@ def find_alternative(morph, reaction_item):
     model_id = m.model
     ws_id = m.ws_id
     fba_formulation = {'media': m.media, 'media_workspace': m.mediaws}
-    a = 0.0
-    b = 0.0
     # blacklist reactions we've already removed and the one we are removing now
     new_model_id = fba_client.remove_reactions({'model': model_id, 'model_workspace': ws_id, 'workspace': ws_id, 'output_id': str('findalt' + str(reaction)), 'reactions': [reaction]})[0]
     m.removed_ids[reaction] = reaction_item[1]
@@ -397,18 +409,18 @@ def find_alternative(morph, reaction_item):
     rmv_probability = m.probhash[reaction.split('_')[0]]
     probsum  = 0.0
     for i in new_reactions:
-        print i
-        print i.split('_')[0]
         try:
-            probsum += m.probhash[i.split('_')[0]]
+            prob = m.probhash[i/split('_')[0]]
+            if prob > 0:
+                probsum += prob
         except KeyError:
-            m.probhash[i.split('_')[0]] = 0.0
+            m.probhash[i.split('_')[0]] = -1.0
     new_probability = probsum / (0.0 + len(new_reactions))
     if new_probability > rmv_probability:
         m.model = filled_model
     a = rmv_probability
     b = new_probability
-    return m, params['gapFill'], new_reactions, filled_model
+    return m, new_reactions
 
 def probanno_optimization(morph, rxn_list=None):
     morph = copy.deepcopy(morph)
@@ -452,6 +464,31 @@ def _finish(morph, save_ws=False):
 
 ws_client, fba_client =  _init_clients()
 
+def get_morph_rxns(morph, label=None):
+    if label is None:
+        modelobj = Helpers.get_object(morph.model, morph.ws_id)
+        rxnlist = list()
+        model = modelobj['data']
+        for i in range(len(model['modelreactions'])):
+            mdlrxn = model['modelreactions'][i]
+            rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+            rxnlist.append(rxn_id)
+    if label is "essential":
+        if morph.essential_ids is not None:
+            return morph.essential_ids.keys()
+        else:
+            return []
+    if label is "removed":
+        if morph.removed_ids is not None:
+            return morph.removed_ids.keys()
+        else:
+            return []
+    if label in morph.rxn_labels.keys():
+        return morph.rxn_labels[label].keys()
+def get_reactions(reactions):
+    return fba_client.get_reactions({'reactions':reactions})
+def get_reaction(reaction):
+    return fba_client.get_reactions({'reactions':[reaction]})
 def get_mdlrxn_info(morph, reaction_ids=None):
     """
     Returns a list of dict() of informtation about reactions in the model and it's relation to the morph
@@ -501,15 +538,6 @@ def get_mdlrxn_info(morph, reaction_ids=None):
         results.append(ans)
     return results
 
-def analyze_alternative(morph, reaction, new_reactions):
-    """
-    Returns information related to what was added to the model when finding alternative reactions
-    """
-    results = dict()
-    results['reaction_re-added'] = reaction in new_reactions
-    results['removed_reactions'] = [r for r in new_reactions if r in morph.removed_ids]
-    results['essential_reactions'] = [r for r in new_reactions if r in morph.essential_ids]
-    return results
 def remove_reactions_by_dict(morph, rxn_dict):
     """
     Removes reactions provided in a dictionary of a style like morph.rxn_labels['gene-no-match'] or morph.essential_ids
@@ -526,4 +554,14 @@ def probanno_fill(morph):
     params = {u'model': morph.model, u'model_workspace': morph.ws_id, u'out_model' : u'morph_filled', u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
     model_info = fba_client.gapfill_model(params)
     morph.model = model_info[0]
+    return morph
+
+def remove_reactions(morph, rxn_list):
+    morph = copy.deepcopy(morph)
+    morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_list})[0]
+    return morph
+
+def remove_reaction(morph, rxn):
+    morph = copy.deepcopy(morph)
+    morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': [rxn]})[0]
     return morph
