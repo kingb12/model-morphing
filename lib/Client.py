@@ -36,7 +36,7 @@ def _init_clients():
     return ws_client, fba_client
 
 def prepare_supermodel(morph, fill_src=True):
-    """
+    r"""
     Composition of the first several steps in the algorithm
 
     1) Fill the source model to media using probabilistic gapfilling (can be skipped if fill_src keyword arg is set to False)
