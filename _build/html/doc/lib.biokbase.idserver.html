@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.biokbase.idserver package &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lib-biokbase-idserver-package">
+<h1>lib.biokbase.idserver package<a class="headerlink" href="#lib-biokbase-idserver-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.biokbase.idserver.client">
+<span id="lib-biokbase-idserver-client-module"></span><h2>lib.biokbase.idserver.client module<a class="headerlink" href="#module-lib.biokbase.idserver.client" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.biokbase.idserver.client.IDServerAPI">
+<em class="property">class </em><code class="descclassname">lib.biokbase.idserver.client.</code><code class="descname">IDServerAPI</code><span class="sig-paren">(</span><em>url=None</em>, <em>timeout=1800</em>, <em>user_id=None</em>, <em>password=None</em>, <em>token=None</em>, <em>ignore_authrc=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="lib.biokbase.idserver.client.IDServerAPI.allocate_id_range">
+<code class="descname">allocate_id_range</code><span class="sig-paren">(</span><em>kbase_id_prefix</em>, <em>count</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI.allocate_id_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI.allocate_id_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.idserver.client.IDServerAPI.external_ids_to_kbase_ids">
+<code class="descname">external_ids_to_kbase_ids</code><span class="sig-paren">(</span><em>external_db</em>, <em>ext_ids</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI.external_ids_to_kbase_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI.external_ids_to_kbase_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.idserver.client.IDServerAPI.kbase_ids_to_external_ids">
+<code class="descname">kbase_ids_to_external_ids</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI.kbase_ids_to_external_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI.kbase_ids_to_external_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.idserver.client.IDServerAPI.register_allocated_ids">
+<code class="descname">register_allocated_ids</code><span class="sig-paren">(</span><em>prefix</em>, <em>db_name</em>, <em>assignments</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI.register_allocated_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI.register_allocated_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.idserver.client.IDServerAPI.register_ids">
+<code class="descname">register_ids</code><span class="sig-paren">(</span><em>prefix</em>, <em>db_name</em>, <em>ids</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#IDServerAPI.register_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.IDServerAPI.register_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.biokbase.idserver.client.JSONObjectEncoder">
+<em class="property">class </em><code class="descclassname">lib.biokbase.idserver.client.</code><code class="descname">JSONObjectEncoder</code><span class="sig-paren">(</span><em>skipkeys=False</em>, <em>ensure_ascii=True</em>, <em>check_circular=True</em>, <em>allow_nan=True</em>, <em>sort_keys=False</em>, <em>indent=None</em>, <em>separators=None</em>, <em>encoding='utf-8'</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#JSONObjectEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.JSONObjectEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">json.encoder.JSONEncoder</span></code></p>
+<dl class="method">
+<dt id="lib.biokbase.idserver.client.JSONObjectEncoder.default">
+<code class="descname">default</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#JSONObjectEncoder.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.JSONObjectEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="lib.biokbase.idserver.client.ServerError">
+<em class="property">exception </em><code class="descclassname">lib.biokbase.idserver.client.</code><code class="descname">ServerError</code><span class="sig-paren">(</span><em>name</em>, <em>code</em>, <em>message</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/idserver/client.html#ServerError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.idserver.client.ServerError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.biokbase.idserver">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lib.biokbase.idserver" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">lib.biokbase.idserver package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.idserver.client">lib.biokbase.idserver.client module</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.idserver">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/doc/lib.biokbase.idserver.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="../_sources/doc/lib.biokbase.idserver.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

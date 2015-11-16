@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.biokbase.assembly.client &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.biokbase.assembly.client</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<span class="kn">from</span> <span class="nn">shock</span> <span class="kn">import</span> <span class="n">Shock</span>
+
+<span class="c">#Debug</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="sd">&quot;&quot;&quot; Assembly Service client library.</span>
+
+<span class="sd">REST interface:</span>
+
+<span class="sd">Resources:</span>
+<span class="sd">* http://assembly.kbase.us/api/</span>
+
+<span class="sd">** user/current</span>
+<span class="sd">** user/USER_ID/</span>
+
+<span class="sd">*** jobs/current</span>
+<span class="sd">*** jobs/JOB_ID</span>
+<span class="sd">**** status</span>
+<span class="sd">**** download</span>
+<span class="sd">**** runtime</span>
+<span class="sd">**** data_id</span>
+<span class="sd">**** ... other metadata</span>
+
+<span class="sd">*** data/current</span>
+<span class="sd">*** data/DATA_ID</span>
+<span class="sd">**** files</span>
+<span class="sd">**** files/FILE_ID(?)</span>
+<span class="sd">***** filename</span>
+<span class="sd">***** filesize</span>
+
+
+<span class="sd">Admin</span>
+<span class="sd">-----</span>
+<span class="sd">Create user                       POST URL/users</span>
+<span class="sd">Run job                           POST URL/user/USER_ID/job/new --data JSON_MSG</span>
+<span class="sd">Get status of recent jobs         GET  URL/user/USER_ID/job/status?records=&lt;&gt;</span>
+
+<span class="sd"># TODO</span>
+<span class="sd">Get status of one job             GET  URL/user/USER_ID/job/JOB_ID/status</span>
+<span class="sd">Get list of user&#39;s data           GET  URL/user/USER_ID/data/current/status</span>
+<span class="sd">Get list of files for data_id     GET  URL/user/USER_ID/data/DATA_ID/status</span>
+
+
+<span class="sd">#TODO</span>
+<span class="sd">format from html??</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="mi">8000</span> <span class="c">## change</span>
+        <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="c"># Port not included</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span> <span class="o">+</span> <span class="s">&#39;:{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s">&#39;{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">),</span>
+                        <span class="s">&#39;Content-type&#39;</span><span class="p">:</span> <span class="s">&#39;application/json&#39;</span><span class="p">,</span> 
+                        <span class="s">&#39;Accept&#39;</span><span class="p">:</span> <span class="s">&#39;text/plain&#39;</span><span class="p">}</span>
+        <span class="n">shockres</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;http://{}/shock&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">),</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shockurl</span> <span class="o">=</span> <span class="s">&#39;http://{}/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">shockres</span><span class="p">)[</span><span class="s">&#39;shockurl&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shock</span> <span class="o">=</span> <span class="n">Shock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shockurl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Client.get_job_data"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.get_job_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_job_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">job_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Job id required&#39;</span><span class="p">)</span>
+        <span class="c"># Get node id</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;http://{}/user/{}/job/{}/shock_node&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">job_id</span><span class="p">),</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="c"># Download files</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nodes_map</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">nodes_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_tb</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">print</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error retrieving results&quot;</span><span class="p">)</span>
+        <span class="k">return</span> 
+</div>
+<div class="viewcode-block" id="Client.get_assemblies"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.get_assemblies">[docs]</a>    <span class="k">def</span> <span class="nf">get_assemblies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">asm_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">job_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Job id required&#39;</span><span class="p">)</span>
+        <span class="c"># Get node id</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;http://{}/user/{}/job/{}/assembly&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">job_id</span><span class="p">),</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+
+        <span class="c"># Download files</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nodes_map</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span> <span class="c"># Get first one and print</span>
+                <span class="n">asm_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="n">nodes_map</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">asm_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="k">print</span> <span class="n">line</span>
+            <span class="k">elif</span> <span class="n">asm_id</span><span class="p">:</span>
+                <span class="n">ordered</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">nodes_map</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">ordered</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="nb">int</span><span class="p">(</span><span class="n">asm_id</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="nb">id</span> <span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">nodes_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_tb</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">print</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error retrieving results&quot;</span><span class="p">)</span>
+        <span class="k">return</span> 
+        </div>
+<div class="viewcode-block" id="Client.upload_data_shock"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.upload_data_shock">[docs]</a>    <span class="k">def</span> <span class="nf">upload_data_shock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">curl</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">upload_reads</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">curl</span><span class="o">=</span><span class="n">curl</span><span class="p">)</span>
+        <span class="n">shock_info</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;filename&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                                  <span class="s">&#39;filesize&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                                  <span class="s">&#39;shock_url&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shockurl</span><span class="p">,</span>
+                                  <span class="s">&#39;shock_id&#39;</span><span class="p">:</span> <span class="n">res</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">],</span>
+                                  <span class="s">&#39;upload_time&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())}</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">shock_info</span>
+</div>
+<div class="viewcode-block" id="Client.upload_data_file_info"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.upload_data_file_info">[docs]</a>    <span class="k">def</span> <span class="nf">upload_data_file_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">curl</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns FileInfo Object &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock</span><span class="o">.</span><span class="n">upload_reads</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">curl</span><span class="o">=</span><span class="n">curl</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FileInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shockurl</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()))</span>
+</div>
+<div class="viewcode-block" id="Client.submit_job"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.submit_job">[docs]</a>    <span class="k">def</span> <span class="nf">submit_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/job/new&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+</div>
+<div class="viewcode-block" id="Client.submit_data"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.submit_data">[docs]</a>    <span class="k">def</span> <span class="nf">submit_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/data/new&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+</div>
+<div class="viewcode-block" id="Client.get_job_status"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.get_job_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_job_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat_n</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">job_id</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/job/{}/status&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/job/status?records={}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">stat_n</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+</div>
+<div class="viewcode-block" id="Client.get_available_modules"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.get_available_modules">[docs]</a>    <span class="k">def</span> <span class="nf">get_available_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/module/all/avail/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+</div>
+<div class="viewcode-block" id="Client.kill_jobs"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.kill_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">kill_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">job_id</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/job/{}/kill&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://{}/user/{}/job/all/kill&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+</div>
+<div class="viewcode-block" id="Client.get_config"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.Client.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;http://{}/admin/system/config&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">))</span><span class="o">.</span><span class="n">content</span>
+
+
+<span class="c">##### ARAST JSON SPEC METHODS #####</span>
+</div></div>
+<div class="viewcode-block" id="FileInfo"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.FileInfo">[docs]</a><span class="k">class</span> <span class="nc">FileInfo</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shock_url</span><span class="p">,</span> <span class="n">shock_id</span><span class="p">,</span> <span class="n">filesize</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">create_time</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">dict</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;shock_url&#39;</span><span class="p">:</span> <span class="n">shock_url</span><span class="p">,</span>
+                     <span class="s">&#39;shock_id&#39;</span> <span class="p">:</span> <span class="n">shock_id</span><span class="p">,</span>
+                     <span class="s">&#39;filesize&#39;</span><span class="p">:</span> <span class="n">filesize</span><span class="p">,</span>
+                     <span class="s">&#39;filename&#39;</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
+                     <span class="s">&#39;create_time&#39;</span><span class="p">:</span> <span class="n">create_time</span><span class="p">,</span>
+                     <span class="s">&#39;metadata&#39;</span><span class="p">:</span> <span class="n">metadata</span><span class="p">})</span>
+</div>
+<div class="viewcode-block" id="FileSet"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.FileSet">[docs]</a><span class="k">class</span> <span class="nc">FileSet</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_type</span><span class="p">,</span> <span class="n">file_infos</span><span class="p">,</span> 
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">dict</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">set_type</span><span class="p">,</span>
+                     <span class="s">&#39;file_infos&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">file_infos</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_infos</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="s">&#39;file_infos&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s">&#39;file_infos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_infos</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="AssemblyData"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.AssemblyData">[docs]</a><span class="k">class</span> <span class="nc">AssemblyData</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">dict</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s">&#39;file_sets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="AssemblyData.add_set"><a class="viewcode-back" href="../../../../doc/lib.biokbase.assembly.html#lib.biokbase.assembly.client.AssemblyData.add_set">[docs]</a>    <span class="k">def</span> <span class="nf">add_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_set</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s">&#39;file_sets&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_set</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

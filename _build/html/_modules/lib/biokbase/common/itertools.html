@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.biokbase.common.itertools &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.biokbase.common.itertools</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Nov 11, 2012</span>
+
+<span class="sd">@author: gaprice@lbl.gov</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<div class="viewcode-block" id="chunkiter"><a class="viewcode-back" href="../../../../doc/lib.biokbase.common.html#lib.biokbase.common.itertools.chunkiter">[docs]</a><span class="k">def</span> <span class="nf">chunkiter</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Iterates over an iterable in chunks of size size. Returns an iterator</span>
+<span class="sd">  that in turn returns iterators over the iterable that each iterate through</span>
+<span class="sd">  size objects in the iterable.</span>
+<span class="sd">  Note that since the inner and outer loops are pulling values from the same</span>
+<span class="sd">  iterator, continue and break don&#39;t necessarily behave exactly as one would</span>
+<span class="sd">  expect. In the outer loop of the iteration, continue effectively does</span>
+<span class="sd">  nothing, but break works normally. In the inner loop, break has no real</span>
+<span class="sd">  effect but continue works normally. For the latter issue, wrapping the inner</span>
+<span class="sd">  iterator in a tuple will cause break to skip the remaining items in the</span>
+<span class="sd">  iterator. Alternatively, one can set a flag and exhaust the inner iterator.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">inneriter</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">iterator</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">first</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">iterator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">inneriter</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

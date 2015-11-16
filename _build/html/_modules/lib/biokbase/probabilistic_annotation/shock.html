@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.biokbase.probabilistic_annotation.shock &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.biokbase.probabilistic_annotation.shock</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;A basic Shock (https://github.com/MG-RAST/Shock) python access class.</span>
+
+<span class="sd">Authors:</span>
+
+<span class="sd">* Jared Wilkening</span>
+<span class="sd">* Travis Harrison</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Imports</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+<span class="kn">import</span> <span class="nn">cStringIO</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Classes</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
+    
+    <span class="n">shock_url</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">auth_header</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s">&quot;An exception of type {0} occured. Arguments:</span><span class="se">\n</span><span class="s">{1!r}&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shock_url</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span> <span class="o">=</span> <span class="n">shock_url</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_auth</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Client.set_auth"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.set_auth">[docs]</a>    <span class="k">def</span> <span class="nf">set_auth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s">&#39;OAuth </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="n">token</span><span class="p">}</span>
+    </div>
+<div class="viewcode-block" id="Client.get_acl"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.get_acl">[docs]</a>    <span class="k">def</span> <span class="nf">get_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manage_acl</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;get&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Client.add_acl"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.add_acl">[docs]</a>    <span class="k">def</span> <span class="nf">add_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">acl</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manage_acl</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;put&#39;</span><span class="p">,</span> <span class="n">acl</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Client.delete_acl"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.delete_acl">[docs]</a>    <span class="k">def</span> <span class="nf">delete_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">acl</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manage_acl</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;delete&#39;</span><span class="p">,</span> <span class="n">acl</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_manage_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">acl</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="o">+</span><span class="s">&#39;/node/&#39;</span><span class="o">+</span><span class="n">node</span><span class="o">+</span><span class="s">&#39;/acl&#39;</span>
+        <span class="k">if</span> <span class="n">acl</span> <span class="ow">and</span> <span class="n">user</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">+=</span> <span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">acl</span><span class="o">+</span><span class="s">&#39;?users=&#39;</span><span class="o">+</span><span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;get&#39;</span><span class="p">:</span>
+                <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;put&#39;</span><span class="p">:</span>
+                <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">:</span>
+                <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">req</span><span class="o">.</span><span class="n">text</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()))</span>
+        <span class="n">rj</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rj</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">key</span> <span class="ow">in</span> <span class="n">rj</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;error&#39;</span><span class="p">]])):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Return data not valid Shock format&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Shock error: </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">rj</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">],</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="Client.get_node"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.get_node">[docs]</a>    <span class="k">def</span> <span class="nf">get_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_data</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">node</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Client.query_node"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.query_node">[docs]</a>    <span class="k">def</span> <span class="nf">query_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="n">query_string</span> <span class="o">=</span> <span class="s">&#39;?query&amp;&#39;</span><span class="o">+</span><span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_data</span><span class="p">(</span><span class="n">query_string</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_get_node_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="o">+</span><span class="s">&#39;/node&#39;</span><span class="o">+</span><span class="n">path</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rget</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rget</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">rget</span><span class="o">.</span><span class="n">text</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">rget</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()))</span>
+        <span class="n">rj</span> <span class="o">=</span> <span class="n">rget</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rj</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">key</span> <span class="ow">in</span> <span class="n">rj</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;error&#39;</span><span class="p">]])):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Return data not valid Shock format&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Shock error: </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">rj</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">],</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="Client.download_to_string"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.download_to_string">[docs]</a>    <span class="k">def</span> <span class="nf">download_to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_download</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="n">part</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="n">chunk</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">content</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">text</span>
+    </div>
+<div class="viewcode-block" id="Client.download_to_path"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.download_to_path">[docs]</a>    <span class="k">def</span> <span class="nf">download_to_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;download_to_path requires non-empty path parameter&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_download</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="n">part</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="n">chunk</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">):</span> 
+                <span class="k">if</span> <span class="n">chunk</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">path</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_get_node_download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">part</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;download requires non-empty node parameter&#39;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/node/</span><span class="si">%s</span><span class="s">?download&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">and</span> <span class="n">part</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">+=</span> <span class="s">&#39;&amp;index=&#39;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s">&#39;&amp;part=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="n">url</span> <span class="o">+=</span> <span class="s">&#39;&amp;chunk_size=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rget</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rget</span><span class="o">.</span><span class="n">ok</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">rget</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">rget</span>
+    
+<div class="viewcode-block" id="Client.delete_node"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.delete_node">[docs]</a>    <span class="k">def</span> <span class="nf">delete_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="o">+</span><span class="s">&#39;/node/&#39;</span><span class="o">+</span><span class="n">node</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">)</span>
+            <span class="n">rj</span>  <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Shock error </span><span class="si">%s</span><span class="s"> : </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">rj</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">],</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">rj</span>
+    </div>
+<div class="viewcode-block" id="Client.index_node"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.index_node">[docs]</a>    <span class="k">def</span> <span class="nf">index_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">/node/</span><span class="si">%s</span><span class="s">/index/</span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">)</span>
+            <span class="n">rj</span>  <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Shock error </span><span class="si">%s</span><span class="s"> : </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">rj</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">],</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">rj</span>
+    </div>
+<div class="viewcode-block" id="Client.create_node"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.create_node">[docs]</a>    <span class="k">def</span> <span class="nf">create_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">data_name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data_name</span><span class="p">)</span>
+
+    <span class="c"># file_name is name of data file</span>
+    <span class="c"># form == True for multi-part form</span>
+    <span class="c"># form == False for data POST of file</span></div>
+<div class="viewcode-block" id="Client.upload"><a class="viewcode-back" href="../../../../doc/lib.biokbase.probabilistic_annotation.html#lib.biokbase.probabilistic_annotation.shock.Client.upload">[docs]</a>    <span class="k">def</span> <span class="nf">upload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shock_url</span><span class="o">+</span><span class="s">&#39;/node&#39;</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;PUT&#39;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">files</span><span class="p">[</span><span class="s">&#39;upload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_handle</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">files</span><span class="p">[</span><span class="s">&#39;attributes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_handle</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;PUT&#39;</span><span class="p">:</span>
+                    <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">rj</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">form</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;PUT&#39;</span><span class="p">:</span>
+                    <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">files</span><span class="p">[</span><span class="s">&#39;upload&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_header</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">files</span><span class="p">[</span><span class="s">&#39;upload&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">rj</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;No data specificed for </span><span class="si">%s</span><span class="s"> body&#39;</span><span class="o">%</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">ok</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Unable to connect to Shock server </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Shock error </span><span class="si">%s</span><span class="s"> : </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">rj</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">],</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rj</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    
+    <span class="c"># handles 3 cases</span>
+    <span class="c"># 1. file path</span>
+    <span class="c"># 2. file object (handle)</span>
+    <span class="c"># 3. file content (string)</span></div>
+    <span class="k">def</span> <span class="nf">_get_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="n">n</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="n">n</span> <span class="k">else</span> <span class="s">&quot;unknown&quot;</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cStringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="n">n</span> <span class="k">else</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;Error opening file handle for upload&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

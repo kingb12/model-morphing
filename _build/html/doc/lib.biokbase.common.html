@@ -1,0 +1,264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.biokbase.common package &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lib-biokbase-common-package">
+<h1>lib.biokbase.common package<a class="headerlink" href="#lib-biokbase-common-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.biokbase.common.classtools">
+<span id="lib-biokbase-common-classtools-module"></span><h2>lib.biokbase.common.classtools module<a class="headerlink" href="#module-lib.biokbase.common.classtools" title="Permalink to this headline">¶</a></h2>
+<p>Created on Sep 6, 2012</p>
+<p>&#64;author: <a class="reference external" href="mailto:gaprice&#37;&#52;&#48;lbl&#46;gov">gaprice<span>&#64;</span>lbl<span>&#46;</span>gov</a></p>
+<p>Some class related tools</p>
+<dl class="exception">
+<dt id="lib.biokbase.common.classtools.DelAttrOnImmutableObjectError">
+<em class="property">exception </em><code class="descclassname">lib.biokbase.common.classtools.</code><code class="descname">DelAttrOnImmutableObjectError</code><a class="reference internal" href="../_modules/lib/biokbase/common/classtools.html#DelAttrOnImmutableObjectError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.classtools.DelAttrOnImmutableObjectError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.biokbase.common.classtools.Immutable">
+<em class="property">class </em><code class="descclassname">lib.biokbase.common.classtools.</code><code class="descname">Immutable</code><a class="reference internal" href="../_modules/lib/biokbase/common/classtools.html#Immutable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.classtools.Immutable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Inheriting from Immutable disables modification of attributes except by
+a non-standard method, preventing accidental modification in code.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="lib.biokbase.common.classtools.SetAttrOnImmutableObjectError">
+<em class="property">exception </em><code class="descclassname">lib.biokbase.common.classtools.</code><code class="descname">SetAttrOnImmutableObjectError</code><a class="reference internal" href="../_modules/lib/biokbase/common/classtools.html#SetAttrOnImmutableObjectError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.classtools.SetAttrOnImmutableObjectError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.biokbase.common.classtools.abstractclassmethod">
+<em class="property">class </em><code class="descclassname">lib.biokbase.common.classtools.</code><code class="descname">abstractclassmethod</code><span class="sig-paren">(</span><em>callable_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/classtools.html#abstractclassmethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.classtools.abstractclassmethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">classmethod</span></code></p>
+<p>A decorator indicating abstract classmethods.</p>
+<p>Similar to abstractmethod.</p>
+<p>Usage:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>class C(metaclass=ABCMeta):</dt>
+<dd><p class="first">&#64;abstractclassmethod
+def my_abstract_classmethod(cls, ...):</p>
+<blockquote class="last">
+<div>...</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p>&#8216;abstractclassmethod&#8217; is deprecated. Use &#8216;classmethod&#8217; with
+&#8216;abstractmethod&#8217; instead.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.biokbase.common.datastructures">
+<span id="lib-biokbase-common-datastructures-module"></span><h2>lib.biokbase.common.datastructures module<a class="headerlink" href="#module-lib.biokbase.common.datastructures" title="Permalink to this headline">¶</a></h2>
+<p>Created on Sep 15, 2012</p>
+<p>&#64;author: <a class="reference external" href="mailto:gaprice&#37;&#52;&#48;lbl&#46;gov">gaprice<span>&#64;</span>lbl<span>&#46;</span>gov</a></p>
+<dl class="class">
+<dt id="lib.biokbase.common.datastructures.AutoVivifingDict">
+<em class="property">class </em><code class="descclassname">lib.biokbase.common.datastructures.</code><code class="descname">AutoVivifingDict</code><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#AutoVivifingDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.AutoVivifingDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a></p>
+<p>Implementation of perl&#8217;s autovivification feature.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator">
+<em class="property">class </em><code class="descclassname">lib.biokbase.common.datastructures.</code><code class="descname">DictListWithSortedIterator</code><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Implements a dict-like object, the values of which are lists of
+objects. The iterator returned from the __iter__ method traverses the lists
+in order of 1) the sorted list of keys and 2) the order the items were added
+to the list. Once iteration is started, the DLWSI cannot be modified until
+the iterator is exhausted or the discard() method is called on the
+iterator.</p>
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.__delitem__">
+<code class="descname">__delitem__</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.__delitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.__delitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the list stored at key.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list stored at key as a tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.__iter__">
+<code class="descname">__iter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.__iter__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.__iter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterator over this DLWSI. The iterator proceeds through
+each list in the order of the sorted keys and returns a key / list item
+pair for each next call. Thus if a particular key has 3 list items that
+key will be returned 3 times in succession, once with each list item.
+The DLWSI cannot be modified while iterating. To allow modification without
+exhausting the iterator call the discard() method on the iterator.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.__setitem__">
+<code class="descname">__setitem__</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.__setitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add value to the end of the list stored at key</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all keys and values from the DLWSI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list stored at key as a tuple. The default argument
+specifies the object to return if key does not exist (default None).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an unsorted list of keys.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.biokbase.common.datastructures.DictListWithSortedIterator.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>dictlist</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/datastructures.html#DictListWithSortedIterator.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.datastructures.DictListWithSortedIterator.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all key value pairs of the passed in DLWSI to this DLWSI. Any
+keys in this DLWSI that have matching names to keys in the passed in DLWSI
+will be overwritten.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lib-biokbase-common-filetools-module">
+<h2>lib.biokbase.common.filetools module<a class="headerlink" href="#lib-biokbase-common-filetools-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.biokbase.common.itertools">
+<span id="lib-biokbase-common-itertools-module"></span><h2>lib.biokbase.common.itertools module<a class="headerlink" href="#module-lib.biokbase.common.itertools" title="Permalink to this headline">¶</a></h2>
+<p>Created on Nov 11, 2012</p>
+<p>&#64;author: <a class="reference external" href="mailto:gaprice&#37;&#52;&#48;lbl&#46;gov">gaprice<span>&#64;</span>lbl<span>&#46;</span>gov</a></p>
+<dl class="function">
+<dt id="lib.biokbase.common.itertools.chunkiter">
+<code class="descclassname">lib.biokbase.common.itertools.</code><code class="descname">chunkiter</code><span class="sig-paren">(</span><em>iterable</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lib/biokbase/common/itertools.html#chunkiter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.biokbase.common.itertools.chunkiter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates over an iterable in chunks of size size. Returns an iterator
+that in turn returns iterators over the iterable that each iterate through
+size objects in the iterable.
+Note that since the inner and outer loops are pulling values from the same
+iterator, continue and break don&#8217;t necessarily behave exactly as one would
+expect. In the outer loop of the iteration, continue effectively does
+nothing, but break works normally. In the inner loop, break has no real
+effect but continue works normally. For the latter issue, wrapping the inner
+iterator in a tuple will cause break to skip the remaining items in the
+iterator. Alternatively, one can set a flag and exhaust the inner iterator.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.biokbase.common">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lib.biokbase.common" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">lib.biokbase.common package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.common.classtools">lib.biokbase.common.classtools module</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.common.datastructures">lib.biokbase.common.datastructures module</a></li>
+<li><a class="reference internal" href="#lib-biokbase-common-filetools-module">lib.biokbase.common.filetools module</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.common.itertools">lib.biokbase.common.itertools module</a></li>
+<li><a class="reference internal" href="#module-lib.biokbase.common">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/doc/lib.biokbase.common.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="../_sources/doc/lib.biokbase.common.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

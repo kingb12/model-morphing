@@ -1,0 +1,53 @@
+lib package
+===========
+
+Subpackages
+-----------
+
+.. toctree::
+
+    lib.biokbase
+
+Submodules
+----------
+
+lib.Client module
+-----------------
+
+.. automodule:: lib.Client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+lib.Helpers module
+------------------
+
+.. automodule:: lib.Helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+lib.Morph module
+----------------
+
+.. automodule:: lib.Morph
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+lib.Runs module
+---------------
+
+.. automodule:: lib.Runs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
