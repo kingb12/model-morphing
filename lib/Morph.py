@@ -77,7 +77,10 @@ class Morph():
             attr = getattr(self, key)
             if (isinstance(attr, dict)):
                 attr = attr.keys()
-            output += str(key) + ': ' + str(attr) + '\n'
+                if len(attr) < 100:
+                    output += str(key) + ': ' + str(attr) + '\n'
+                else:
+                    output += str(key) + ': ' + str(attr[0:100]) + ' ... (more)\n'
         return output
     def __repr__(self):
         output = ''
@@ -85,7 +88,10 @@ class Morph():
             attr = getattr(self, key)
             if (isinstance(attr, dict)):
                 attr = attr.keys()
-            output += str(key) + ': ' + str(attr) + '\n'
+                if len(attr) < 100:
+                    output += str(key) + ': ' + str(attr) + '\n'
+                else:
+                    output += str(key) + ': ' + str(attr[0:100]) + ' ... (more)\n'
         return output
     def __unicode__(self):
         output = ''
@@ -93,6 +99,9 @@ class Morph():
             attr = getattr(self, key)
             if (isinstance(attr, dict)):
                 attr = attr.keys()
-            output += str(key) + ': ' + str(attr) + '\n'
+                if len(attr) < 100:
+                    output += str(key) + ': ' + str(attr) + '\n'
+                else:
+                    output += str(key) + ': ' + str(attr[0:100]) + ' ... (more)\n'
         return output
 ws_client, fba_client = _init_clients()

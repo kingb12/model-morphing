@@ -7,21 +7,7 @@ import Client
 from firebase import firebase
 import os
 
-
-def make_morph():
-    args = dict()
-    args['genome'] = '3'
-    args['src_model'] = '19'
-    args['probanno'] = '15'
-    args['protcomp'] = '6'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '18'
-    return Morph(args)
-def make_morph(ws_id):
+def make_morph(ws_id=None):
     args = dict()
     args['genome'] = '3'
     args['src_model'] = '19'

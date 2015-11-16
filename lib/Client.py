@@ -44,30 +44,180 @@ def prepare_supermodel(morph, fill_src=True):
     3) Draft reconstruction of target genome fills morph.recon_model field
     4) label reactions in the morph (populates morph.rxn_labels)
     5) Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function
+
+    Parameters
+    ----------
+    morph: Morph
+        An initialized Morph with the following Requirements:
+            - morph.ws_id is a valid KBase workspace_id that user has permission
+            to write to
+            - morph has valid object identities for src_model, genome, probanno,
+            protcomp (These 4 are object_ids, their ___ws counterparts are workspace_ids
+            of user readable workspaces)
+    fill_src: boolean,optional
+        a boolean indicating that the src_model should first be filled using probabilistic gapfilling
+        Optional, default is true.
+
+    Requires
+    --------
+        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
+        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+        morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.model
+    morph.trans_model
+    morph.recon_model
+    morph.object
+    morph.info
+    morph.rxn_labels
+    morph.probhash
+
+    Returns
+    -------
+    Morph
+        A Morph with the following state changes:
+            - morph.model has the object_id of the super_model in KBase
+            - morph.rxn_labels has the labels for the reactions in the super
+            model
+            - morph.probhash has the probability hash for reactions related to
+            Target genome
+            - morph.trans_model has the object_id of the translated model
+            - morph.recon model has the object_id of the reconstruction of
+            Target Genome
+
+    Examples
+    --------
+    Suppose you have a morph initialized like so: (this is the output of Helpers.make_morph() )
+
+    >>> morph = make_morph()
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        protcompws: 9145
+        src_model: 19
+        media: 18
+        removed_ids: None
+        mediaws: 9145
+        trans_model: None
+        probhash: None
+        genomews: 9145
+        essential_ids: None
+        genome: 3
+        rxn_labels: None
+        model: None
+        ws_id: 11444
+        recon_model: None
+        probanno: 15
+        protcomp: 6
+
+    A call to Client.prepare_supermodel(morph) will return a morph of this sort of form:
+
+    >>> morph = Client.prepare_supermodel(morph)
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        protcompws: 9145
+        src_model: 19
+        media: 18
+        removed_ids: None
+        mediaws: 9145
+        trans_model: 3
+        probhash: [u'rxn00001' ... u'rxn97854']
+        genomews: 9145
+        essential_ids: None
+        genome: 3
+        rxn_labels: ['gene-no-much', 'gene-match', 'recon', 'no-gene']
+        model: 5
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        protcomp: 6
+
+    See Also
+    --------
+    fill_src_to_media
+    translate_features
+    reconstruct_genome
+    label_reactions
+    build_supermodel
+
+    This functions post condition preps the morph for the Client.process_reactions(morph) function
     """
     if(fill_src):
-        morph = fill_to_media(morph)
+        morph = fill_src_to_media(morph)
     morph = translate_features(morph)
     morph = reconstruct_genome(morph)
     morph = label_reactions(morph)
     morph = build_supermodel(morph)
     return morph
 
-def fill_to_media(morph):
+def fill_src_to_media(morph):
     """
-    Takes a morph and produces a model filled to the provided media
+    Takes a morph and probanno gap-fills the source model to given media
 
-    Fills a model to a given media. This is an important step if the source model does not grow initially on the media. NOTE: THIS OVERWRITES SRC_MODEL IN THE MORPH
+    Fills a source model to a given media. This is an important step if the source model does not grow initially on the media. NOTE: THIS MODIFIES SRC_MODEL IN THE MORPH
     However, it does not overwrite the actual source model in KBase. It is imported to morph.ws_id, and morph.src_modelws is changed to match ws_id. Therefore, the data of the source
-    model is preserved as is, but the reference is lost from the morph.
+    model is preserved as is, but the reference to its location in KBase is lost from the morph.
 
-    Requires:
-        morph.media, morph.mediaws is a valid ObjectIdentity for a media capable of allowing growth for the organisms in question.
-           This is an important distinction that is left to the discretion of the user. If no media is known, complete can likely be used.
-        morph.src_model, morph.src_modelws is a valid ObjectIdentity for a source model
-    Returns:
-        a morph. with morph.src_model set to a filled version of the source organism model. Guarantees that the resulting model can grow on media or
-        an Exception is thrown declariing the source model and media incompatible
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to gap-fill the source model to it's given media
+
+    Requires
+    --------
+    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Returns
+    -------
+    Morph
+        a morph object where morph.src_model, morph.src_modelws forms a valid ObjectIdentity for a
+        readable/writable KBase model object (the gapfilled version of parameter's morph.src_model)
+
+    Raises
+    ------
+    exception: MediaException
+        (TO BE IMPLEMENTED) An exception indicating that the given media could not be gapfilled in such a way that model objective function exceeds 0
+
+
+    Modifies
+    --------
+    morph.src_model
+    morph.src_modelws
+
+    Examples
+    --------
+    Given a morph of the form (Only relevant attributes shown):
+
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        media: 18
+        mediaws: 9145
+        ws_id: 11444
+
+    >>> morph = fill_src_to_media(morph)
+
+    Produces something like so:
+
+        ws_name: MMws235
+        src_modelws: 11444
+        src_model: 2
+        media: 18
+        mediaws: 9145
+        ws_id: 11444
+
+    Note: The reference to the old source model is lost from the model, but it still exists at it's previous KBase location un-modified
+
     """
     # Copy the source model to the new workspace
     morph = copy.deepcopy(morph)
@@ -91,10 +241,27 @@ def translate_features(morph):
     NOTE: The translated model will lose reactions in the source model that did not have matching features
     and is not guaranteed to be useful in FBA simulation.
 
-    Requires:
-        morph.src_model, morph.src_modelws must form a valid ObjectIdentity. morph.protcomp/morph.protcompws must form a valid ObjectIdentity
-    Modifies:
-        morph - morph.trans_model
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to produce a translated model to be referenced by morph.trans_model
+        (preceeds reaction labelling)
+
+    Requires
+    --------
+    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+    morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.trans_model
+
+    Returns
+    -------
+    Morph
+        a morph object where morph.trans_model, morph.ws_id forms a valid ObjectIdentity for a
+        readable/writable KBase model object (the translation of morph.src_model)
     """
  # import necesary services# import necesary service
     if (debug):
@@ -109,15 +276,51 @@ def translate_features(morph):
 
 def reconstruct_genome(morph):
     """
-    Builds a draft reconstruction from the genome in the morph.
+    Builds a reconstruction from morph.genome and saves it in morph.recon_model
 
-    Builds a draft model reconstruction and saves it in the workspace associated with morph.ws_id.
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to build a reconstruction referenced by morph.recon_model
+        (preceeds reaction labelling)
 
-    Requires:
-        morph.genome and morph.genomews must be valid ID's for KBase objects/workspace (respectively), forming a valid
-        ObjectIdentity.
-    Modifies:
-        morph - morph.recon_model
+    Requires
+    --------
+    morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.recon_model
+
+    Returns
+    -------
+    Morph
+        a morph object where morph.recon_model, morph.ws_id forms a valid ObjectIdentity for a
+        readable/writable KBase model object (the draft reconstruction of morph.genome)
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attributes shown):
+
+        ws_name: MMws235
+        genomews: 9145
+        genome: 3
+        ws_id: 11444
+        recon_model: None
+
+    >>> morph = Client.reconstruct_genome(morph)
+
+    would produce something like this:
+
+        ws_name: MMws235
+        genomews: 9145
+        genome: 3
+        ws_id: 11444
+        recon_model: 4
+
+    Where morph.recon_model, morph.ws_id forms a valid ObjectIdentity for a readable/writable KBase model object (the draft reconstruction of morph.genome)
+
     """
     morph = copy.deepcopy(morph)
     if (debug):
@@ -129,6 +332,8 @@ def reconstruct_genome(morph):
 
 def _get_objects(morph):
     """
+    This is used by the label reactions function and is not intended for end user use, proceed with caution
+
     Gets the model and probanno objects associated with the morph.
 
     Populates morph.objects with a dictionary of objects. Three are FBA Models, with keys 'source_model', 'recon_model', 'trans_model'.
@@ -172,7 +377,7 @@ def _get_objects(morph):
     return morph
 def label_reactions(morph):
     """
-    Labels the reactions in the translated model and the reconstruction
+    Labels morph's reactions from translated model, reconstruction, and source
 
     Populates the rxn_labels attribute in the Morph object with a Dictionary of four dictionaries of reactrion_id -> value tuples.
     The first level dicts are named with the keys:
@@ -180,6 +385,23 @@ def label_reactions(morph):
         - gene-no-match
         - no-gene
         - recon
+    Populates morph.probhash with a dictionary of compartment-truncated reaction_ids to their probability relative to genome in question
+        (derived from morph.probanno).
+    Also populates morph.objects, morph.info with data from KBase objects (advanced use)
+
+    Technical Details (Consult if you are encountering issues):
+    For simplicity, an end user can treat the interiors of each dictionary like a set of reaction ids, but it is important to note the
+    this is actually a nested dictionary with entries of the form: reaction_id -> (model_index, probability)
+    Thus, some set like behavior works, but some doesn't, the user must account for the fact that these are dictionaries:
+
+        >>>'rxn09073_c0' in morph.rxn_labels['gene-no'match']
+
+            works and returns True or False, indicating whether or not rxn09073_c0 is a gene-no-match reaction
+
+        >>>morph.rxn_labels['gene-match'].add('rxn00456_c0')
+
+        fails and throws an exception. add() is a set method and can't be used on dictionaries. (You could set an
+        entry with real or arbitrary value to get around this if you really wished)
 
     Each inner dictionary is keyed with reaction_ids, hashed to tuples as such: (model_index, probability)
     Where reaction_id is a kbase reaction id with the compartment info appended to the end (e.g. rxn01316_c0),
@@ -187,18 +409,84 @@ def label_reactions(morph):
     is the reaction probability associated with each reaction from the probanno object. Reactions not in ProbAnno
     are given an arbitrary probability of -1.0
 
-    Example uses:
+    Example evaluations:
     rxn_labels['gene-no-match']['rxn01316_c0'][0] evaluates to the index of rxn01316_c0 in morph.objects['trans_model']['modelreactions']
     rxn_labels['gene-no-match']['rxn01316_c0'][1] evaluates to the reaction probability of rxn01316_c0
     'rxn01316_c0' in rxn_labels['gene-no-match'] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)
 
-    Requires: Morph.objects and Morph.info must have valid entries for 'source_model', 'trans_model', 'recon_model',
-    and 'probanno' (The post condition of _get_objects()).
+    Parameters
+    ----------
+    morph: Morph
+        the morph fo which you want to generate reaction labels
 
-    Modifies:
-        Morph - Morph.rxn_labels
+    Requires
+    --------
+    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+    morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a readable/writeable KBase workspace
 
-    :param morph: the Morph object for labeling as described above
+    Modifies
+    --------
+    morph.rxn_labels
+    morph.probhash
+    morph.objects
+    morph.info
+
+    Returns
+    -------
+    Morph
+        a morph in which morph.rxn_labels holds a dictionary with the keys 'gene-match', gene-no-match', 'recon'
+        and 'no-gene'. The value of each key holds a dictionary with 0 or more entries of the form:
+            reaction_id -> (model_index, probability)
+        morph.probhash contains a dictionary of reaction_ids (COMPARTMENT TRUNCATED) mapped to their probabilities
+            e.g. rxn09876 -> 0.04545339
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attricutes shown):
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        trans_model: 3
+        probhash: None
+        rxn_labels: None
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        morph.objects = None
+        morph.info = None
+
+    >>>morph = Client.label_reactions(morph)
+
+    would produce something like:
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        trans_model: 3
+        probhash: ['rxn05653', 'rxn12345', rxn59595', 'rxn45644' ... (more)]
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.info = ['source_model', 'recon_model', 'trans_model', 'probanno']
+
+    These could be examined like so:
+
+    >>>morph.rxn_labels['no-gene'].keys()[1]
+    u'rxn10316_c0'
+
+    >>>morph.rxn_labels['no-gene']['rxn10316_c0'][1]
+    0.444456666959
+
+    >>>'rxn10316_c0' in morph.rxn_labels['no-gene']
+    True
     """
     morph = _get_objects(morph)
     morph = copy.deepcopy(morph)
@@ -254,15 +542,53 @@ def label_reactions(morph):
 
 def build_supermodel(morph):
     """
-    Sets morph.model to a superset of all reaction types in morph.rxn_labels
+    Sets morph.model to a superset of all reactions in morph.rxn_labels
 
-    Builds a model with the reactions unique to the target genome added and sets the morph.model attribute to this 'super-model'
+    Parameters
+    ----------
+    morph: Morph
+        The morph for which you want to build a super_model (initializing morph.model)
 
-    Requires:
-    morph.rxn_labels must be populated to meet the post condition of _label_reactions(). morph.objects and morph,info must meet the post condition of _get_objects()
+    Requires
+    --------
+    morph.rxn_labels is a dictionary with the four keys ['gene-match', 'gene-no-match', 'recon', 'no-gene'],
+        and it's values are dictionaries with entries of the form: reaction_id -> (model_index, probability)
+    morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
+        is the output of the label_reactions(morph) function)
 
-    Modifies:
+    Modifies
+    --------
     morph.model
+
+    Returns
+    -------
+    Morph
+        a morph object where morph.model, morph.ws_id forms a valid ObjectIdentity for a
+        readable/writable KBase model object (the super-model)
+
+    Examples
+    --------
+    Given a morph like so (only relevant attributes shown):
+
+        ws_name: MMws235
+        trans_model: 3
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.model = None
+
+    >>>morph = Client.build_supermodel(morph)
+
+    would produce something like this:
+
+        ws_name: MMws235
+        trans_model: 3
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.model = 5
+
+    Where morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase (the super model)
     """
     morph = copy.deepcopy(morph)
     super_time = time.time()
@@ -286,41 +612,123 @@ def build_supermodel(morph):
 
 def removal_list(rxn_dict, list_range=None):
     """
-    Generates a removal list from the import rxn_dict (e.g. morph.rxn_labels['no-gene'])
+    Generates a removal list from the rxn_dict (e.g. morph.rxn_labels['no-gene'])
 
     Accepts a dictionary of reactions -> (index, probability) as is given by morph.rxn_labels[label] and returns a sorted
-    list of tuples that can be passed as the rxn_list parameter to the _process_reactions function. This allows for processing
+    list of tuples that can be passed as the rxn_list parameter to the process_reactions function. This allows for processing
     of only some reactions from the model at a time. Tuples are in the form (reaction_id, index, probability). Setting the range keyword
     arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).
+
+    Parameters
+    ----------
+    rxn_dict: dict
+        A dictionary of the form specified in rxn_labels[key] (see above description)
+    list_range: tuple, optional. (start, end)
+        A range within the list once it is sorted by probability (start inclusive, end exclusive)
+
+    Requires
+    --------
+    rxn_dict is of a form analagous to rxn_labels[key]
+
+    Returns
+    -------
+    list
+        an sorted list of reactions to remove (sorted from low import probability to high
+
+    Examples
+    --------
+    Given a rxn_dict with 4 entries (shown below) and list_range of (0, 3)
+        >>>rxn_dict = { 'rxn00001_c0': (3, 0.2453)
+                     'rxn03035_c0': (78, 0.8744)
+                     'rxn00451_c0': (32, 0.0004)
+                     'rxn00602_c0': (9, 0.0056) }
+
+        >>>rxn_list = Client.removal_list(rxn_dict, list_range=(0, 3))
+
+    rxn_list would evaluate to: [('rxn00451_c0', (32, 0.0004)), ('rxn00602_c0', (9, 0.0056)), ('rxn00001_c0, (3, 0.2453))]
     """
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return item[1][1]
     removal_list = sorted(rxn_dict.items(), key=get_key)
     if list_range is not None:
-        removal_list = removal_list[list_range[0]:list_range[1]]
+       return removal_list[list_range[0]:list_range[1]]
     return removal_list
 
 def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
-    Attempts removal of each reaction , keeping it only if it is essential to the objective function
-    of a given FBA formulation. Populates morph.essential_ids with the reaction_ids that could not be removed without breaking FBA
-    simulation. morph.removed_ids is populated with the ids of the reactions that were removed. Both are populated as a dictionary of
-    reaction_ids to their model_index and probability
+    Attempts removal of each reaction , keeping it only if it is essential to the objective function.
+    Populates morph.essential_ids with the reaction_ids that could not be removed without breaking the model.
+    morph.removed_ids is populated with the ids of the reactions that were removed. Both are populated as a dictionary of
+    reaction_ids to their model_index and probability (like the entries in rxn_labels).
+        e.g. reaction_id -> (model_index, probability)
 
-    if label is a key to morph.rxn_labels AND rxn_list is None, the function behaves as if morph.rxn_labels[label] was the rxn_list argument
+    if rxn_list is None, the function removes (in low to high probability order) gene-no-match reactions followed by no-gene reactions
 
-    Requires:
-        -You must set keyword label to a valid key of morph.rxn_labels OR keyword rxn_list to a list of tuples
-        - if rxn_labels[label] is not None, it must be a dictionary of reaction_ids -> (model_index, probability). Behavior uncertain if model_id
-        and rxn_labels are not related to the same model as morph.
+    Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id
 
-    Modifies:
-       morph - morph.essential_ids, morph.removed_ids, morph.rxn_labels[label]
-    Raises:
-        KeyError if (label not in rxn_labels)
+    Parameters
+    ----------
+    morph: Morph
+        The morph containing the model (morph.model) from which reactions will be removed
+    rxn_list: list, optional
+        A sorted list of tuples of the form (reaction_id, (model_index, probability)) which will be processed from morph,model
+        (form is the output of removal_list() function)
+        (if left out, all gene-no-match follwed by all no-gene reactions will be processed in low to high likelihood order)
+    name: String, optional
+        Setting name will begin all output model names with name. Default is MM
+        output models are named as follows: str(name) + '-' + str(process_count)
+    process_count: int, optional
+        A number indicating how many reactions have been processed so far, used in nameing output models. Default is 0.
+        output models are named as follows: str(name) + '-' + str(process_count)
+    get_count: Boolean, optional
+        A Boolean flag indicating whether the process_count should be returned with the morph (as a tuple). Used when not processing all
+        reactions at once. Deafault is False
+
+    Requires
+    --------
+    if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
+        with 0 or more entries of the form reaction_id -> (model_index, probability)
+    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.essential_ids
+    morph.removed_ids
+    morph.model
+
+    Returns
+    -------
+    Morph
+        A morph with a new model, and essential_ids/removed)ids used to keep track of changes
+    int (Only if get_count=True)
+        process_count (number of models created, used for name managing)
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attributes shown):
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 5
+        morph.essential_ids = None
+        morph.removed_ids = None
+
+    >>>morph = Client.process_reactions(morph, rxn_list=Client,removal_list(morph.rxn_labels['gene-no-match'], list_range=(0, 10)))
+
+    would process the 10 least likely gene-no-match reactions, which might produce a morph like this:
+
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 5
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+        morph.removed_ids = ['rxn11123_c0', 'rxn34534_c0', 'rxn90565_c0', 'rxn78987_c0', 'rxn12321_c0', 'rxn89034_c0', 'rxn88888_c0']
+
+    where removal of one of the reactions given by a key in morph.essential_ids would result in a model that has an objective value of 0.000 in FBA simulation
     """
     morph = copy.deepcopy(morph)
     ws = morph.ws_id
@@ -371,14 +779,75 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         return  morph, process_count
     return morph
 
-def find_alternative(morph, reaction_item):
+def find_alternative(morph, reaction):
     """
+    NOT FUNCTIONING AS DESIRED
+
     attemps to find an alternative to a reaction given by reaction item of the form (reaction_id, (model_index, probanno value))
 
     An example reaction_item would be morph.essential_ids.items()[0]
+
+    Parameters
+    ----------
+    morph: Morph
+        contains the morph.model from which will try to find an alternative to a particular reaction
+    reaction: String (reaction_id)
+        The reaction_id for a reaction to find a more likely alternative for
+
+    Requires
+    --------
+    reaction corresponds to a Reaction in morph.model
+    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+    morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
+    morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -> probabilities
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.model
+
+    Returns
+    -------
+    Morph
+        a morph where morph,model, morph.ws_id is a valid ObjectIdentity for a model object in KBase
+        (if a more likely alternative was found for reaction, this will be reflected in the model object)
+    list
+        new_reactions: a list of the new reactions considered as a potential alternatice to 'reaction'
+
+    Examples
+    --------
+    Given a morph of the form:
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 214
+        probannows: 9145
+        probhash: ['rxn00001', 'rxn03434', 'rxn67834' ... (more)]
+        probanno: 15
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+
+    Below, morph.essential_ids.keys()[0] evaluates to 'rxn10316_c0' as shown above
+    >>>morph, new_rxns = Client.find_alternative(morph, morph.essential_ids.keys()[0])
+
+    would return:
+
+        morph =
+
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 216
+        probannows: 9145
+        probhash: ['rxn00001', 'rxn03434', 'rxn67834' ... (more)]
+        probanno: 15
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+
+        new_reactions =
+
+        ['rxn34343_c0', 'rxn 78923_c0', 'rxn00002_c0']
+
     """
     m = copy.deepcopy(morph)
-    reaction = reaction_item[0]
     model_id = m.model
     ws_id = m.ws_id
     fba_formulation = {'media': m.media, 'media_workspace': m.mediaws}
@@ -423,6 +892,9 @@ def find_alternative(morph, reaction_item):
     return m, new_reactions
 
 def probanno_optimization(morph, rxn_list=None):
+    """
+    Deprecated, not maintained
+    """
     morph = copy.deepcopy(morph)
     if rxn_list is None:
         rxn_list = morph.essential_ids.keys()
@@ -465,6 +937,50 @@ def _finish(morph, save_ws=False):
 ws_client, fba_client =  _init_clients()
 
 def get_morph_rxns(morph, label=None):
+    """
+    returns a list of all reactions in the model (by reaction_id)
+
+    Parameters
+    ----------
+    morph: Morph
+        morph which has the model to get reactions from
+    label: String, optional
+        pass a label to only get reactions of a certain type
+        valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon
+
+    Requires
+    --------
+    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Returns
+    -------
+    list
+        a list of reaction_ids in the morph's model. If a label parameter is set, only that specific type of reaction
+        will be added to the list, If none exist, the empty list is returned
+
+    Examples
+    --------
+    Given a morph of the form:
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 216
+        probannows: 9145
+        probhash: ['rxn00001', 'rxn03434', 'rxn67834' ... (more)]
+        probanno: 15
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+
+    >>>rxn_list = Client.get_morph_rxns(morph)
+
+     would return a list of the form:
+
+    ['rxn00001_c0', 'rxn78786_c0', 'rxn45324_e0' ... (more)]
+
+    >>>rxn_list = Client.get_morph_rxns(morph, label='gene-no-match')
+
+    would return a list of the same form, and would be identical to morph.rxn_labels['gene-no-match'].keys()
+    """
     if label is None:
         modelobj = Helpers.get_object(morph.model, morph.ws_id)
         rxnlist = list()
@@ -485,9 +1001,57 @@ def get_morph_rxns(morph, label=None):
             return []
     if label in morph.rxn_labels.keys():
         return morph.rxn_labels[label].keys()
+    else:
+        return []
 def get_reactions(reactions):
+    """
+    returns reaction info for given reactions in truncated compartment form, including definition and more
+
+    Parmeters
+    ---------
+    reactions: list,(String) reaction_id
+        a list of reaction_ids (compartment truncated) to get definition, equation, and other info on (will update this doc section to be more specific
+
+    Returns
+    -------
+    list
+        a list of dictionaries where the keys are strings describing info about a reaction and the values are that information specific to a reaction
+
+    Examples
+    --------
+    >>>rxn_info_list = Client.get_reactions(['rxn00001', 'rxn54545',])
+
+    >>>rxn_info_list[0].keys()
+    [u'definition', u'direction', u'name', u'enzymes', u'equation', u'deltaGErr', u'reversibility', u'abbrev', u'deltaG', u'id', u'aliases']
+
+    >>>rxn_info_list[0]['definition']
+    u'(1) H2O[c] + (1) PPi[c] <=> (2) Phosphate[c] + (2) H+[c]'
+    """
     return fba_client.get_reactions({'reactions':reactions})
 def get_reaction(reaction):
+    """
+    returns reaction info for a given reaction in truncated compartment form, including definition and more
+
+    Parmeters
+    ---------
+    reaction: String, reaction_id
+        a reaction_id (compartment truncated) to get definition, equation, and other info on (will update this doc section to be more specific
+
+    Returns
+    -------
+    dict
+        a dictionary where the keys are strings describing info about a reaction and the values are that information specific to a reaction
+
+    Examples
+    --------
+    >>>rxn_info = Client.get_reaction('rxn00001')
+
+    >>>rxn_info.keys()
+    [u'definition', u'direction', u'name', u'enzymes', u'equation', u'deltaGErr', u'reversibility', u'abbrev', u'deltaG', u'id', u'aliases']
+
+    >>>rxn_info['definition']
+    u'(1) H2O[c] + (1) PPi[c] <=> (2) Phosphate[c] + (2) H+[c]'
+    """
     return fba_client.get_reactions({'reactions':[reaction]})
 def get_mdlrxn_info(morph, reaction_ids=None):
     """
@@ -546,6 +1110,62 @@ def remove_reactions_by_dict(morph, rxn_dict):
     morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_dict.keys()})[0]
     return morph
 def probanno_fill(morph):
+    """
+    runs probabilistic gapfilling on morph.model
+
+    Parameters
+    ----------
+    morph: Morph
+        A morph with model to be filled using probabilistic gapfilling
+
+    Requires
+    --------
+    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph.model
+
+    Returns
+    -------
+    Morph
+        a morph such that morph.model, morph.ws_id forms an ObjectIdentity for a probalistic gapfilled model in KBase (to media)
+
+    Examples
+    --------
+    Given a morph of the form:
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 214
+        probannows: 9145
+        probhash: ['rxn00001', 'rxn03434', 'rxn67834' ... (more)]
+        probanno: 15
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+        probannows: 9145
+        media: 18
+        mediaws: 9145
+
+    >>>morph = Client.probanno_fill(morph)
+
+    Might return a morph of form
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 216
+        probannows: 9145
+        probhash: ['rxn00001', 'rxn03434', 'rxn67834' ... (more)]
+        probanno: 15
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+        probannows: 9145
+        media: 18
+        mediaws: 9145
+
+    Where morph.model now holds the object_id of a model filled to morph.media using porbabilistic gapfilling
+    """
     morph = copy.deepcopy(morph)
     # Gapfill the model and reset the model and modelws attributes of
     # the morph
@@ -557,11 +1177,87 @@ def probanno_fill(morph):
     return morph
 
 def remove_reactions(morph, rxn_list):
+    """
+    remove the reactions in rxn_list from morph.model
+
+    Parameters
+    ----------
+    morph: Morph
+        the morph with the model reactions will be removed from
+    rxn_list: list (String)
+        a list of reaction_ids corresponding to reactions to be removed from the Morph
+
+    Requires
+    --------
+    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph,model
+
+    Returns
+    -------
+    Morph
+        a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reactions in rxn_list)
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attributes shown):
+        ws_id: 11444
+        model: 214
+
+    >>>morph = Client.remove_reactons(morph, ['rxn00001_c0', 'rxn11898_c0'])
+
+    Might return a morph of the form:
+        ws_id: 11444
+        model: 216
+
+    where morph.model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous model minus rxn00001_c0 and rxn11898_c0)
+    """
     morph = copy.deepcopy(morph)
     morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_list})[0]
     return morph
 
 def remove_reaction(morph, rxn):
+    """
+    remove the reaction rxn from morph.model
+
+    Parameters
+    ----------
+    morph: Morph
+        the morph with the model reactions will be removed from
+    rxn: String
+        a reaction_id corresponding to a reaction to be removed from the Morph
+
+    Requires
+    --------
+    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
+    Modifies
+    --------
+    morph,model
+
+    Returns
+    -------
+    Morph
+        a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reaction rxn)
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attributes shown):
+        ws_id: 11444
+        model: 214
+
+    >>>morph = Client.remove_reactons(morph, 'rxn11898_c0')
+
+    Might return a morph of the form:
+        ws_id: 11444
+        model: 216
+
+    where morph.model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous model minus rxn11898_c0)
+    """
     morph = copy.deepcopy(morph)
     morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': [rxn]})[0]
     return morph
