@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.Helpers &mdash; Model Morphing b1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Model Morphing b1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.Helpers</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">Morph</span> <span class="kn">import</span> <span class="n">Morph</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">Client</span>
+<span class="kn">from</span> <span class="nn">firebase</span> <span class="kn">import</span> <span class="n">firebase</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="k">def</span> <span class="nf">make_morph</span><span class="p">(</span><span class="n">ws_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;genome&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;3&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;src_model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;19&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;probanno&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;15&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;protcomp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;6&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;genomews&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;9145&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;src_modelws&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;9145&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;probannows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;9145&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;protcompws&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;9145&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;mediaws&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;9145&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;media&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;18&#39;</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;ws_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ws_id</span>
+    <span class="k">return</span> <span class="n">Morph</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">modelargs</span><span class="p">(</span><span class="n">morph</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">morph</span><span class="o">.</span><span class="n">model</span>
+    <span class="n">args</span><span class="p">[</span><span class="s">&#39;model_workspace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span>
+    <span class="k">return</span> <span class="n">args</span>
+
+<span class="k">def</span> <span class="nf">essential_test</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">rxn_list</span><span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">rxn</span> <span class="ow">in</span> <span class="n">rxn_list</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">rxn</span>
+        <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">find_alternative</span><span class="p">(</span><span class="n">rxn</span><span class="p">,</span> <span class="n">morph</span><span class="o">=</span><span class="n">morph</span><span class="p">)</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">analyze_alternative</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">rxn</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">rxn</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">analysis</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s">&quot;essential_results/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rxn</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.pkl&quot;</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&quot;saved&quot;</span>
+<span class="c"># CURRENT USE SPECIFIC INITIALIZATION CODE</span>
+
+<span class="k">def</span> <span class="nf">unpack_essen_results</span><span class="p">():</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="o">+</span> <span class="s">&#39;/../data/essential_results&#39;</span>
+    <span class="n">reactions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">filename</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">reactions</span><span class="p">[</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="o">+</span> <span class="s">&#39;/../data/reactions.pkl&#39;</span>
+    <span class="k">return</span> <span class="n">reactions</span>
+
+<span class="k">def</span> <span class="nf">_count_essential</span><span class="p">(</span><span class="n">reactions</span><span class="p">):</span>
+    <span class="n">rxns</span> <span class="o">=</span> <span class="n">reactions</span>
+    <span class="n">reactions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">rxn</span> <span class="ow">in</span> <span class="n">rxns</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">rxns</span><span class="p">[</span><span class="n">rxn</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="n">rxn</span><span class="p">][</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reactions</span><span class="p">:</span>
+                <span class="n">reactions</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rxn</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reactions</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rxn</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reactions</span>
+
+<div class="viewcode-block" id="pp_eval_rxns"><a class="viewcode-back" href="../../lib.html#lib.Helpers.pp_eval_rxns">[docs]</a><span class="k">def</span> <span class="nf">pp_eval_rxns</span><span class="p">(</span><span class="n">reactions</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    prints the essential reactions added  fro an essential reaction test (essential_test)</span>
+
+<span class="sd">    Requires: The input to the function should be the results of the unpack_essen_results() function. These are separated to save computational time in some circumstances</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">count_rxns</span> <span class="o">=</span> <span class="n">_count_essential</span><span class="p">(</span><span class="n">reactions</span><span class="p">)</span>
+    <span class="n">added_rxns</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">fba_client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">({</span><span class="s">&#39;reactions&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">count_rxns</span><span class="o">.</span><span class="n">keys</span><span class="p">()]})</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;../analysis/fill_frequency.txt&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">added_rxns</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;definition&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Frequency in which it was added in gapfilling: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">count_rxns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;_c0&#39;</span><span class="p">)]))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">count_rxns</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Frequency in which it was added in gapfilling: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">count_rxns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;_e0&#39;</span><span class="p">)]))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">count_rxns</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;../analysis/essen_rxn_info.txt&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+         <span class="k">for</span> <span class="n">rxn</span> <span class="ow">in</span> <span class="n">reactions</span><span class="p">:</span>
+             <span class="k">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">rxn</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reactions</span>
+</div>
+<div class="viewcode-block" id="get_object"><a class="viewcode-back" href="../../lib.html#lib.Helpers.get_object">[docs]</a><span class="k">def</span> <span class="nf">get_object</span><span class="p">(</span><span class="n">objid</span><span class="p">,</span> <span class="n">wsid</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns an object and it&#39;s associated KBase information</span>
+
+<span class="sd">    Returns an ObjectData (dictionary) like what is returned in the workspace service &#39;get_objects&#39; function:</span>
+
+<span class="sd">	/* The data and supplemental info for an object.</span>
+
+<span class="sd">		UnspecifiedObject data - the object&#39;s data or subset data.</span>
+<span class="sd">		object_info info - information about the object.</span>
+<span class="sd">		list&lt;ProvenanceAction&gt; provenance - the object&#39;s provenance.</span>
+<span class="sd">		username creator - the user that first saved the object to the</span>
+<span class="sd">			workspace.</span>
+<span class="sd">		timestamp created - the date the object was first saved to the</span>
+<span class="sd">			workspace.</span>
+<span class="sd">		list&lt;obj_ref&gt; - the references contained within the object.</span>
+<span class="sd">		obj_ref copied - the reference of the source object if this object is</span>
+<span class="sd">			a copy and the copy source exists and is accessible.</span>
+<span class="sd">			null otherwise.</span>
+<span class="sd">		boolean copy_source_inaccessible - true if the object was copied from</span>
+<span class="sd">			another object, but that object is no longer accessible to the</span>
+<span class="sd">			user. False otherwise.</span>
+<span class="sd">		mapping&lt;id_type, list&lt;extracted_id&gt;&gt; extracted_ids - any ids extracted</span>
+<span class="sd">			from the object.</span>
+<span class="sd">		string handle_error - if an error occurs while setting ACLs on</span>
+<span class="sd">			embedded handle IDs, it will be reported here.</span>
+<span class="sd">		string handle_stacktrace - the stacktrace for handle_error.</span>
+
+<span class="sd">	*/</span>
+<span class="sd">	typedef structure {</span>
+<span class="sd">		UnspecifiedObject data;</span>
+<span class="sd">		object_info info;</span>
+<span class="sd">		list&lt;ProvenanceAction&gt; provenance;</span>
+<span class="sd">		username creator;</span>
+<span class="sd">		timestamp created;</span>
+<span class="sd">		list&lt;obj_ref&gt; refs;</span>
+<span class="sd">		obj_ref copied;</span>
+<span class="sd">		boolean copy_source_inaccessible;</span>
+<span class="sd">		mapping&lt;id_type, list&lt;extracted_id&gt;&gt; extracted_ids;</span>
+<span class="sd">		string handle_error;</span>
+<span class="sd">		string handle_stacktrace;</span>
+<span class="sd">	} ObjectData;</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Client</span><span class="o">.</span><span class="n">ws_client</span><span class="o">.</span><span class="n">get_objects</span><span class="p">([{</span><span class="s">&#39;objid&#39;</span><span class="p">:</span><span class="n">objid</span><span class="p">,</span> <span class="s">&#39;wsid&#39;</span><span class="p">:</span><span class="n">wsid</span><span class="p">}])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Client</span><span class="o">.</span><span class="n">ws_client</span><span class="o">.</span><span class="n">get_objects</span><span class="p">([{</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;wsid&#39;</span><span class="p">:</span><span class="n">wsid</span><span class="p">}])[</span><span class="mi">0</span><span class="p">]</span></div>
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">save_object</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">wsid</span><span class="p">,</span> <span class="n">objid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">sv</span> <span class="o">=</span> <span class="p">{</span><span class="s">u&#39;data&#39;</span><span class="p">:</span><span class="n">data</span><span class="p">,</span> <span class="s">u&#39;type&#39;</span><span class="p">:</span><span class="nb">type</span><span class="p">,</span> <span class="s">u&#39;name&#39;</span><span class="p">:</span><span class="n">name</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">objid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">sv</span><span class="p">[</span><span class="s">u&#39;objid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">objid</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">sv</span><span class="p">[</span><span class="s">u&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="n">Client</span><span class="o">.</span><span class="n">ws_client</span><span class="o">.</span><span class="n">save_objects</span><span class="p">({</span><span class="s">u&#39;id&#39;</span><span class="p">:</span><span class="n">wsid</span><span class="p">,</span> <span class="s">u&#39;objects&#39;</span><span class="p">:[</span><span class="n">sv</span><span class="p">]})</span>
+<div class="viewcode-block" id="load_morph"><a class="viewcode-back" href="../../lib.html#lib.Helpers.load_morph">[docs]</a><span class="k">def</span> <span class="nf">load_morph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads a morph that has completed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_unicode</span> <span class="o">=</span> <span class="n">fb</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;standard_morph&#39;</span><span class="p">,</span> <span class="s">&#39;acebar&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data_unicode</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">Morph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="put"><a class="viewcode-back" href="../../lib.html#lib.Helpers.put">[docs]</a><span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Puts value at the givenkey at url in the Firebase</span>
+
+<span class="sd">    (the url is just the subdirectory within firebase, ie. to store &quot;Morty&quot; at &#39;https://my_base/firebaseio.com/BestCats&#39;</span>
+<span class="sd">    call put(&#39;/BestCats&#39;, &quot;Morty&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fb</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">to_JSON</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">fb</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">check_for_duplicates</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">ws_id</span><span class="p">):</span>
+    <span class="nb">object</span> <span class="o">=</span> <span class="n">get_object</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">ws_id</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="nb">object</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">cpds</span> <span class="o">=</span> <span class="p">[(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;compound_ref&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;modelcompartment_ref&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">model</span><span class="p">[</span><span class="s">&#39;modelcompounds&#39;</span><span class="p">]]</span>
+    <span class="n">compound_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">cpd</span> <span class="ow">in</span> <span class="n">cpds</span><span class="p">:</span>
+        <span class="n">cpd_id</span> <span class="o">=</span> <span class="n">cpd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cpd_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">compound_dict</span><span class="p">):</span>
+            <span class="n">compound_dict</span><span class="p">[</span><span class="n">cpd_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpd</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">compound_dict</span><span class="p">[</span><span class="n">cpd_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpd</span><span class="p">)</span>
+    <span class="n">dups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">compound_dict</span><span class="p">:</span>
+        <span class="n">compartments</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">compound_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="c"># Sets can only have unique values, so if there is a duplicate</span>
+        <span class="c"># compartment, it woll cause a change in length from list -&gt; set</span>
+        <span class="n">compset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">compartments</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">compset</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">compartments</span><span class="p">)):</span>
+            <span class="n">dups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">duplicates</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dups</span><span class="p">:</span>
+        <span class="n">duplicates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">compound_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">mdl</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">return</span> <span class="n">duplicates</span><span class="p">,</span> <span class="n">mdl</span>
+<span class="k">def</span> <span class="nf">process_iterated</span><span class="p">(</span><span class="n">morph</span><span class="p">):</span>
+    <span class="n">gnm</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">removal_list</span><span class="p">(</span><span class="n">morph</span><span class="o">.</span><span class="n">rxn_labels</span><span class="p">[</span><span class="s">&#39;gene-no-match&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gnm</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">process_reactions</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">rxn_list</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">dump</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="s">&#39;../data/morph-Hsmedia.pkl&#39;</span><span class="p">)</span>
+    <span class="n">ng</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">removal_list</span><span class="p">(</span><span class="n">morph</span><span class="o">.</span><span class="n">rxn_labels</span><span class="p">[</span><span class="s">&#39;no-gene&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ng</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">process_reactions</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">rxn_list</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">dump</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="s">&#39;../data/morph-Hsmedia.pkl&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">morph</span>
+
+<span class="k">def</span> <span class="nf">runfba</span><span class="p">(</span><span class="n">morph</span><span class="p">):</span>
+    <span class="n">fba_formulation</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;media&#39;</span><span class="p">:</span> <span class="n">morph</span><span class="o">.</span><span class="n">media</span><span class="p">,</span> <span class="s">&#39;media_workspace&#39;</span><span class="p">:</span> <span class="n">morph</span><span class="o">.</span><span class="n">mediaws</span><span class="p">}</span>
+    <span class="n">fba_params</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;workspace&#39;</span><span class="p">:</span> <span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span><span class="p">,</span> <span class="s">&#39;model&#39;</span> <span class="p">:</span> <span class="n">morph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s">&#39;model_workspace&#39;</span><span class="p">:</span><span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span><span class="p">,</span>
+                  <span class="s">&#39;formulation&#39;</span><span class="p">:</span> <span class="n">fba_formulation</span><span class="p">}</span>
+    <span class="n">fbaMeta</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">fba_client</span><span class="o">.</span><span class="n">runfba</span><span class="p">(</span><span class="n">fba_params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fbaMeta</span>
+
+<span class="k">def</span> <span class="nf">clone_morph</span><span class="p">(</span><span class="n">morph</span><span class="p">):</span>
+    <span class="n">morph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">morph</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">ws_client</span><span class="o">.</span><span class="n">clone_workspace</span><span class="p">({</span><span class="s">&#39;wsi&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span><span class="p">},</span> <span class="s">&#39;workspace&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="s">&#39;morphclone&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)))})</span>
+    <span class="n">morph</span><span class="o">.</span><span class="n">ws_id</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">morph</span>
+<span class="n">fb</span> <span class="o">=</span> <span class="n">firebase</span><span class="o">.</span><span class="n">FirebaseApplication</span><span class="p">(</span><span class="s">&#39;https://fiery-fire-3234.firebaseio.com&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Brendan King, Matt Richards, Vangelis Simeonidis, Nathan Price.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
