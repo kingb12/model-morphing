@@ -60,7 +60,18 @@ calls that modify morph.model, among other attributes. morph.model can be though
 references the KBase model as we change it and is the primary output of the overall algorithm. The Morph class has additional attributes
 to make state management easy, to provide information for analysis, and to reduce the number of required arguments to each Client function
 to a reasonable number.
-### Modifying and Reading Attributes (Somewhat Advanced, For Developing)
+Here are a few example calls to Client methods:
+```python
+# A function in Helpers module that makes a default morph for acetivorans -> barkeri
+morph = Helpers,make_morph()
+morph = Client.prepare_supermodel(morph)
+fully_processed_morph = Client.process_reactions(morph)
+gnm_processed_morph = Client.process_reactions(morph, 
+    rxn_list=removal_list(morph.rxn_labels['gene-no-match']))
+```
+The above code takes advantage of the fact that argument morphs keep their original state, and a function returns a new Morph with a resulting state. First, a morph is instantiated using a Helper function. Then, the Client function prepare_supermodel runs through the first steps in the algorith, creating a morph with labelled reactions and a super_model regerence in morph.model. After this, we take advantage of state preservation to diverge into two new morphs from just the one argument, one called 'fully_processed_morph' which has run processing on all gene-no-match and no-gene reactions, and one called 'gnm_processed_morph' which only processed the 'gene-no-match' reactions. In the end, we can reference three distinct morph states: morph (pre-processing), gnm_processed_morph (mid-processing), and fully_processed_morph (post-processing).
+
+### Modifying and Reading Attributes
 ####Modifying
 Morph Attributes are modified through direct manipulation: just treat each attribute like you would any other variable
 in the namespace. *Overriding of attribute setting methods in the Morph class will prevent logcally inconsistent states
