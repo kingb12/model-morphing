@@ -36,7 +36,7 @@ def _init_clients():
     return ws_client, fba_client
 
 def prepare_supermodel(morph, fill_src=True):
-    r"""
+    """
     Composition of the first several steps in the algorithm
 
     1) Fill the source model to media using probabilistic gapfilling (can be skipped if fill_src keyword arg is set to False)
@@ -150,6 +150,7 @@ def prepare_supermodel(morph, fill_src=True):
 
     This functions post condition preps the morph for the Client.process_reactions(morph) function
     """
+    morph = copy.deepcopy(morph)
     if(fill_src):
         morph = fill_src_to_media(morph)
     morph = translate_features(morph)
@@ -1261,3 +1262,18 @@ def remove_reaction(morph, rxn):
     morph = copy.deepcopy(morph)
     morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': [rxn]})[0]
     return morph
+
+def simple_probanno_morph(morph):
+    morph = copy.deepcopy(morph)
+    morph = prepare_supermodel(morph, fill_src=False)
+    morph = remove_reactions(morph, rxn_list=morph.rxn_labels['gene-no-match'].keys())
+    morph = remove_reactions(morph, rxn_list=morph.rxn_labels['no-gene'].keys())
+    morph = probanno_fill(morph)
+    return morph
+
+def compare_morphmodels(list_of_morphs):
+    args = {'models':[], 'workspaces': []}
+    for i in list_of_morphs:
+        args['models'].append(i.model)
+        args['workspaces'].append(i.ws_id)
+    return fba_client.compare_models(args)
