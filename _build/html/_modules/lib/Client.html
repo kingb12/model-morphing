@@ -98,12 +98,12 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
-<span class="sd">        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
-<span class="sd">        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase</span>
-<span class="sd">        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
-<span class="sd">        morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
+<span class="sd">        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
+<span class="sd">        - morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase</span>
+<span class="sd">        - morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -211,9 +211,9 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -281,9 +281,9 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -315,8 +315,8 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -445,11 +445,11 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
-<span class="sd">    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a readable/writeable KBase workspace</span>
+<span class="sd">        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
+<span class="sd">        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a readable/writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -569,9 +569,9 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.rxn_labels is a dictionary with the four keys [&#39;gene-match&#39;, &#39;gene-no-match&#39;, &#39;recon&#39;, &#39;no-gene&#39;],</span>
+<span class="sd">        - morph.rxn_labels is a dictionary with the four keys [&#39;gene-match&#39;, &#39;gene-no-match&#39;, &#39;recon&#39;, &#39;no-gene&#39;],</span>
 <span class="sd">        and it&#39;s values are dictionaries with entries of the form: reaction_id -&gt; (model_index, probability)</span>
-<span class="sd">    morph.objects contains entries for the &#39;source_model&#39; and &#39;recon_model&#39; with data for the models in KBase (this</span>
+<span class="sd">        - morph.objects contains entries for the &#39;source_model&#39; and &#39;recon_model&#39; with data for the models in KBase (this</span>
 <span class="sd">        is the output of the label_reactions(morph) function)</span>
 
 <span class="sd">    Parameters</span>
@@ -641,7 +641,7 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    rxn_dict is of a form analagous to rxn_labels[key]</span>
+<span class="sd">        - rxn_dict is of a form analagous to rxn_labels[key]</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -692,10 +692,10 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    if rxn_list is None, rxn_labels[&#39;gene-no-match&#39;] and rxn_labels[&#39;no-gene&#39;] must be dictionaries</span>
+<span class="sd">        - if rxn_list is None, rxn_labels[&#39;gene-no-match&#39;] and rxn_labels[&#39;no-gene&#39;] must be dictionaries</span>
 <span class="sd">        with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -805,11 +805,11 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    reaction corresponds to a Reaction in morph.model</span>
-<span class="sd">    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
-<span class="sd">    morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase</span>
-<span class="sd">    morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - reaction corresponds to a Reaction in morph.model</span>
+<span class="sd">        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
+<span class="sd">        - morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase</span>
+<span class="sd">        - morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -955,8 +955,8 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1129,10 +1129,10 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
-<span class="sd">    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
+<span class="sd">        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
+<span class="sd">        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1195,8 +1195,8 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1235,8 +1235,8 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+<span class="sd">        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        - morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1295,8 +1295,8 @@
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">    filename is a valid path to a properly formatted text file representing a media object</span>
-<span class="sd">    ws_id corresponds to a KBase workspace you are authorized to write to</span>
+<span class="sd">        - filename is a valid path to a properly formatted text file representing a media object</span>
+<span class="sd">        - ws_id corresponds to a KBase workspace you are authorized to write to</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

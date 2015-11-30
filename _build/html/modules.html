@@ -62,9 +62,14 @@
 <dd><p>Builds a media from a text file in tab delimited format</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-filename is a valid path to a properly formatted text file representing a media object
-ws_id corresponds to a KBase workspace you are authorized to write to</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>filename is a valid path to a properly formatted text file representing a media object</li>
+<li>ws_id corresponds to a KBase workspace you are authorized to write to</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -120,13 +125,15 @@ cpd00034[e0]    0.01    -1000.000000    1000.000000</dd>
 <dd><p>Sets morph.model to a superset of all reactions in morph.rxn_labels</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Function Requirements:
-morph.rxn_labels is a dictionary with the four keys [&#8216;gene-match&#8217;, &#8216;gene-no-match&#8217;, &#8216;recon&#8217;, &#8216;no-gene&#8217;],</p>
-<blockquote>
-<div>and it&#8217;s values are dictionaries with entries of the form: reaction_id -&gt; (model_index, probability)</div></blockquote>
 <dl class="last docutils">
-<dt>morph.objects contains entries for the &#8216;source_model&#8217; and &#8216;recon_model&#8217; with data for the models in KBase (this</dt>
-<dd>is the output of the label_reactions(morph) function)</dd>
+<dt>Function Requirements:</dt>
+<dd><ul class="first simple">
+<li>morph.rxn_labels is a dictionary with the four keys [&#8216;gene-match&#8217;, &#8216;gene-no-match&#8217;, &#8216;recon&#8217;, &#8216;no-gene&#8217;],</li>
+</ul>
+<p class="last">and it&#8217;s values are dictionaries with entries of the form: reaction_id -&gt; (model_index, probability)
+- morph.objects contains entries for the &#8216;source_model&#8217; and &#8216;recon_model&#8217; with data for the models in KBase (this
+is the output of the label_reactions(morph) function)</p>
+</dd>
 </dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -178,10 +185,15 @@ However, it does not overwrite the actual source model in KBase. It is imported 
 model is preserved as is, but the reference to its location in KBase is lost from the morph.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -230,12 +242,17 @@ ws_id: 11444</div></blockquote>
 <p>An example reaction_item would be morph.essential_ids.items()[0]</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-reaction corresponds to a Reaction in morph.model
-morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
-morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>reaction corresponds to a Reaction in morph.model</li>
+<li>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</li>
+<li>morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase</li>
+<li>morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -306,9 +323,14 @@ word is set, examines all reactions in morph.model</p>
 <dd><p>returns a list of all reactions in the model (by reaction_id)</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -444,12 +466,17 @@ rxn_labels[&#8216;gene-no-match&#8217;][&#8216;rxn01316_c0&#8217;][1] evaluates 
 &#8216;rxn01316_c0&#8217; in rxn_labels[&#8216;gene-no-match&#8217;] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a readable/writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</li>
+<li>morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.ws_id is the ID of a readable/writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -524,12 +551,15 @@ True</p>
 <p class="first admonition-title">Note</p>
 <dl class="last docutils">
 <dt>Function Requirements:</dt>
-<dd>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
-morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</dd>
+<dd><ul class="first last simple">
+<li>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</li>
+<li>morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</li>
+<li>morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase</li>
+<li>morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
 </dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -625,11 +655,16 @@ protcomp: 6</div></blockquote>
 <dd><p>runs probabilistic gapfilling on morph.model</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</li>
+<li>morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</li>
+<li>morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -696,12 +731,16 @@ reaction_ids to their model_index and probability (like the entries in rxn_label
 <p>Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Function Requirements:
-if rxn_list is None, rxn_labels[&#8216;gene-no-match&#8217;] and rxn_labels[&#8216;no-gene&#8217;] must be dictionaries</p>
-<blockquote>
-<div>with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</div></blockquote>
-<p class="last">morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first simple">
+<li>if rxn_list is None, rxn_labels[&#8216;gene-no-match&#8217;] and rxn_labels[&#8216;no-gene&#8217;] must be dictionaries</li>
+</ul>
+<p class="last">with 0 or more entries of the form reaction_id -&gt; (model_index, probability)
+- morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+- morph.ws_id is the ID of a writeable KBase workspace</p>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -760,9 +799,14 @@ morph.removed_ids = [&#8216;rxn11123_c0&#8217;, &#8216;rxn34534_c0&#8217;, &#821
 <dd><p>Builds a reconstruction from morph.genome and saves it in morph.recon_model</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -809,8 +853,13 @@ of only some reactions from the model at a time. Tuples are in the form (reactio
 arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-rxn_dict is of a form analagous to rxn_labels[key]</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>rxn_dict is of a form analagous to rxn_labels[key]</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -851,9 +900,14 @@ rxn_dict is of a form analagous to rxn_labels[key]</p>
 <dd><p>remove the reaction rxn from morph.model</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -894,9 +948,14 @@ model: 216</dd>
 <dd><p>remove the reactions in rxn_list from morph.model</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -945,10 +1004,15 @@ model: 216</dd>
 and is not guaranteed to be useful in FBA simulation.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd><ul class="first last simple">
+<li>morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</li>
+<li>morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</li>
+<li>morph.ws_id is the ID of a writeable KBase workspace</li>
+</ul>
+</dd>
+</dl>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

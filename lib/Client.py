@@ -49,12 +49,12 @@ def prepare_supermodel(morph, fill_src=True):
     Note
     ----
     Function Requirements:
-        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
-        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-        morph.ws_id is the ID of a writeable KBase workspace
+        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        - morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
+        - morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -162,9 +162,9 @@ def fill_src_to_media(morph):
     Note
     ----
     Function Requirements:
-    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -232,9 +232,9 @@ def translate_features(morph):
     Note
     ----
     Function Requirements:
-    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-    morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        - morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -266,8 +266,8 @@ def reconstruct_genome(morph):
     Note
     ----
     Function Requirements:
-    morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -396,11 +396,11 @@ def label_reactions(morph):
     Note
     ----
     Function Requirements:
-    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-    morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a readable/writeable KBase workspace
+        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        - morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a readable/writeable KBase workspace
 
     Parameters
     ----------
@@ -520,9 +520,9 @@ def build_supermodel(morph):
     Note
     ----
     Function Requirements:
-    morph.rxn_labels is a dictionary with the four keys ['gene-match', 'gene-no-match', 'recon', 'no-gene'],
+        - morph.rxn_labels is a dictionary with the four keys ['gene-match', 'gene-no-match', 'recon', 'no-gene'],
         and it's values are dictionaries with entries of the form: reaction_id -> (model_index, probability)
-    morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
+        - morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
         is the output of the label_reactions(morph) function)
 
     Parameters
@@ -592,7 +592,7 @@ def removal_list(rxn_dict, list_range=None):
     Note
     ----
     Function Requirements:
-    rxn_dict is of a form analagous to rxn_labels[key]
+        - rxn_dict is of a form analagous to rxn_labels[key]
 
     Parameters
     ----------
@@ -643,10 +643,10 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
     Note
     ----
     Function Requirements:
-    if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
+        - if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
         with 0 or more entries of the form reaction_id -> (model_index, probability)
-    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -756,11 +756,11 @@ def find_alternative(morph, reaction):
     Note
     ----
     Function Requirements:
-    reaction corresponds to a Reaction in morph.model
-    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-    morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
-    morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -> probabilities
-    morph.ws_id is the ID of a writeable KBase workspace
+        - reaction corresponds to a Reaction in morph.model
+        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        - morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
+        - morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -> probabilities
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -906,8 +906,8 @@ def get_morph_rxns(morph, label=None):
     Note
     ----
     Function Requirements:
-    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -1080,10 +1080,10 @@ def probanno_fill(morph, name=None):
     Note
     ----
     Function Requirements:
-    morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -1146,8 +1146,8 @@ def remove_reactions(morph, rxn_list):
     Note
     ----
     Function Requirements:
-    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -1186,8 +1186,8 @@ def remove_reaction(morph, rxn):
     Note
     ----
     Function Requirements:
-    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
 
     Parameters
     ----------
@@ -1246,8 +1246,8 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     Note
     ----
     Function Requirements:
-    filename is a valid path to a properly formatted text file representing a media object
-    ws_id corresponds to a KBase workspace you are authorized to write to
+        - filename is a valid path to a properly formatted text file representing a media object
+        - ws_id corresponds to a KBase workspace you are authorized to write to
 
     Parameters
     ----------
