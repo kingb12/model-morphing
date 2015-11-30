@@ -1271,7 +1271,7 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     Examples
     --------
     Proper file format example:
-        .. code-block::
+        ::
             Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)
             cpd00001[e0]    0.01    -1000.000000    1000.000000
             cpd00009[e0]    0.01    -1000.000000    1000.000000
