@@ -95,6 +95,16 @@
 <span class="sd">    4) label reactions in the morph (populates morph.rxn_labels)</span>
 <span class="sd">    5) Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function</span>
 
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Function Requirements:</span>
+<span class="sd">        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
+<span class="sd">        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
+<span class="sd">        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase</span>
+<span class="sd">        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
+<span class="sd">        morph.ws_id is the ID of a writeable KBase workspace</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    morph: Morph</span>
@@ -107,26 +117,6 @@
 <span class="sd">    fill_src: boolean,optional</span>
 <span class="sd">        a boolean indicating that the src_model should first be filled using probabilistic gapfilling</span>
 <span class="sd">        Optional, default is true.</span>
-
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Function Requirements:</span>
-<span class="sd">        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase</span>
-<span class="sd">        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
-<span class="sd">        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase</span>
-<span class="sd">        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
-<span class="sd">        morph.ws_id is the ID of a writeable KBase workspace</span>
-
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.model</span>
-<span class="sd">    morph.trans_model</span>
-<span class="sd">    morph.recon_model</span>
-<span class="sd">    morph.object</span>
-<span class="sd">    morph.info</span>
-<span class="sd">    morph.rxn_labels</span>
-<span class="sd">    morph.probhash</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -218,17 +208,17 @@
 <span class="sd">    However, it does not overwrite the actual source model in KBase. It is imported to morph.ws_id, and morph.src_modelws is changed to match ws_id. Therefore, the data of the source</span>
 <span class="sd">    model is preserved as is, but the reference to its location in KBase is lost from the morph.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        A morph for which you want to gap-fill the source model to it&#39;s given media</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
 <span class="sd">    morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase</span>
 <span class="sd">    morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        A morph for which you want to gap-fill the source model to it&#39;s given media</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -240,12 +230,6 @@
 <span class="sd">    ------</span>
 <span class="sd">    exception: MediaException</span>
 <span class="sd">        (TO BE IMPLEMENTED) An exception indicating that the given media could not be gapfilled in such a way that model objective function exceeds 0</span>
-
-
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.src_model</span>
-<span class="sd">    morph.src_modelws</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -294,12 +278,6 @@
 <span class="sd">    NOTE: The translated model will lose reactions in the source model that did not have matching features</span>
 <span class="sd">    and is not guaranteed to be useful in FBA simulation.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        A morph for which you want to produce a translated model to be referenced by morph.trans_model</span>
-<span class="sd">        (preceeds reaction labelling)</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
@@ -307,9 +285,11 @@
 <span class="sd">    morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.trans_model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        A morph for which you want to produce a translated model to be referenced by morph.trans_model</span>
+<span class="sd">        (preceeds reaction labelling)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -332,21 +312,17 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Builds a reconstruction from morph.genome and saves it in morph.recon_model</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        A morph for which you want to build a reconstruction referenced by morph.recon_model</span>
-<span class="sd">        (preceeds reaction labelling)</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
 <span class="sd">    morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.recon_model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        A morph for which you want to build a reconstruction referenced by morph.recon_model</span>
+<span class="sd">        (preceeds reaction labelling)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -394,9 +370,6 @@
 <span class="sd">    Populates morph.objects with a dictionary of objects. Three are FBA Models, with keys &#39;source_model&#39;, &#39;recon_model&#39;, &#39;trans_model&#39;.</span>
 <span class="sd">    The last is a ProbAnno RxnProbs object, keyed &#39;probanno&#39;. Corresponding entries are put in a dictionary morph.info, with the object_info</span>
 <span class="sd">    as it is returned from the workspace service&quot;</span>
-
-<span class="sd">    Modifies:</span>
-<span class="sd">        morph - morph.objects and morph.info</span>
 
 <span class="sd">    Requires:</span>
 <span class="sd">        src_model, trans_model, recon_model, and probanno are all attributes of morph and valid IDs for KBase objects. src_modelws and probannows are valid</span>
@@ -469,11 +442,6 @@
 <span class="sd">    rxn_labels[&#39;gene-no-match&#39;][&#39;rxn01316_c0&#39;][1] evaluates to the reaction probability of rxn01316_c0</span>
 <span class="sd">    &#39;rxn01316_c0&#39; in rxn_labels[&#39;gene-no-match&#39;] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        the morph fo which you want to generate reaction labels</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
@@ -483,12 +451,10 @@
 <span class="sd">    morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a readable/writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.rxn_labels</span>
-<span class="sd">    morph.probhash</span>
-<span class="sd">    morph.objects</span>
-<span class="sd">    morph.info</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        the morph fo which you want to generate reaction labels</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -600,11 +566,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sets morph.model to a superset of all reactions in morph.rxn_labels</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        The morph for which you want to build a super_model (initializing morph.model)</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
@@ -613,9 +574,10 @@
 <span class="sd">    morph.objects contains entries for the &#39;source_model&#39; and &#39;recon_model&#39; with data for the models in KBase (this</span>
 <span class="sd">        is the output of the label_reactions(morph) function)</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        The morph for which you want to build a super_model (initializing morph.model)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -676,17 +638,17 @@
 <span class="sd">    of only some reactions from the model at a time. Tuples are in the form (reaction_id, index, probability). Setting the range keyword</span>
 <span class="sd">    arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).</span>
 
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Function Requirements:</span>
+<span class="sd">    rxn_dict is of a form analagous to rxn_labels[key]</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    rxn_dict: dict</span>
 <span class="sd">        A dictionary of the form specified in rxn_labels[key] (see above description)</span>
 <span class="sd">    list_range: tuple, optional. (start, end)</span>
 <span class="sd">        A range within the list once it is sorted by probability (start inclusive, end exclusive)</span>
-
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Function Requirements:</span>
-<span class="sd">    rxn_dict is of a form analagous to rxn_labels[key]</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -727,6 +689,14 @@
 
 <span class="sd">    Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id</span>
 
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Function Requirements:</span>
+<span class="sd">    if rxn_list is None, rxn_labels[&#39;gene-no-match&#39;] and rxn_labels[&#39;no-gene&#39;] must be dictionaries</span>
+<span class="sd">        with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</span>
+<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
+<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    morph: Morph</span>
@@ -744,20 +714,6 @@
 <span class="sd">    get_count: Boolean, optional</span>
 <span class="sd">        A Boolean flag indicating whether the process_count should be returned with the morph (as a tuple). Used when not processing all</span>
 <span class="sd">        reactions at once. Deafault is False</span>
-
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Function Requirements:</span>
-<span class="sd">    if rxn_list is None, rxn_labels[&#39;gene-no-match&#39;] and rxn_labels[&#39;no-gene&#39;] must be dictionaries</span>
-<span class="sd">        with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
-
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.essential_ids</span>
-<span class="sd">    morph.removed_ids</span>
-<span class="sd">    morph.model</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -846,13 +802,6 @@
 
 <span class="sd">    An example reaction_item would be morph.essential_ids.items()[0]</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        contains the morph.model from which will try to find an alternative to a particular reaction</span>
-<span class="sd">    reaction: String (reaction_id)</span>
-<span class="sd">        The reaction_id for a reaction to find a more likely alternative for</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
@@ -862,9 +811,12 @@
 <span class="sd">    morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        contains the morph.model from which will try to find an alternative to a particular reaction</span>
+<span class="sd">    reaction: String (reaction_id)</span>
+<span class="sd">        The reaction_id for a reaction to find a more likely alternative for</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1000,6 +952,12 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    returns a list of all reactions in the model (by reaction_id)</span>
 
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Function Requirements:</span>
+<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase</span>
+<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    morph: Morph</span>
@@ -1007,12 +965,6 @@
 <span class="sd">    label: String, optional</span>
 <span class="sd">        pass a label to only get reactions of a certain type</span>
 <span class="sd">        valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon</span>
-
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Function Requirements:</span>
-<span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase</span>
-<span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1174,11 +1126,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    runs probabilistic gapfilling on morph.model</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        A morph with model to be filled using probabilistic gapfilling</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
@@ -1187,9 +1134,10 @@
 <span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph.model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        A morph with model to be filled using probabilistic gapfilling</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1244,22 +1192,18 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    remove the reactions in rxn_list from morph.model</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        the morph with the model reactions will be removed from</span>
-<span class="sd">    rxn_list: list (String)</span>
-<span class="sd">        a list of reaction_ids corresponding to reactions to be removed from the Morph</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
 <span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph,model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        the morph with the model reactions will be removed from</span>
+<span class="sd">    rxn_list: list (String)</span>
+<span class="sd">        a list of reaction_ids corresponding to reactions to be removed from the Morph</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1288,22 +1232,18 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    remove the reaction rxn from morph.model</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    morph: Morph</span>
-<span class="sd">        the morph with the model reactions will be removed from</span>
-<span class="sd">    rxn: String</span>
-<span class="sd">        a reaction_id corresponding to a reaction to be removed from the Morph</span>
-
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
 <span class="sd">    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase</span>
 <span class="sd">    morph.ws_id is the ID of a writeable KBase workspace</span>
 
-<span class="sd">    Modifies</span>
-<span class="sd">    --------</span>
-<span class="sd">    morph,model</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    morph: Morph</span>
+<span class="sd">        the morph with the model reactions will be removed from</span>
+<span class="sd">    rxn: String</span>
+<span class="sd">        a reaction_id corresponding to a reaction to be removed from the Morph</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1352,6 +1292,12 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Builds a media from a text file in tab delimited format</span>
 
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Function Requirements:</span>
+<span class="sd">    filename is a valid path to a properly formatted text file representing a media object</span>
+<span class="sd">    ws_id corresponds to a KBase workspace you are authorized to write to</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    filename: String</span>
@@ -1370,12 +1316,6 @@
 <span class="sd">    -------</span>
 <span class="sd">    Tuple: (objid, wsid) (Integer, Integer)</span>
 <span class="sd">        An object_id and workspace_id in a tuple that correspond to the ObjectIdentity of the media in KBase</span>
-
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Function Requirements:</span>
-<span class="sd">    filename is a valid path to a properly formatted text file representing a media object</span>
-<span class="sd">    ws_id corresponds to a KBase workspace you are authorized to write to</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>

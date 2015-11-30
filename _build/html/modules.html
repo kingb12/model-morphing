@@ -60,6 +60,12 @@
 <dt id="lib.Client.build_media">
 <code class="descclassname">lib.Client.</code><code class="descname">build_media</code><span class="sig-paren">(</span><em>filename</em>, <em>ws_id</em>, <em>suppressError=False</em>, <em>objid=None</em>, <em>isMinimal=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#build_media"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.build_media" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a media from a text file in tab delimited format</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function Requirements:
+filename is a valid path to a properly formatted text file representing a media object
+ws_id corresponds to a KBase workspace you are authorized to write to</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -83,12 +89,6 @@ An object_id and workspace_id in a tuple that correspond to the ObjectIdentity o
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Function Requirements:
-filename is a valid path to a properly formatted text file representing a media object
-ws_id corresponds to a KBase workspace you are authorized to write to</p>
-</div>
 <p class="rubric">Examples</p>
 <dl class="docutils">
 <dt>Proper file format example:</dt>
@@ -118,34 +118,27 @@ cpd00034[e0]    0.01    -1000.000000    1000.000000</dd>
 <dt id="lib.Client.build_supermodel">
 <code class="descclassname">lib.Client.</code><code class="descname">build_supermodel</code><span class="sig-paren">(</span><em>morph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#build_supermodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.build_supermodel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets morph.model to a superset of all reactions in morph.rxn_labels</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; The morph for which you want to build a super_model (initializing morph.model)</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Function Requirements:
 morph.rxn_labels is a dictionary with the four keys [&#8216;gene-match&#8217;, &#8216;gene-no-match&#8217;, &#8216;recon&#8217;, &#8216;no-gene&#8217;],</p>
 <blockquote>
 <div>and it&#8217;s values are dictionaries with entries of the form: reaction_id -&gt; (model_index, probability)</div></blockquote>
-<dl class="docutils">
+<dl class="last docutils">
 <dt>morph.objects contains entries for the &#8216;source_model&#8217; and &#8216;recon_model&#8217; with data for the models in KBase (this</dt>
 <dd>is the output of the label_reactions(morph) function)</dd>
 </dl>
-<p class="last">morph.model</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.model, morph.ws_id forms a valid ObjectIdentity for a
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; The morph for which you want to build a super_model (initializing morph.model)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.model, morph.ws_id forms a valid ObjectIdentity for a
 readable/writable KBase model object (the super-model)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
 </tbody>
 </table>
@@ -183,14 +176,6 @@ morph.model = 5</div></blockquote>
 <p>Fills a source model to a given media. This is an important step if the source model does not grow initially on the media. NOTE: THIS MODIFIES SRC_MODEL IN THE MORPH
 However, it does not overwrite the actual source model in KBase. It is imported to morph.ws_id, and morph.src_modelws is changed to match ws_id. Therefore, the data of the source
 model is preserved as is, but the reference to its location in KBase is lost from the morph.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; A morph for which you want to gap-fill the source model to it&#8217;s given media</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Function Requirements:
@@ -202,18 +187,18 @@ morph.ws_id is the ID of a writeable KBase workspace</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.src_model, morph.src_modelws forms a valid ObjectIdentity for a
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; A morph for which you want to gap-fill the source model to it&#8217;s given media</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.src_model, morph.src_modelws forms a valid ObjectIdentity for a
 readable/writable KBase model object (the gapfilled version of parameter&#8217;s morph.src_model)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">exception</span></code> (<em>MediaException</em>) &#8211;
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">exception</span></code> (<em>MediaException</em>) &#8211;
 (TO BE IMPLEMENTED) An exception indicating that the given media could not be gapfilled in such a way that model objective function exceeds 0</td>
 </tr>
 </tbody>
 </table>
-<p>morph.src_model
-morph.src_modelws</p>
 <p class="rubric">Examples</p>
 <p>Given a morph of the form (Only relevant attributes shown):</p>
 <blockquote>
@@ -243,39 +228,33 @@ ws_id: 11444</div></blockquote>
 <dd><p>NOT FUNCTIONING AS DESIRED</p>
 <p>attemps to find an alternative to a reaction given by reaction item of the form (reaction_id, (model_index, probanno value))</p>
 <p>An example reaction_item would be morph.essential_ids.items()[0]</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; contains the morph.model from which will try to find an alternative to a particular reaction</li>
-<li><strong>reaction</strong> (<em>String (reaction_id)</em>) &#8211; The reaction_id for a reaction to find a more likely alternative for</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Function Requirements:
+<p class="last">Function Requirements:
 reaction corresponds to a Reaction in morph.model
 morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
 morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
 morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -&gt; probabilities
 morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph.model</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; contains the morph.model from which will try to find an alternative to a particular reaction</li>
+<li><strong>reaction</strong> (<em>String (reaction_id)</em>) &#8211; The reaction_id for a reaction to find a more likely alternative for</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><em>Morph</em> &#8211;
 a morph where morph,model, morph.ws_id is a valid ObjectIdentity for a model object in KBase
 (if a more likely alternative was found for reaction, this will be reflected in the model object)</li>
 <li><em>list</em> &#8211;
 new_reactions: a list of the new reactions considered as a potential alternatice to &#8216;reaction&#8217;</li>
 </ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -325,19 +304,6 @@ word is set, examines all reactions in morph.model</p>
 <dt id="lib.Client.get_morph_rxns">
 <code class="descclassname">lib.Client.</code><code class="descname">get_morph_rxns</code><span class="sig-paren">(</span><em>morph</em>, <em>label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#get_morph_rxns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.get_morph_rxns" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns a list of all reactions in the model (by reaction_id)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; morph which has the model to get reactions from</li>
-<li><strong>label</strong> (<em>String, optional</em>) &#8211; pass a label to only get reactions of a certain type
-valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Function Requirements:
@@ -348,10 +314,19 @@ morph.ws_id is the ID of a writeable KBase workspace</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a list of reaction_ids in the morph&#8217;s model. If a label parameter is set, only that specific type of reaction
-will be added to the list, If none exist, the empty list is returned</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; morph which has the model to get reactions from</li>
+<li><strong>label</strong> (<em>String, optional</em>) &#8211; pass a label to only get reactions of a certain type
+valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of reaction_ids in the morph&#8217;s model. If a label parameter is set, only that specific type of reaction
+will be added to the list, If none exist, the empty list is returned</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -467,32 +442,22 @@ are given an arbitrary probability of -1.0</p>
 rxn_labels[&#8216;gene-no-match&#8217;][&#8216;rxn01316_c0&#8217;][0] evaluates to the index of rxn01316_c0 in morph.objects[&#8216;trans_model&#8217;][&#8216;modelreactions&#8217;]
 rxn_labels[&#8216;gene-no-match&#8217;][&#8216;rxn01316_c0&#8217;][1] evaluates to the reaction probability of rxn01316_c0
 &#8216;rxn01316_c0&#8217; in rxn_labels[&#8216;gene-no-match&#8217;] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function Requirements:
+morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+morph.ws_id is the ID of a readable/writeable KBase workspace</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; the morph fo which you want to generate reaction labels</td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Function Requirements:
-morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a readable/writeable KBase workspace</p>
-<p class="last">morph.rxn_labels
-morph.probhash
-morph.objects
-morph.info</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph in which morph.rxn_labels holds a dictionary with the keys &#8216;gene-match&#8217;, gene-no-match&#8217;, &#8216;recon&#8217;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph in which morph.rxn_labels holds a dictionary with the keys &#8216;gene-match&#8217;, gene-no-match&#8217;, &#8216;recon&#8217;
 and &#8216;no-gene&#8217;. The value of each key holds a dictionary with 0 or more entries of the form:<blockquote>
 <div>reaction_id -&gt; (model_index, probability)</div></blockquote>
 <dl class="docutils">
@@ -501,7 +466,7 @@ and &#8216;no-gene&#8217;. The value of each key holds a dictionary with 0 or mo
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
 </tbody>
 </table>
@@ -555,11 +520,23 @@ True</p>
 <li>label reactions in the morph (populates morph.rxn_labels)</li>
 <li>Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function</li>
 </ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<dl class="last docutils">
+<dt>Function Requirements:</dt>
+<dd>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
+morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+morph.ws_id is the ID of a writeable KBase workspace</dd>
+</dl>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; An initialized Morph with the following Requirements:
 - morph.ws_id is a valid KBase workspace_id that user has permission
 to write to
@@ -571,32 +548,7 @@ Optional, default is true.</li>
 </ul>
 </td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<dl class="docutils">
-<dt>Function Requirements:</dt>
-<dd>morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
-morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</dd>
-</dl>
-<p class="last">morph.model
-morph.trans_model
-morph.recon_model
-morph.object
-morph.info
-morph.rxn_labels
-morph.probhash</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Morph with the following state changes:
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A Morph with the following state changes:
 - morph.model has the object_id of the super_model in KBase
 - morph.rxn_labels has the labels for the reactions in the super
 model
@@ -604,9 +556,11 @@ model
 Target genome
 - morph.trans_model has the object_id of the translated model
 - morph.recon model has the object_id of the reconstruction of
-Target Genome</td>
+Target Genome</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -669,30 +623,23 @@ protcomp: 6</div></blockquote>
 <dt id="lib.Client.probanno_fill">
 <code class="descclassname">lib.Client.</code><code class="descname">probanno_fill</code><span class="sig-paren">(</span><em>morph</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#probanno_fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.probanno_fill" title="Permalink to this definition">¶</a></dt>
 <dd><p>runs probabilistic gapfilling on morph.model</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function Requirements:
+morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+morph.ws_id is the ID of a writeable KBase workspace</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; A morph with model to be filled using probabilistic gapfilling</td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Function Requirements:
-morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph.model</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph such that morph.model, morph.ws_id forms an ObjectIdentity for a probalistic gapfilled model in KBase (to media)</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph such that morph.model, morph.ws_id forms an ObjectIdentity for a probalistic gapfilled model in KBase (to media)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
 </tbody>
 </table>
@@ -747,11 +694,20 @@ reaction_ids to their model_index and probability (like the entries in rxn_label
 <div>e.g. reaction_id -&gt; (model_index, probability)</div></blockquote>
 <p>if rxn_list is None, the function removes (in low to high probability order) gene-no-match reactions followed by no-gene reactions</p>
 <p>Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Function Requirements:
+if rxn_list is None, rxn_labels[&#8216;gene-no-match&#8217;] and rxn_labels[&#8216;no-gene&#8217;] must be dictionaries</p>
+<blockquote>
+<div>with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</div></blockquote>
+<p class="last">morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+morph.ws_id is the ID of a writeable KBase workspace</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; The morph containing the model (morph.model) from which reactions will be removed</li>
 <li><strong>rxn_list</strong> (<em>list, optional</em>) &#8211; A sorted list of tuples of the form (reaction_id, (model_index, probability)) which will be processed from morph,model
 (form is the output of removal_list() function)
@@ -765,30 +721,13 @@ reactions at once. Deafault is False</li>
 </ul>
 </td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Function Requirements:
-if rxn_list is None, rxn_labels[&#8216;gene-no-match&#8217;] and rxn_labels[&#8216;no-gene&#8217;] must be dictionaries</p>
-<blockquote>
-<div>with 0 or more entries of the form reaction_id -&gt; (model_index, probability)</div></blockquote>
-<p>morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph.essential_ids
-morph.removed_ids
-morph.model</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><em>Morph</em> &#8211;
 A morph with a new model, and essential_ids/removed)ids used to keep track of changes</li>
 <li><em>int (Only if get_count=True)</em> &#8211;
 process_count (number of models created, used for name managing)</li>
 </ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -819,6 +758,12 @@ morph.removed_ids = [&#8216;rxn11123_c0&#8217;, &#8216;rxn34534_c0&#8217;, &#821
 <dt id="lib.Client.reconstruct_genome">
 <code class="descclassname">lib.Client.</code><code class="descname">reconstruct_genome</code><span class="sig-paren">(</span><em>morph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#reconstruct_genome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.reconstruct_genome" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a reconstruction from morph.genome and saves it in morph.recon_model</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function Requirements:
+morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
+morph.ws_id is the ID of a writeable KBase workspace</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -826,23 +771,10 @@ morph.removed_ids = [&#8216;rxn11123_c0&#8217;, &#8216;rxn34534_c0&#8217;, &#821
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; A morph for which you want to build a reconstruction referenced by morph.recon_model
 (preceeds reaction labelling)</td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Function Requirements:
-morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph.recon_model</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.recon_model, morph.ws_id forms a valid ObjectIdentity for a
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.recon_model, morph.ws_id forms a valid ObjectIdentity for a
 readable/writable KBase model object (the draft reconstruction of morph.genome)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
 </tbody>
 </table>
@@ -875,18 +807,6 @@ recon_model: 4</div></blockquote>
 list of tuples that can be passed as the rxn_list parameter to the process_reactions function. This allows for processing
 of only some reactions from the model at a time. Tuples are in the form (reaction_id, index, probability). Setting the range keyword
 arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>rxn_dict</strong> (<a class="reference external" href="https://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A dictionary of the form specified in rxn_labels[key] (see above description)</li>
-<li><strong>list_range</strong> (<em>tuple, optional. (start, end)</em>) &#8211; A range within the list once it is sorted by probability (start inclusive, end exclusive)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Function Requirements:
@@ -896,9 +816,17 @@ rxn_dict is of a form analagous to rxn_labels[key]</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an sorted list of reactions to remove (sorted from low import probability to high</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rxn_dict</strong> (<a class="reference external" href="https://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A dictionary of the form specified in rxn_labels[key] (see above description)</li>
+<li><strong>list_range</strong> (<em>tuple, optional. (start, end)</em>) &#8211; A range within the list once it is sorted by probability (start inclusive, end exclusive)</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">an sorted list of reactions to remove (sorted from low import probability to high</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -921,32 +849,27 @@ rxn_dict is of a form analagous to rxn_labels[key]</p>
 <dt id="lib.Client.remove_reaction">
 <code class="descclassname">lib.Client.</code><code class="descname">remove_reaction</code><span class="sig-paren">(</span><em>morph</em>, <em>rxn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#remove_reaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.remove_reaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove the reaction rxn from morph.model</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; the morph with the model reactions will be removed from</li>
-<li><strong>rxn</strong> (<em>String</em>) &#8211; a reaction_id corresponding to a reaction to be removed from the Morph</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Function Requirements:
+<p class="last">Function Requirements:
 morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
 morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph,model</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reaction rxn)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; the morph with the model reactions will be removed from</li>
+<li><strong>rxn</strong> (<em>String</em>) &#8211; a reaction_id corresponding to a reaction to be removed from the Morph</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reaction rxn)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -969,32 +892,27 @@ model: 216</dd>
 <dt id="lib.Client.remove_reactions">
 <code class="descclassname">lib.Client.</code><code class="descname">remove_reactions</code><span class="sig-paren">(</span><em>morph</em>, <em>rxn_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Client.html#remove_reactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Client.remove_reactions" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove the reactions in rxn_list from morph.model</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; the morph with the model reactions will be removed from</li>
-<li><strong>rxn_list</strong> (<em>list (String)</em>) &#8211; a list of reaction_ids corresponding to reactions to be removed from the Morph</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Function Requirements:
+<p class="last">Function Requirements:
 morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
 morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph,model</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reactions in rxn_list)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; the morph with the model reactions will be removed from</li>
+<li><strong>rxn_list</strong> (<em>list (String)</em>) &#8211; a list of reaction_ids corresponding to reactions to be removed from the Morph</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reactions in rxn_list)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1025,6 +943,13 @@ model: 216</dd>
 <dd><p>Translates the features in the source model to matches in the target genome</p>
 <p>NOTE: The translated model will lose reactions in the source model that did not have matching features
 and is not guaranteed to be useful in FBA simulation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function Requirements:
+morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+morph.ws_id is the ID of a writeable KBase workspace</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1032,24 +957,10 @@ and is not guaranteed to be useful in FBA simulation.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>morph</strong> (<a class="reference internal" href="#module-lib.Morph" title="lib.Morph"><em>Morph</em></a>) &#8211; A morph for which you want to produce a translated model to be referenced by morph.trans_model
 (preceeds reaction labelling)</td>
 </tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Function Requirements:
-morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-morph.ws_id is the ID of a writeable KBase workspace</p>
-<p class="last">morph.trans_model</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.trans_model, morph.ws_id forms a valid ObjectIdentity for a
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a morph object where morph.trans_model, morph.ws_id forms a valid ObjectIdentity for a
 readable/writable KBase model object (the translation of morph.src_model)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-lib.Morph" title="lib.Morph">Morph</a></td>
 </tr>
 </tbody>
 </table>
