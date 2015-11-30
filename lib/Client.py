@@ -46,6 +46,16 @@ def prepare_supermodel(morph, fill_src=True):
     4) label reactions in the morph (populates morph.rxn_labels)
     5) Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function
 
+    Note
+    ----
+    Function Requirements:
+        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
+        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+        morph.ws_id is the ID of a writeable KBase workspace
+
     Parameters
     ----------
     morph: Morph
@@ -58,26 +68,6 @@ def prepare_supermodel(morph, fill_src=True):
     fill_src: boolean,optional
         a boolean indicating that the src_model should first be filled using probabilistic gapfilling
         Optional, default is true.
-
-    Note
-    ----
-    Function Requirements:
-        morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
-        morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
-        morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
-        morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
-        morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
-        morph.ws_id is the ID of a writeable KBase workspace
-
-    Modifies
-    --------
-    morph.model
-    morph.trans_model
-    morph.recon_model
-    morph.object
-    morph.info
-    morph.rxn_labels
-    morph.probhash
 
     Returns
     -------
@@ -169,17 +159,17 @@ def fill_src_to_media(morph):
     However, it does not overwrite the actual source model in KBase. It is imported to morph.ws_id, and morph.src_modelws is changed to match ws_id. Therefore, the data of the source
     model is preserved as is, but the reference to its location in KBase is lost from the morph.
 
-    Parameters
-    ----------
-    morph: Morph
-        A morph for which you want to gap-fill the source model to it's given media
-
     Note
     ----
     Function Requirements:
     morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
     morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
+
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to gap-fill the source model to it's given media
 
     Returns
     -------
@@ -191,12 +181,6 @@ def fill_src_to_media(morph):
     ------
     exception: MediaException
         (TO BE IMPLEMENTED) An exception indicating that the given media could not be gapfilled in such a way that model objective function exceeds 0
-
-
-    Modifies
-    --------
-    morph.src_model
-    morph.src_modelws
 
     Examples
     --------
@@ -245,12 +229,6 @@ def translate_features(morph):
     NOTE: The translated model will lose reactions in the source model that did not have matching features
     and is not guaranteed to be useful in FBA simulation.
 
-    Parameters
-    ----------
-    morph: Morph
-        A morph for which you want to produce a translated model to be referenced by morph.trans_model
-        (preceeds reaction labelling)
-
     Note
     ----
     Function Requirements:
@@ -258,9 +236,11 @@ def translate_features(morph):
     morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph.trans_model
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to produce a translated model to be referenced by morph.trans_model
+        (preceeds reaction labelling)
 
     Returns
     -------
@@ -283,21 +263,17 @@ def reconstruct_genome(morph):
     """
     Builds a reconstruction from morph.genome and saves it in morph.recon_model
 
-    Parameters
-    ----------
-    morph: Morph
-        A morph for which you want to build a reconstruction referenced by morph.recon_model
-        (preceeds reaction labelling)
-
     Note
     ----
     Function Requirements:
     morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph.recon_model
+    Parameters
+    ----------
+    morph: Morph
+        A morph for which you want to build a reconstruction referenced by morph.recon_model
+        (preceeds reaction labelling)
 
     Returns
     -------
@@ -345,9 +321,6 @@ def _get_objects(morph):
     Populates morph.objects with a dictionary of objects. Three are FBA Models, with keys 'source_model', 'recon_model', 'trans_model'.
     The last is a ProbAnno RxnProbs object, keyed 'probanno'. Corresponding entries are put in a dictionary morph.info, with the object_info
     as it is returned from the workspace service"
-
-    Modifies:
-        morph - morph.objects and morph.info
 
     Requires:
         src_model, trans_model, recon_model, and probanno are all attributes of morph and valid IDs for KBase objects. src_modelws and probannows are valid
@@ -420,11 +393,6 @@ def label_reactions(morph):
     rxn_labels['gene-no-match']['rxn01316_c0'][1] evaluates to the reaction probability of rxn01316_c0
     'rxn01316_c0' in rxn_labels['gene-no-match'] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)
 
-    Parameters
-    ----------
-    morph: Morph
-        the morph fo which you want to generate reaction labels
-
     Note
     ----
     Function Requirements:
@@ -434,12 +402,10 @@ def label_reactions(morph):
     morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a readable/writeable KBase workspace
 
-    Modifies
-    --------
-    morph.rxn_labels
-    morph.probhash
-    morph.objects
-    morph.info
+    Parameters
+    ----------
+    morph: Morph
+        the morph fo which you want to generate reaction labels
 
     Returns
     -------
@@ -551,11 +517,6 @@ def build_supermodel(morph):
     """
     Sets morph.model to a superset of all reactions in morph.rxn_labels
 
-    Parameters
-    ----------
-    morph: Morph
-        The morph for which you want to build a super_model (initializing morph.model)
-
     Note
     ----
     Function Requirements:
@@ -564,9 +525,10 @@ def build_supermodel(morph):
     morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
         is the output of the label_reactions(morph) function)
 
-    Modifies
-    --------
-    morph.model
+    Parameters
+    ----------
+    morph: Morph
+        The morph for which you want to build a super_model (initializing morph.model)
 
     Returns
     -------
@@ -627,17 +589,17 @@ def removal_list(rxn_dict, list_range=None):
     of only some reactions from the model at a time. Tuples are in the form (reaction_id, index, probability). Setting the range keyword
     arg returns only a subset of the sorted list given by the index range passed in as a tuple (start, end).
 
+    Note
+    ----
+    Function Requirements:
+    rxn_dict is of a form analagous to rxn_labels[key]
+
     Parameters
     ----------
     rxn_dict: dict
         A dictionary of the form specified in rxn_labels[key] (see above description)
     list_range: tuple, optional. (start, end)
         A range within the list once it is sorted by probability (start inclusive, end exclusive)
-
-    Note
-    ----
-    Function Requirements:
-    rxn_dict is of a form analagous to rxn_labels[key]
 
     Returns
     -------
@@ -678,6 +640,14 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
 
     Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id
 
+    Note
+    ----
+    Function Requirements:
+    if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
+        with 0 or more entries of the form reaction_id -> (model_index, probability)
+    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
     Parameters
     ----------
     morph: Morph
@@ -695,20 +665,6 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
     get_count: Boolean, optional
         A Boolean flag indicating whether the process_count should be returned with the morph (as a tuple). Used when not processing all
         reactions at once. Deafault is False
-
-    Note
-    ----
-    Function Requirements:
-    if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
-        with 0 or more entries of the form reaction_id -> (model_index, probability)
-    morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
-
-    Modifies
-    --------
-    morph.essential_ids
-    morph.removed_ids
-    morph.model
 
     Returns
     -------
@@ -797,13 +753,6 @@ def find_alternative(morph, reaction):
 
     An example reaction_item would be morph.essential_ids.items()[0]
 
-    Parameters
-    ----------
-    morph: Morph
-        contains the morph.model from which will try to find an alternative to a particular reaction
-    reaction: String (reaction_id)
-        The reaction_id for a reaction to find a more likely alternative for
-
     Note
     ----
     Function Requirements:
@@ -813,9 +762,12 @@ def find_alternative(morph, reaction):
     morph.probhash is initialized to a dictionary of compartment truncated reaction_ids -> probabilities
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph.model
+    Parameters
+    ----------
+    morph: Morph
+        contains the morph.model from which will try to find an alternative to a particular reaction
+    reaction: String (reaction_id)
+        The reaction_id for a reaction to find a more likely alternative for
 
     Returns
     -------
@@ -951,6 +903,12 @@ def get_morph_rxns(morph, label=None):
     """
     returns a list of all reactions in the model (by reaction_id)
 
+    Note
+    ----
+    Function Requirements:
+    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
+    morph.ws_id is the ID of a writeable KBase workspace
+
     Parameters
     ----------
     morph: Morph
@@ -958,12 +916,6 @@ def get_morph_rxns(morph, label=None):
     label: String, optional
         pass a label to only get reactions of a certain type
         valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon
-
-    Note
-    ----
-    Function Requirements:
-    morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
-    morph.ws_id is the ID of a writeable KBase workspace
 
     Returns
     -------
@@ -1125,11 +1077,6 @@ def probanno_fill(morph, name=None):
     """
     runs probabilistic gapfilling on morph.model
 
-    Parameters
-    ----------
-    morph: Morph
-        A morph with model to be filled using probabilistic gapfilling
-
     Note
     ----
     Function Requirements:
@@ -1138,9 +1085,10 @@ def probanno_fill(morph, name=None):
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph.model
+    Parameters
+    ----------
+    morph: Morph
+        A morph with model to be filled using probabilistic gapfilling
 
     Returns
     -------
@@ -1195,22 +1143,18 @@ def remove_reactions(morph, rxn_list):
     """
     remove the reactions in rxn_list from morph.model
 
-    Parameters
-    ----------
-    morph: Morph
-        the morph with the model reactions will be removed from
-    rxn_list: list (String)
-        a list of reaction_ids corresponding to reactions to be removed from the Morph
-
     Note
     ----
     Function Requirements:
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph,model
+    Parameters
+    ----------
+    morph: Morph
+        the morph with the model reactions will be removed from
+    rxn_list: list (String)
+        a list of reaction_ids corresponding to reactions to be removed from the Morph
 
     Returns
     -------
@@ -1239,22 +1183,18 @@ def remove_reaction(morph, rxn):
     """
     remove the reaction rxn from morph.model
 
-    Parameters
-    ----------
-    morph: Morph
-        the morph with the model reactions will be removed from
-    rxn: String
-        a reaction_id corresponding to a reaction to be removed from the Morph
-
     Note
     ----
     Function Requirements:
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
-    Modifies
-    --------
-    morph,model
+    Parameters
+    ----------
+    morph: Morph
+        the morph with the model reactions will be removed from
+    rxn: String
+        a reaction_id corresponding to a reaction to be removed from the Morph
 
     Returns
     -------
@@ -1303,6 +1243,12 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     """
     Builds a media from a text file in tab delimited format
 
+    Note
+    ----
+    Function Requirements:
+    filename is a valid path to a properly formatted text file representing a media object
+    ws_id corresponds to a KBase workspace you are authorized to write to
+
     Parameters
     ----------
     filename: String
@@ -1321,12 +1267,6 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     -------
     Tuple: (objid, wsid) (Integer, Integer)
         An object_id and workspace_id in a tuple that correspond to the ObjectIdentity of the media in KBase
-
-    Note
-    ----
-    Function Requirements:
-    filename is a valid path to a properly formatted text file representing a media object
-    ws_id corresponds to a KBase workspace you are authorized to write to
 
     Examples
     --------
