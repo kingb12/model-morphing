@@ -1241,54 +1241,54 @@ def prob_annotate(genome_id, ws_id):
 ws_client, fba_client = _init_clients()
 def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=False):
     """
-    Builds a media from a text file in tab delimited format
+    Builds a KBase media object from a txt file in tab delimited format and saves it in a workspace
 
     Note
     ----
     Function Requirements:
-        - filename is a valid path to a properly formatted text file representing a media object
-        - ws_id corresponds to a KBase workspace you are authorized to write to
+        - `filename` is a valid path to a properly formatted text file representing a media object
+        - `ws_id` corresponds to a KBase workspace you are authorized to write to
 
     Parameters
     ----------
     filename: String
         a String with the path to a txt file representing a media in tab-delimitted format. See MediaDB for an example
     ws_id: Integer
-        a workspace_id for the media destination (can also be a string so long as the string represents an integer)
+        a `workspace_id` for the media destination (can also be a string so long as the string represents an integer)
     suppressError: Boolean, optional
         a boolean flag for suppressing improperly formatted compound errors. Best used if one or more compounds does
-        not have a kbase compound_id but they are NOT essential to the media. Default is False.
+        not have a kbase compound_id but they are NOT essential to the media. Default is `False`
     objid: Integer, optional
-        a object_id for where to save the media (optional, for workspace system control)
+        a `object_id` for where to save the media (optional, for workspace system control)
     isMinimal: Boolean, optional
-        a boolean indicating whether the given media is minimal. Default is False
+        a boolean indicating whether the given media is minimal. Default is `False`
 
     Returns
     -------
-    Tuple: (objid, wsid) (Integer, Integer)
-        An object_id and workspace_id in a tuple that correspond to the ObjectIdentity of the media in KBase
+    (objid, wsid): ((Integer, Integer))
+        An `object_id` and `workspace_id` in a tuple that correspond to the ObjectIdentity of the media in KBase
 
     Examples
     --------
     Proper file format example:
-        Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)
+        `Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)
         cpd00001[e0]    0.01    -1000.000000    1000.000000
         cpd00009[e0]    0.01    -1000.000000    1000.000000
         cpd00011[e0]    0.01    -1000.000000    1000.000000
         cpd00013[e0]    0.01    -1000.000000    1000.000000
         cpd00029[e0]    0.01    -1000.000000    1000.000000
         cpd00030[e0]    0.01    -1000.000000    1000.000000
-        cpd00034[e0]    0.01    -1000.000000    1000.000000
+        cpd00034[e0]    0.01    -1000.000000    1000.000000`
     - First Row is headers for the columns below
     - Each row is tab-delimitted ('\\t'), the 4th term ending with a new new
     line
 
     First, put a media txt file of the above form in a directory sucl as (relative) '../media/mymedia.txt'
 
-    >>>Client.build_media('../media/mymedia.txt', 9145)
+    `>>>Client.build_media('../media/mymedia.txt', 9145)`
     (15, 9145)
 
-    >>>
+    >>>`
 
     """
     compounds = list()

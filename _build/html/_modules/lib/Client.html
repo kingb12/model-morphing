@@ -1290,54 +1290,54 @@
 <span class="n">ws_client</span><span class="p">,</span> <span class="n">fba_client</span> <span class="o">=</span> <span class="n">_init_clients</span><span class="p">()</span>
 <div class="viewcode-block" id="build_media"><a class="viewcode-back" href="../../modules.html#lib.Client.build_media">[docs]</a><span class="k">def</span> <span class="nf">build_media</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">ws_id</span><span class="p">,</span> <span class="n">suppressError</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">objid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">isMinimal</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Builds a media from a text file in tab delimited format</span>
+<span class="sd">    Builds a KBase media object from a txt file in tab delimited format and saves it in a workspace</span>
 
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
 <span class="sd">    Function Requirements:</span>
-<span class="sd">        - filename is a valid path to a properly formatted text file representing a media object</span>
-<span class="sd">        - ws_id corresponds to a KBase workspace you are authorized to write to</span>
+<span class="sd">        - `filename` is a valid path to a properly formatted text file representing a media object</span>
+<span class="sd">        - `ws_id` corresponds to a KBase workspace you are authorized to write to</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    filename: String</span>
 <span class="sd">        a String with the path to a txt file representing a media in tab-delimitted format. See MediaDB for an example</span>
 <span class="sd">    ws_id: Integer</span>
-<span class="sd">        a workspace_id for the media destination (can also be a string so long as the string represents an integer)</span>
+<span class="sd">        a `workspace_id` for the media destination (can also be a string so long as the string represents an integer)</span>
 <span class="sd">    suppressError: Boolean, optional</span>
 <span class="sd">        a boolean flag for suppressing improperly formatted compound errors. Best used if one or more compounds does</span>
-<span class="sd">        not have a kbase compound_id but they are NOT essential to the media. Default is False.</span>
+<span class="sd">        not have a kbase compound_id but they are NOT essential to the media. Default is `False`</span>
 <span class="sd">    objid: Integer, optional</span>
-<span class="sd">        a object_id for where to save the media (optional, for workspace system control)</span>
+<span class="sd">        a `object_id` for where to save the media (optional, for workspace system control)</span>
 <span class="sd">    isMinimal: Boolean, optional</span>
-<span class="sd">        a boolean indicating whether the given media is minimal. Default is False</span>
+<span class="sd">        a boolean indicating whether the given media is minimal. Default is `False`</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Tuple: (objid, wsid) (Integer, Integer)</span>
-<span class="sd">        An object_id and workspace_id in a tuple that correspond to the ObjectIdentity of the media in KBase</span>
+<span class="sd">    (objid, wsid): ((Integer, Integer))</span>
+<span class="sd">        An `object_id` and `workspace_id` in a tuple that correspond to the ObjectIdentity of the media in KBase</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    Proper file format example:</span>
-<span class="sd">        Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)</span>
+<span class="sd">        `Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)</span>
 <span class="sd">        cpd00001[e0]    0.01    -1000.000000    1000.000000</span>
 <span class="sd">        cpd00009[e0]    0.01    -1000.000000    1000.000000</span>
 <span class="sd">        cpd00011[e0]    0.01    -1000.000000    1000.000000</span>
 <span class="sd">        cpd00013[e0]    0.01    -1000.000000    1000.000000</span>
 <span class="sd">        cpd00029[e0]    0.01    -1000.000000    1000.000000</span>
 <span class="sd">        cpd00030[e0]    0.01    -1000.000000    1000.000000</span>
-<span class="sd">        cpd00034[e0]    0.01    -1000.000000    1000.000000</span>
+<span class="sd">        cpd00034[e0]    0.01    -1000.000000    1000.000000`</span>
 <span class="sd">    - First Row is headers for the columns below</span>
 <span class="sd">    - Each row is tab-delimitted (&#39;\\t&#39;), the 4th term ending with a new new</span>
 <span class="sd">    line</span>
 
 <span class="sd">    First, put a media txt file of the above form in a directory sucl as (relative) &#39;../media/mymedia.txt&#39;</span>
 
-<span class="sd">    &gt;&gt;&gt;Client.build_media(&#39;../media/mymedia.txt&#39;, 9145)</span>
+<span class="sd">    `&gt;&gt;&gt;Client.build_media(&#39;../media/mymedia.txt&#39;, 9145)`</span>
 <span class="sd">    (15, 9145)</span>
 
-<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;`</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">compounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
