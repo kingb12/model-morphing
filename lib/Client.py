@@ -33,6 +33,7 @@ def _init_clients():
     with open ("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
         url = myfile.read().replace('\n','')
     fba_client = fbaModelServices(url)
+
     return ws_client, fba_client
 
 def prepare_supermodel(morph, fill_src=True):
@@ -58,8 +59,9 @@ def prepare_supermodel(morph, fill_src=True):
         a boolean indicating that the src_model should first be filled using probabilistic gapfilling
         Optional, default is true.
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
         morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
         morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
         morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
@@ -172,8 +174,9 @@ def fill_src_to_media(morph):
     morph: Morph
         A morph for which you want to gap-fill the source model to it's given media
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
     morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
@@ -248,8 +251,9 @@ def translate_features(morph):
         A morph for which you want to produce a translated model to be referenced by morph.trans_model
         (preceeds reaction labelling)
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
     morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
@@ -285,8 +289,9 @@ def reconstruct_genome(morph):
         A morph for which you want to build a reconstruction referenced by morph.recon_model
         (preceeds reaction labelling)
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.genome, morph.genomews form a valid ObjectIdentity for a genome object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
@@ -420,8 +425,9 @@ def label_reactions(morph):
     morph: Morph
         the morph fo which you want to generate reaction labels
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
     morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
     morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
@@ -550,8 +556,9 @@ def build_supermodel(morph):
     morph: Morph
         The morph for which you want to build a super_model (initializing morph.model)
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.rxn_labels is a dictionary with the four keys ['gene-match', 'gene-no-match', 'recon', 'no-gene'],
         and it's values are dictionaries with entries of the form: reaction_id -> (model_index, probability)
     morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
@@ -627,8 +634,9 @@ def removal_list(rxn_dict, list_range=None):
     list_range: tuple, optional. (start, end)
         A range within the list once it is sorted by probability (start inclusive, end exclusive)
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     rxn_dict is of a form analagous to rxn_labels[key]
 
     Returns
@@ -688,8 +696,9 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         A Boolean flag indicating whether the process_count should be returned with the morph (as a tuple). Used when not processing all
         reactions at once. Deafault is False
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
         with 0 or more entries of the form reaction_id -> (model_index, probability)
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
@@ -795,8 +804,9 @@ def find_alternative(morph, reaction):
     reaction: String (reaction_id)
         The reaction_id for a reaction to find a more likely alternative for
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     reaction corresponds to a Reaction in morph.model
     morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
     morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase
@@ -949,8 +959,9 @@ def get_morph_rxns(morph, label=None):
         pass a label to only get reactions of a certain type
         valid labels: essential, removed, gebe-no-match, gene-match, no-gene, recon
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.model, morph.ws_id form a valid ObjectIdentity for a model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
@@ -1110,7 +1121,7 @@ def remove_reactions_by_dict(morph, rxn_dict):
     morph = copy.deepcopy(morph)
     morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_dict.keys()})[0]
     return morph
-def probanno_fill(morph):
+def probanno_fill(morph, name=None):
     """
     runs probabilistic gapfilling on morph.model
 
@@ -1119,8 +1130,9 @@ def probanno_fill(morph):
     morph: Morph
         A morph with model to be filled using probabilistic gapfilling
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
     morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
@@ -1170,9 +1182,11 @@ def probanno_fill(morph):
     morph = copy.deepcopy(morph)
     # Gapfill the model and reset the model and modelws attributes of
     # the morph
+    if name is None:
+        name = u'morph-filled'
     fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
     gap_formulation = {'probabilisticAnnotation' : morph.probanno, 'probabilisticAnnotation_workspace' : morph.probannows, u'formulation': fba_formulation}
-    params = {u'model': morph.model, u'model_workspace': morph.ws_id, u'out_model' : u'morph_filled', u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
+    params = {u'model': morph.model, u'model_workspace': morph.ws_id, u'out_model' : name, u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
     model_info = fba_client.gapfill_model(params)
     morph.model = model_info[0]
     return morph
@@ -1188,8 +1202,9 @@ def remove_reactions(morph, rxn_list):
     rxn_list: list (String)
         a list of reaction_ids corresponding to reactions to be removed from the Morph
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
@@ -1231,8 +1246,9 @@ def remove_reaction(morph, rxn):
     rxn: String
         a reaction_id corresponding to a reaction to be removed from the Morph
 
-    Requires
-    --------
+    Note
+    ----
+    Function Requirements:
     morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
     morph.ws_id is the ID of a writeable KBase workspace
 
@@ -1268,12 +1284,107 @@ def simple_probanno_morph(morph):
     morph = prepare_supermodel(morph, fill_src=False)
     morph = remove_reactions(morph, rxn_list=morph.rxn_labels['gene-no-match'].keys())
     morph = remove_reactions(morph, rxn_list=morph.rxn_labels['no-gene'].keys())
-    morph = probanno_fill(morph)
+    morph = probanno_fill(morph, name=u'simple_probanno_morph')
     return morph
 
 def compare_morphmodels(list_of_morphs):
+    """
+    Returns a detailed comparison of the models in a list of models
+    """
     args = {'models':[], 'workspaces': []}
     for i in list_of_morphs:
         args['models'].append(i.model)
         args['workspaces'].append(i.ws_id)
     return fba_client.compare_models(args)
+def prob_annotate(genome_id, ws_id):
+    print "to be implemented"
+ws_client, fba_client = _init_clients()
+def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=False):
+    """
+    Builds a media from a text file in tab delimited format
+
+    Parameters
+    ----------
+    filename: String
+        a String with the path to a txt file representing a media in tab-delimitted format. See MediaDB for an example
+    ws_id: Integer
+        a workspace_id for the media destination (can also be a string so long as the string represents an integer)
+    suppressError: Boolean, optional
+        a boolean flag for suppressing improperly formatted compound errors. Best used if one or more compounds does
+        not have a kbase compound_id but they are NOT essential to the media. Default is False.
+    objid: Integer, optional
+        a object_id for where to save the media (optional, for workspace system control)
+    isMinimal: Boolean, optional
+        a boolean indicating whether the given media is minimal. Default is False
+
+    Returns
+    -------
+    Tuple: (objid, wsid) (Integer, Integer)
+        An object_id and workspace_id in a tuple that correspond to the ObjectIdentity of the media in KBase
+
+    Note
+    ----
+    Function Requirements:
+    filename is a valid path to a properly formatted text file representing a media object
+    ws_id corresponds to a KBase workspace you are authorized to write to
+
+    Examples
+    --------
+    Proper file format example:
+        Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)
+        cpd00001[e0]    0.01    -1000.000000    1000.000000
+        cpd00009[e0]    0.01    -1000.000000    1000.000000
+        cpd00011[e0]    0.01    -1000.000000    1000.000000
+        cpd00013[e0]    0.01    -1000.000000    1000.000000
+        cpd00029[e0]    0.01    -1000.000000    1000.000000
+        cpd00030[e0]    0.01    -1000.000000    1000.000000
+        cpd00034[e0]    0.01    -1000.000000    1000.000000
+    - First Row is headers for the columns below
+    - Each row is tab-delimitted ('\\t'), the 4th term ending with a new new
+    line
+
+    First, put a media txt file of the above form in a directory sucl as (relative) '../media/mymedia.txt'
+
+    >>>Client.build_media('../media/mymedia.txt', 9145)
+    (15, 9145)
+
+    >>>
+
+    """
+    compounds = list()
+    with open(filename,'r') as file:
+        cpds =  file.readlines()[1:]
+        for c in cpds:
+            item = dict()
+            c = c.split('\n')[0]
+            values = c.split('\t')
+            if values[0][0:3] == "cpd":
+                values[0] = values[0][0:8] + '_' + values[0][9:11]
+                item[u'compound_ref'] = u'489/6/1/compounds/id/' + values[0]
+                item[u'concentration'] = float(values[1])
+                item[u'minFlux'] = float(values[2])
+                item[u'maxFlux'] = float(values[3])
+                compounds.append(item)
+            else:
+                if suppressError:
+                    print values[0] + " not added to media!!"
+                else:
+                    raise MediaFormatError(values[0] + 'is not a properly formed KBase compound_id')
+    name = filename.split('/')[-1].split('.')[0]
+    obj = Helpers.load('blankmedia.pkl')
+    obj =copy.deepcopy(obj)
+    media = obj['data']
+    media[u'name'] = name
+    media[u'source_id'] = name
+    if isMinimal:
+        media['isMinimal'] = 1
+    media[u'mediacompounds'] = compounds
+    info = Helpers.save_object(media, obj['info'][2], ws_id, objid, name=name)[0]
+    return (info[0], info[6])
+
+
+class MediaFormatError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
