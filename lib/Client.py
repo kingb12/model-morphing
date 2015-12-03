@@ -570,6 +570,7 @@ def build_supermodel(morph):
         # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][morph.rxn_labels['gene-no-match'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
+        gpr = _get_gpr(reaction)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
     # Add the recon reactions:
     for rxn_id in morph.rxn_labels['recon']:
@@ -1322,6 +1323,39 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     media[u'mediacompounds'] = compounds
     info = Helpers.save_object(media, obj['info'][2], ws_id, objid, name=name)[0]
     return (info[0], info[6])
+
+
+def _get_gpr(reaction):
+    rxn_proteins = reaction['modelReactionProteins']
+    proteins_str = ""
+    for i in range(0, len(rxn_proteins)):
+        units_str = ""
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = unit['feature_refs']
+            features = ""
+            if (len(ftrs) == 0):
+                if unit['note'] != "":
+                    features = "(Unknown)"
+                else:
+                   continue
+            else:
+                for k in range(0, len(ftrs)):
+                    feature = ftrs[k].split('/')[-1]
+                    if (k > 0):
+                        feature = " or " + feature
+                    features += feature
+            unit_str = "(" + features + ")"
+            if j > 0:
+                unit_str = " and " + unit_str
+            units_str += unit_str
+        protein = "(" + units_str + ")"
+        if (i > 0):
+            protein = " or " + protein
+        proteins_str += protein
+    gpr = "(" + proteins_str + ")"
+    return gpr
 
 
 class MediaFormatError(Exception):
