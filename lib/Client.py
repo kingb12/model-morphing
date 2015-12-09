@@ -561,7 +561,6 @@ def build_supermodel(morph):
     Where morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase (the super model)
     """
     morph = copy.deepcopy(morph)
-    super_time = time.time()
     model = morph.objects['source_model']
     recon = morph.objects['recon_model']
     super_rxns = list()
@@ -570,14 +569,16 @@ def build_supermodel(morph):
         # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][morph.rxn_labels['gene-no-match'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
-        gpr = _get_gpr(reaction)
-        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'GENE_NO_MATCH', '', reaction['name']))
+        # shouldn't have genes
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
     # Add the recon reactions:
     for rxn_id in morph.rxn_labels['recon']:
-        # morph.rxn_labels['recon'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+        # morph.rxn_labels['recon'][0] gives the index of the reaction in the
+        # recon['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = recon['modelreactions'][morph.rxn_labels['recon'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
-        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], 'recon', '', reaction['name']))
+        gpr = _get_gpr(reaction)
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr))
     morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
     return morph
 
@@ -627,7 +628,7 @@ def removal_list(rxn_dict, list_range=None):
        return removal_list[list_range[0]:list_range[1]]
     return removal_list
 
-def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False):
+def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False, iterative_models=True):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
@@ -1067,12 +1068,14 @@ def get_mdlrxn_info(morph, reaction_ids=None):
         results.append(ans)
     return results
 
-def remove_reactions_by_dict(morph, rxn_dict):
+def remove_reactions_by_dict(morph, rxn_dict, output_id=None):
     """
     Removes reactions provided in a dictionary of a style like morph.rxn_labels['gene-no-match'] or morph.essential_ids
     """
+    if output_id is None:
+        output_id = 'removerxnsbydict'
     morph = copy.deepcopy(morph)
-    morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': 'removerxnsbydict', 'reactions': rxn_dict.keys()})[0]
+    morph.model  = fba_client.remove_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'output_id': output_id, 'reactions': rxn_dict.keys()})[0]
     return morph
 def probanno_fill(morph, name=None):
     """
@@ -1323,6 +1326,65 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     media[u'mediacompounds'] = compounds
     info = Helpers.save_object(media, obj['info'][2], ws_id, objid, name=name)[0]
     return (info[0], info[6])
+
+def parse_fill(morph, name=None):
+    """
+    runs parsimonious gapfilling on morph.model
+
+    Note
+    ----
+    Function Requirements:
+        - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+        - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a writeable KBase workspace
+
+    Parameters
+    ----------
+    morph: Morph
+        A morph with model to be filled using parsimonious gapfilling
+
+    Returns
+    -------
+    Morph
+        a morph such that morph.model, morph.ws_id forms an ObjectIdentity for a parsimonious gapfilled model in KBase (to media)
+
+    Examples
+    --------
+    Given a morph of the form:
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 214
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+        probannows: 9145
+        media: 18
+        mediaws: 9145
+
+    >>>morph = Client.probanno_fill(morph)
+
+    Might return a morph of form
+        ws_name: MMws235
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.model = 216
+        morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+        probannows: 9145
+        media: 18
+        mediaws: 9145
+
+    Where morph.model now holds the object_id of a model filled to morph.media using parsimonious gapfilling
+    """
+    morph = copy.deepcopy(morph)
+    # Gapfill the model and reset the model and modelws attributes of
+    # the morph
+    if name is None:
+        name = u'morph-parse-filled'
+    fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
+    gap_formulation = {u'formulation': fba_formulation}
+    params = {u'model': morph.model, u'model_workspace': morph.ws_id, u'out_model' : name, u'workspace' : morph.ws_id, u'formulation' : gap_formulation, u'integrate_solution' : True, u'gapFill' : u'gf'}
+    model_info = fba_client.gapfill_model(params)
+    morph.model = model_info[0]
+    return morph
 
 
 def _get_gpr(reaction):

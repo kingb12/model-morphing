@@ -1,6 +1,7 @@
 import Helpers
 from Helpers import *
 import Client
+from biokbase.fbaModelServices.Client import ServerError
 # This is a module of functions that perform an unorganized collection of runs
 # and routines, not for production usage
 
@@ -66,3 +67,159 @@ def check_essentiality(result, index):
         m.model = Client.fba_client.remove_reactions({'model': result['models'][index], 'model_workspace': result['morphs'][index].ws_id, 'output_id': 'essncheck', 'workspace':result['morphs'][index].ws_id, 'reactions':[s]})[0]
         a = runfba(m)
         print a[10]['Objective']
+def supermodel_check(morph):
+    super_rxns = get_object(morph.model, morph.ws_id)['data']['modelreactions']
+    recon_rxns = morph.objects['recon_model']['modelreactions']
+    super_hash = dict()
+    for i in range(0, len(super_rxns)):
+        mdlrxn = super_rxns[i]
+        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        super_hash[rxn_id] = i
+    for rxn in morph.rxn_labels['recon']:
+        index1 =  morph.rxn_labels['recon'][rxn][0]
+        index2 = super_hash[rxn]
+        recon_proteins = recon_rxns[index1]['modelReactionProteins']
+        super_proteins = super_rxns[index2]['modelReactionProteins']
+        assert len(recon_proteins) == len(super_proteins)
+        for i in range(0, len(recon_proteins)):
+            recon_subs = recon_proteins[i]['modelReactionProteinSubunits']
+            super_subs = super_proteins[i]['modelReactionProteinSubunits']
+            assert len(recon_subs) == len(super_subs)
+            for j in range(0, len(recon_subs)):
+                recon_unit = recon_subs[j]
+                super_unit = super_subs[j]
+                assert recon_unit['feature_refs'] == super_unit['feature_refs']
+
+def five_model_morpher():
+    workspaces = (11782, 11783)
+    #one by one
+    morph = make_morph(ws_id=workspaces[0])
+    redo = 0
+    while(redo < 5):
+        try:
+            morph = Client.prepare_supermodel(morph)
+            redo = 9
+        except ServerError:
+            redo += 1
+    reaction_list = Client.removal_list(morph.rxn_labels['gene-no-match'])
+    morph = Client.process_reactions(morph, rxn_list=reaction_list)
+    reaction_list = Client.removal_list(morph.rxn_labels['no-gene'])
+    morph = Client.process_reactions(morph, rxn_list=reaction_list)
+    dump(morph, '../data/morph-Hsmedianew.pkl')
+
+    #all at once removal
+    morph = make_morph(ws_id=workspaces[1])
+    while(redo < 5):
+        try:
+            morph = Client.prepare_supermodel(morph)
+            redo = 9
+        except ServerError:
+            redo += 1
+    morph = remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id = 'gnm-removed')
+    morph_ng = remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id = 'gnm-and-ng-removed')
+
+    #various gapfillings
+    redo = 0
+    while(redo < 5):
+        try:
+            m2 = Client.probanno_fill(morph, name='gnm-rmv-prob-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m3 = Client.probanno_fill(morph_ng, name='gnm-and-ng-rmv-prob-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m4 = Client.parse_fill(morph, name='gnm-rmv-parse-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m5 = Client.parse_fill(morph_ng, name='gnm-and-ng-rmv-parse-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+
+    dump(m2, '../data/morph-all1-prob.pkl')
+    dump(m3, '../data/morph-all2-prob.pkl')
+    dump(m4, '../data/morph-all1-parse.pkl')
+    dump(m5, '../data/morph-all2-parse.pkl')
+
+def all_removal():
+
+    #all at once removal
+    redo = 0
+    morph = make_morph(ws_id=11783)
+    while(redo < 5):
+        try:
+            morph = Client.prepare_supermodel(morph)
+            redo = 9
+        except ServerError:
+            redo += 1
+    morph = Client.remove_reactions_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id = 'gnm-removed')
+    morph_ng = Client.remove_reactions_by_dict(morph, morph.rxn_labels['no-gene'], output_id = 'gnm-and-ng-removed')
+
+    #various gapfillings
+    redo = 0
+    while(redo < 5):
+        try:
+            m2 = Client.probanno_fill(morph, name='gnm-rmv-prob-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m3 = Client.probanno_fill(morph_ng, name='gnm-and-ng-rmv-prob-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m4 = Client.parse_fill(morph, name='gnm-rmv-parse-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+    redo = 0
+    while(redo < 5):
+        try:
+            m5 = Client.parse_fill(morph_ng, name='gnm-and-ng-rmv-parse-fill')
+            redo = 9
+        except ServerError:
+            redo += 1
+
+    dump(m2, '../data/morph-all1-prob.pkl')
+    dump(m3, '../data/morph-all2-prob.pkl')
+    dump(m4, '../data/morph-all1-parse.pkl')
+    dump(m5, '../data/morph-all2-parse.pkl')
+
+def find_kbaliases(filename, genome_id, ws_id):
+    """
+    given a list of genes, finds their KBase ID aliases and return them as a list
+    """
+    genes = list()
+    with open(filename, "r") as file:
+        genes = file.readlines()
+    genome = get_object(genome_id, ws_id)['data']
+    # create a hash of a set of aliases to their unique KBase ID
+    # Consider making the hash a morph attribute TODO
+    gene_hash = dict()
+    for feat in genome['features']:
+        kb_id = feat['id']
+        if 'aliases' in feat.keys():
+            for alias in feat['aliases']:
+                gene_hash[alias] = kb_id
+    # find the appropriate genes from the hash
+    for i in range(0, len(genes)):
+        # Modify the list in place
+        genes[i] = gene_hash[genes[i].split('\n')[0]]
+    return genes
