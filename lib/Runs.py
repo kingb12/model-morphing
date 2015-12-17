@@ -223,3 +223,97 @@ def find_kbaliases(filename, genome_id, ws_id):
         # Modify the list in place
         genes[i] = gene_hash[genes[i].split('\n')[0]]
     return genes
+
+def simulate_all_models(ws_id, media_id, phenotype_id):
+    #Get all the objects in ws_id
+    models = list() # A list of tuples of the form (obj_id, ws_id, obj_name)
+    objects = Client.ws_client.list_objects({'ids' : [ws_id]})
+    for obj in objects:
+        type = obj[2]
+        if 'FBAModel' in type: #is it a model
+            if 'iAF' not in obj[1]:
+                models.append((obj[0], obj[6], obj[1]))
+        if phenotype_id is None and 'PhenotypeSet' in type:
+            phenotype_id = obj[0]
+    for model in models:
+        args = dict()
+        args['model'] = model[0]
+        args['model_workspace'] = model[1]
+        args['workspace'] = ws_id
+        args['phenotypeSet'] = phenotype_id
+        args['phenotypeSet_workspace'] = ws_id
+        args['overwrite'] = False
+        print args
+        Client.fba_client.simulate_phenotypes(args)
+def try_FBA_geneKO(model, media, ws_id):
+    formulation = {'media': media, 'media_workspace': ws_id, 'rxnko': ['rxn03079_c0']}
+    Client.fba_client.runfba({'model' : model, 'model_workspace': ws_id, 'formulation':formulation, 'fba':'testFBAgeneKO', 'workspace':ws_id})
+def compare_all_models(ws_id):
+    models = _allmodelsinws(ws_id)
+    args = {'models': [m[0] for m in models], 'workspaces': [m[1] for m in models]}
+    return Client.fba_client.compare_models(args)
+
+def all_model_stats(ws_id):
+    models = _allmodelsinws(ws_id)
+    results = dict()
+    names = _names_dict(ws_id)
+    for m in models:
+        stats = Client.fba_client.generate_model_stats({'model': m[0], 'model_workspace': m[1]})
+        results[names[m[0]]] = stats
+    return results
+
+def _allmodelsinws(ws_id):
+    models = list() # A list of tuples of the form (obj_id, ws_id, obj_name)
+    objects = Client.ws_client.list_objects({'ids' : [ws_id]})
+    for obj in objects:
+        type = obj[2]
+        if 'FBAModel' in type: #is it a model
+            models.append((obj[0], obj[6], obj[1]))
+    return models
+
+def all_models_counts(ws_id, model_names):
+    names = _names_dict(ws_id)
+    comp = compare_all_models(ws_id)
+    results = dict()
+    for rxn in comp['reaction_comparisons']:
+        val = dict()
+        val['number_models'] = rxn['number_models']
+        # add a key for all the model_names
+        for name in model_names:
+            val[name] = (0,0)
+        for model_ref in rxn['model_features']:
+            numgenes = len(rxn['model_features'][model_ref])
+            name = names[int(model_ref.split('/')[-1])]
+            if(numgenes == 1):
+                if rxn['model_features'][model_ref][0][0:2] != u'kb':
+                    numgenes = numgenes - 1
+            val[name] = (1, numgenes)
+        key = rxn['reaction'] + '_' + rxn['compartment'] + str(0)
+        results[key] = val
+    return results
+
+def make_tab_file(reaction_info, models, filename):
+    with open(filename, 'w') as f:
+        for rxn in reaction_info:
+            f.write(str(rxn) + '\t')
+            for m in models:
+                f.write(str(reaction_info[rxn][m][0]) + '\t' + str(reaction_info[rxn][m][1]) + '\t')
+            f.write('\n')
+
+
+def venn_analysis(reaction_info, models):
+    venn = dict()
+    letters = ['A', 'B', 'C', 'D', 'E', 'F']
+    for rxn in reaction_info:
+        key = ""
+        for i in range(0, len(models)):
+            if reaction_info[rxn][models[i]][0] > 0:
+                key = key + letters[i]
+                print key
+        try:
+            venn[key].append(rxn)
+        except KeyError:
+            venn[key] = [rxn]
+    return venn
+
+

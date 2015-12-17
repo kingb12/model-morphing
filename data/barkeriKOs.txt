@@ -1,7 +1,8 @@
-Mbar_A0147
-Mbar_A0148
-Mbar_A0149
-Mbar_A0150
-Mbar_A0151
-Mbar_A0152
-Mbar_A2455
+Media	Mediaws Growth	gene_kos							    	additionalCompounds
+19		11783	1		kb|g.587.peg.673			    			None	 
+19		11783	1		kb|g.587.peg.2481			      			None	 
+19		11783	0		kb|g.587.peg.491			          		None	 
+19		11783	0		kb|g.587.peg.3087			    	    	None	 
+19		11783	0		kb|g.587.peg.2782			        		None	 
+19		11783	1		kb|g.587.peg.673, kb|g.587.peg.2782		    None	 
+19		11783	0		kb|g.587.peg.2782, kb|g.587.peg.2481	    None	 

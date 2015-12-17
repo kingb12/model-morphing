@@ -7,6 +7,7 @@ import argparse
 import time
 import traceback
 import Helpers
+import re
 import copy
 from operator import itemgetter
 from Morph import Morph
@@ -1386,7 +1387,47 @@ def parse_fill(morph, name=None):
     morph.model = model_info[0]
     return morph
 
-
+def build_phenotype_set(filename, genome_id, genome_ws, ws_id, name=None):
+    object = Helpers.load('../data/pheno.pkl')
+    media_ref = None
+    media = None
+    genome = Helpers.get_object(genome_id, genome_ws)
+    genome_ref = str(genome_ws) + '/' + str(genome_id) + '/' + str(genome['info'][4])
+    pheno = object['data']
+    pheno['genome_ref'] = genome_ref
+    pheno['name'] = genome['data']['id'] + 'essentiality data'
+    pheno['source_id'] = genome['data']['id'] + 'essentiality data'
+    pheno['importErrors'] = ''
+    pheno['id'] = genome['data']['id'] + '.phe.3'
+    pheno['phenotypes'] = list()
+    #Build a list of phenotype runs from file
+    with open(filename) as f:
+        lines = f.readlines()
+    #each line in the file corresponds to one run. interpret it and add it to runs
+    for i  in range(1, len(lines)):
+        line = lines[i]
+        run = dict()
+        elements = re.split("\t+", line.split('\n')[0])
+        # first two elements are media ObjectIdentity
+        next_media = (elements[0], elements[1])
+        if next_media != media_ref:
+            media_ref = (elements[0], elements[1])
+            media = Helpers.get_object(media_ref[0], media_ref[1])
+        run['media_ref'] = str(media['info'][6]) + '/' + str(media['info'][0]) + '/' + str(media['info'][4])
+        run['normalizedGrowth'] = int(elements[2])
+        run['geneko_refs'] = list()
+        for geneko in elements[3].split(", "):
+            ref = genome_ref + '/features/id/' + geneko
+            run['geneko_refs'].append(ref)
+        # TODO If we're ever going to use this feature, implement it to accept
+        # cpds
+        run['additionalcompound_refs'] = []
+        run['id'] = genome['data']['id'] + '.phe.3.pheno.' + str(i)
+        run['name'] = genome['data']['id'] + '.phe.3.pheno.' + str(i)
+        pheno['phenotypes'].append(run)
+    if name is None:
+        name = re.split(" +", genome['data']['scientific_name'])[1] + '_essentiality_data'
+    return Helpers.save_object(pheno, object['info'][2], ws_id, name=name)
 def _get_gpr(reaction):
     rxn_proteins = reaction['modelReactionProteins']
     proteins_str = ""
