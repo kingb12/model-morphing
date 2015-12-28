@@ -301,6 +301,12 @@ def make_tab_file(reaction_info, models, filename):
             f.write('\n')
 
 
+def _names_dict(ws_id):
+    models = dict() # A list of tuples of the form (obj_id, ws_id, obj_name)
+    objects = Client.ws_client.list_objects({'ids' : [ws_id]})
+    for i in objects:
+        models[i[0]] = i[1]
+    return models
 def venn_analysis(reaction_info, models):
     venn = dict()
     letters = ['A', 'B', 'C', 'D', 'E', 'F']
@@ -315,5 +321,32 @@ def venn_analysis(reaction_info, models):
         except KeyError:
             venn[key] = [rxn]
     return venn
+
+def get_rxninfo_sublist(reaction_info, names, no_gene=True):
+    result = dict()
+    for name in names:
+        result[name] = []
+    for key in reaction_info.keys():
+        rxn = reaction_info[key]
+        for k in rxn.keys():
+            if k in result: #if its a name we are concerned with
+                if (no_gene and rxn[k][0] == 1) or rxn[k][1] > 0:
+                    result[k].append(key)
+    return result
+
+def get_comp_info(reactions, comparison):
+    comp_dict = dict()
+    result = list()
+    for rxn in comparison:
+        key = rxn['reaction'] +  '_' + rxn['compartment'] + '0'
+        comp_dict[key] = rxn
+    for rxn in reactions:
+        result.append(comp_dict[rxn])
+    return result
+
+
+
+
+
 
 

@@ -462,9 +462,8 @@ def label_reactions(morph):
     >>>'rxn10316_c0' in morph.rxn_labels['no-gene']
     True
     """
-    morph = _get_objects(morph)
     morph = copy.deepcopy(morph)
-    label_time = time.time()
+    morph = _get_objects(morph)
     # create local vars for parts of the morph
     trans_model = morph.objects['trans_model']
     model = morph.objects['source_model']

@@ -213,4 +213,10 @@ def clone_morph(morph):
     info = Client.ws_client.clone_workspace({'wsi': {'id': morph.ws_id}, 'workspace':str('morphclone' + str(morph.ws_id) + str(random.randint(0, 1000000)))})
     morph.ws_id = info[0]
     return morph
+
+def copy_object(objid, wsid, new_ws, name=None):
+    obj = get_object(objid, wsid, name=name)
+    return save_object(obj['data'], obj['info'][2], new_ws, name=obj['info'][1])[0]
+
+
 fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)
