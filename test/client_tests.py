@@ -95,7 +95,7 @@ class ClientTest(unittest.TestCase):
         m3 = Client.label_reactions(m4)
         m3obj = Helpers.get_object(m3.trans_model, m3.ws_id)
         m3obj_recon = Helpers.get_object(m3.recon_model, m3.ws_id)
-        trans_rxns = get_reaction_dict(m3obj)
+        trans_rxns2 = get_reaction_dict(m3obj)
         recon_rxns = get_reaction_dict(m3obj_recon)
         labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon'}
         labels = dict()
@@ -109,6 +109,7 @@ class ClientTest(unittest.TestCase):
         self.assertFalse(m2 is self.morph, msg='aliasing issues')
         self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
         self.assertTrue(set(labels.keys()) == labelnames)
+        self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
     #Mechanism Checks
         self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
         self.assertTrue(labels['gene-no-match'] == src_set - trans_set, msg='incorrect gene-no-match mechanism')
@@ -120,15 +121,30 @@ class ClientTest(unittest.TestCase):
             for j in range(0, len(items)):
                 if i != j:
                     self.assertTrue(items[i][1].isdisjoint(items[j][1]), 'a reaction is in two label sets')
+    # Definition Checks
+        self.assertTrue(labels['gene-no-match'].isdisjoint(trans_set), msg='a gnm reaction is in the trans model')
+        gene_rxns = set()
+        for rxn in src_rxns:
+            if _has_gene(src_rxns[rxn]):
+                gene_rxns.add(rxn)
+        self.assertTrue(len(gene_rxns) > 0)
+        self.assertTrue(labels['gene-no-match'], msg='a gnm reaction is in the trans model')
+        self.assertTrue(labels['gene-no-match'].issubset(gene_rxns), msg='there is a rxn in gnm but has no gene in source')
+        self.assertTrue(labels['gene-match'].issubset(gene_rxns), msg='there is a rxn in gene match without a gene in source')
+        self.assertTrue(labels['no-gene'].isdisjoint(gene_rxns), msg='a no gene rxn has a gene in source')
+        self.assertTrue(labels['no-gene'].issubset(trans_set), msg='a no gene rxn is not in translation')
+        self.assertTrue(labels['no-gene'].issubset(src_set), msg='a no gene rxn is not in source')
+        for r in recon_rxns:
+            self.assertTrue(_has_gene(recon_rxns[r]), msg='recon rxn has no gene')
 
 
-    #gnm
     #ng
     #gm
     #
 
 def _has_gene(rxn_struct):
-    return len(rxn_struct['modelReactionProteins'][0]['modelReactionProteinSubunits']) > 0
+    prot1 = rxn_struct['modelReactionProteins'][0]
+    return len(prot1['modelReactionProteinSubunits']) > 0 or prot1['note'] == u'universal' or prot1['note'] == u'spontaneous'
 
 def _copy_morph_to_ws(morph, ws_id):
     orig_ws = morph.ws_id
