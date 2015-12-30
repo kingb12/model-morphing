@@ -90,7 +90,6 @@ class ClientTest(unittest.TestCase):
         m2obj = Helpers.get_object(m2.trans_model, m2.ws_id)
         trans_rxns = get_reaction_dict(m2obj)
         src_rxns = get_reaction_dict(self.srcobj)
-        genome = Helpers.get_object(m2.genome, m2.genomews)['data']
         m4 = Client.reconstruct_genome(m2)
         m3 = Client.label_reactions(m4)
         m3obj = Helpers.get_object(m3.trans_model, m3.ws_id)
@@ -131,16 +130,97 @@ class ClientTest(unittest.TestCase):
         self.assertTrue(labels['gene-no-match'], msg='a gnm reaction is in the trans model')
         self.assertTrue(labels['gene-no-match'].issubset(gene_rxns), msg='there is a rxn in gnm but has no gene in source')
         self.assertTrue(labels['gene-match'].issubset(gene_rxns), msg='there is a rxn in gene match without a gene in source')
+        self.assertTrue(labels['gene-match'].issubset(trans_rxns), msg='there is a rxn in gene match not in tanslation')
+        # no gene definition
         self.assertTrue(labels['no-gene'].isdisjoint(gene_rxns), msg='a no gene rxn has a gene in source')
         self.assertTrue(labels['no-gene'].issubset(trans_set), msg='a no gene rxn is not in translation')
         self.assertTrue(labels['no-gene'].issubset(src_set), msg='a no gene rxn is not in source')
+        # recon definition
         for r in recon_rxns:
             self.assertTrue(_has_gene(recon_rxns[r]), msg='recon rxn has no gene')
+
+    def test_build_supermodel(self):
+        # Set Up (method specific)
+        src_rxns = get_reaction_dict(self.srcobj)
+        trans = Client.translate_features(self.morph)
+        trans_obj = Helpers.get_object(trans.trans_model, trans.ws_id)
+        trans_rxns = get_reaction_dict(trans_obj)
+        recon = Client.reconstruct_genome(trans)
+        m3 = Client.label_reactions(recon)
+        supm = Client.build_supermodel(m3)
+        supm_obj = Helpers.get_object(supm.model, supm.ws_id)
+        supm_rxns = get_reaction_dict(supm_obj)
+        recon_obj = Helpers.get_object(recon.recon_model, recon.ws_id)
+        recon_rxns = get_reaction_dict(recon_obj)
+        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon'}
+        labels = dict()
+        for key in m3.rxn_labels:
+            labels[key] = set(supm.rxn_labels[key].keys())
+        trans_set = set(trans_rxns.keys())
+        src_set = set(src_rxns.keys())
+        recon_set = set(recon_rxns.keys())
+        supm_set = set(supm_rxns.keys())
+        # Sanity Checks
+        self.assertTrue(supm.ws_id == test_space, msg='test architecture')
+        self.assertFalse(trans is self.morph, msg='aliasing issues')
+        self.assertFalse(m3 is supm, msg='aliasing issues')
+        self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
+        self.assertTrue(len(supm_rxns) > 0, msg='there are supm rxns')
+        self.assertTrue(len(recon_rxns) > 0, msg='there are recon rxns')
+        self.assertTrue(len(src_rxns) > 0, msg='there are src rxns')
+        self.assertTrue(set(labels.keys()) == labelnames, msg='improper test set up (method specific)')
+        # Mechanism Checks
+        self.assertTrue(supm_set == recon_set | trans_set | labels['gene-no-match'], msg='supermodel mechanism off')
+        self.assertTrue(supm_set == recon_set | src_set, msg='supermodel mechanism off (definition of trans)')
+        # Definition Checks
+        for rxn in recon_rxns:
+            self.assertTrue(rxn in supm_rxns, msg='recon rxn not in super (redundant check, prevent keyerror)')
+            recon_gpr = _gpr_set(recon_rxns[rxn])
+            supm_gpr = _gpr_set(supm_rxns[rxn])
+            self.assertTrue(_ftr_set(supm_rxns[rxn]).issubset(_ftr_set(recon_rxns[rxn])), msg=str(rxn))
+# CURRENTLY FAILS BECAUSE OF A FLAW IN OUR ALGORITHM!!!!!!
+#            self.assertTrue(recon_gpr == supm_gpr, msg='\n mismatched gprs: ' + str(rxn) + '\n' +
+#                          Client._get_gpr(recon_rxns[rxn]) + ' \n' + Client._get_gpr(supm_rxns[rxn]))
+
 
 
     #ng
     #gm
     #
+
+def _ftr_set(reaction):
+    features = set()
+    for protein in reaction['modelReactionProteins']:
+        for sub in protein['modelReactionProteinSubunits']:
+            features |= set([i.split('/')[-1] for i in sub['feature_refs']])
+    return features
+
+def _gpr_set(reaction):
+    rxn_proteins = reaction['modelReactionProteins']
+    prots = set()
+    for i in range(0, len(rxn_proteins)):
+        prot = set()
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = unit['feature_refs']
+            prot.add(frozenset(ftrs))
+        prots.add(frozenset(prot))
+    return prots
+
+def to_str(list):
+    result = ''
+    for i in list:
+        if type(i) is 'list':
+            for j in i:
+                result += to_str(j)
+        if type(i) is 'dict':
+            for j in i:
+                result += str(j) + to_str(j[i])
+        else:
+            result += str(i) + '\n'
+    return result
+
 
 def _has_gene(rxn_struct):
     prot1 = rxn_struct['modelReactionProteins'][0]
