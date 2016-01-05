@@ -469,6 +469,12 @@ def label_reactions(morph):
     model = morph.objects['source_model']
     recon = morph.objects['recon_model']
     probanno = morph.objects['probanno']
+    recon_set = set()
+    for i in range(len(recon['modelreactions'])):
+        #anni e.g. rxn_id = rxn01316_c0
+        mdlrxn = recon['modelreactions'][i]
+        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        recon_set.add(rxn_id)
     # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict()}
     # Build a hash of rxn_ids to probability to save look up time
@@ -481,12 +487,12 @@ def label_reactions(morph):
         mdlrxn = trans_model['modelreactions'][i]
         rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
         rxn_prot = mdlrxn['modelReactionProteins']
-        if (len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal'):
+        if (rxn_id not in recon_set and len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal'):
             try:
                 rxn_labels['no-gene'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
                 rxn_labels['no-gene'][rxn_id] = (i, -1.0)
-        else:
+        elif (rxn_id not in recon_set):
             try:
                 rxn_labels['gene-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
@@ -495,7 +501,7 @@ def label_reactions(morph):
     for i in range(len(model['modelreactions'])):
         mdlrxn = model['modelreactions'][i]
         rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
-        if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']):
+        if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']) and (rxn_id not in recon_set):
             try:
                 rxn_labels['gene-no-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
             except KeyError:
