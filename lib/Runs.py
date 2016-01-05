@@ -90,10 +90,14 @@ def supermodel_check(morph):
                 super_unit = super_subs[j]
                 assert recon_unit['feature_refs'] == super_unit['feature_refs']
 
-def five_model_morpher():
+def five_model_morpher(media, mediaws):
     workspaces = (11782, 11783)
     #one by one
     morph = make_morph(ws_id=workspaces[0])
+    #update media
+    morph.media = media
+    morph.mediaws = mediaws
+    media_name = Helpers.get_object(media, mediaws)['info'][1]
     redo = 0
     while(redo < 5):
         try:
@@ -105,59 +109,63 @@ def five_model_morpher():
     morph = Client.process_reactions(morph, rxn_list=reaction_list)
     reaction_list = Client.removal_list(morph.rxn_labels['no-gene'])
     morph = Client.process_reactions(morph, rxn_list=reaction_list)
-    dump(morph, '../data/morph-Hsmedianew.pkl')
+    dump(morph, '../data/morph-' + media_name + '.pkl')
 
     #all at once removal
     morph = make_morph(ws_id=workspaces[1])
+    morph.media = media
+    morph.mediaws = mediaws
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
             redo = 9
         except ServerError:
             redo += 1
-    morph = remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id = 'gnm-removed')
-    morph_ng = remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id = 'gnm-and-ng-removed')
+    morph = Client.remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id =media_name +  '-gnm-removed')
+    morph_ng = Client.remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id =media_name +  '-gnm-and-ng-removed')
 
     #various gapfillings
     redo = 0
     while(redo < 5):
         try:
-            m2 = Client.probanno_fill(morph, name='gnm-rmv-prob-fill')
+            m2 = Client.probanno_fill(morph, name=media_name + '-gnm-rmv-prob-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m3 = Client.probanno_fill(morph_ng, name='gnm-and-ng-rmv-prob-fill')
+            m3 = Client.probanno_fill(morph_ng, name=media_name + '-gnm-and-ng-rmv-prob-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m4 = Client.parse_fill(morph, name='gnm-rmv-parse-fill')
+            m4 = Client.parse_fill(morph, name=media_name + '-gnm-rmv-parse-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m5 = Client.parse_fill(morph_ng, name='gnm-and-ng-rmv-parse-fill')
+            m5 = Client.parse_fill(morph_ng, name=media_name + '-gnm-and-ng-rmv-parse-fill')
             redo = 9
         except ServerError:
             redo += 1
 
-    dump(m2, '../data/morph-all1-prob.pkl')
-    dump(m3, '../data/morph-all2-prob.pkl')
-    dump(m4, '../data/morph-all1-parse.pkl')
-    dump(m5, '../data/morph-all2-parse.pkl')
+    dump(m2, '../data/morph-' + media_name + '-all1-prob.pkl')
+    dump(m3, '../data/morph-' + media_name + '-all2-prob.pkl')
+    dump(m4, '../data/morph-' + media_name + '-all1-parse.pkl')
+    dump(m5, '../data/morph-' + media_name + '-all2-parse.pkl')
 
-def all_removal():
+def all_removal(media, mediaws):
 
     #all at once removal
     redo = 0
     morph = make_morph(ws_id=11783)
+    morph.media = media
+    morph.mediaws = mediaws
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
@@ -206,9 +214,9 @@ def find_kbaliases(filename, genome_id, ws_id):
     """
     given a list of genes, finds their KBase ID aliases and return them as a list
     """
-    genes = list()
+    genes = dict()
     with open(filename, "r") as file:
-        genes = file.readlines()
+        gene_list = [g.split('\n')[0] for g in file.readlines()]
     genome = get_object(genome_id, ws_id)['data']
     # create a hash of a set of aliases to their unique KBase ID
     # Consider making the hash a morph attribute TODO
@@ -219,9 +227,8 @@ def find_kbaliases(filename, genome_id, ws_id):
             for alias in feat['aliases']:
                 gene_hash[alias] = kb_id
     # find the appropriate genes from the hash
-    for i in range(0, len(genes)):
-        # Modify the list in place
-        genes[i] = gene_hash[genes[i].split('\n')[0]]
+    for i in range(0, len(gene_list)):
+        genes[gene_list[i]] = gene_hash[gene_list[i].split('\n')[0]]
     return genes
 
 def simulate_all_models(ws_id, media_id, phenotype_id):
@@ -344,9 +351,99 @@ def get_comp_info(reactions, comparison):
         result.append(comp_dict[rxn])
     return result
 
+def find_gene_relationships(ws_id=None):
+    # Make a morph, a translation, and a reconstruction
+    m = make_morph(ws_id)
+    m = Client.translate_features(m)
+    m = Client.reconstruct_genome(m)
+    # get the model objects
+    recon_model = get_object(m.recon_model, m.ws_id)
+    trans_model = get_object(m.trans_model, m.ws_id)
+    #return a set of all disagreeing GPR's
+    result = dict() # rxn_id -> GPR (maybe get_gpr?)
+    recon_rxns = get_reaction_dict(recon_model)
+    trans_rxns = get_reaction_dict(trans_model)
+    recon_set = set(recon_rxns.keys())
+    trans_set = set(trans_rxns.keys())
+    common_set = recon_set & trans_set
+    for rxn in common_set:
+        if  not same_gpr(recon_rxns[rxn], trans_rxns[rxn]):
+            result[rxn] = (gpr_set(trans_rxns[rxn]), gpr_set(recon_rxns[rxn]))
+    classes = simple_classify(result.keys(), recon_rxns, trans_rxns)
+    return result, common_set, classes
+
+def classify_gprs(gpr_comparison_set):
+    gprs = gpr_comparison_set
+    for rxn in gprs:
+        print gprs[rxn][0] - gprs[rxn][1]
+
+
+        # differences = ['','',''] #prot, sub, ftr
+        # for prot in gprs[0]: # iterate over the set of proteins of first model
+
+            # if prot not in gprs[1]:
+                # they differ by this protein somehow
+                # get the list of proteins in gprs[1] that contain some ftr in
+                # prot
+                # if the length of this list is 0, they differ by protein OR by
+                # feature
+
+def simple_classify(common_set, recon_rxns, trans_rxns):
+    result = {'recon_ftrs': dict(), 'trans_ftrs': dict(), 'both': dict()}
+    for rxn in common_set:
+        if len(ftr_set(recon_rxns[rxn]) - ftr_set(trans_rxns[rxn])) > 0:
+            if len(ftr_set(trans_rxns[rxn]) - ftr_set(recon_rxns[rxn])) > 0:
+                result['both'][rxn] = (recon_rxns[rxn], trans_rxns[rxn])
+            else:
+                result['recon_ftrs'][rxn] = (recon_rxns[rxn], trans_rxns[rxn])
+        else:
+            result['trans_ftrs'][rxn] = (recon_rxns[rxn], trans_rxns[rxn])
+
+    return result
 
 
 
 
 
+
+
+
+def same_gpr(rxn1, rxn2):
+    rxn1_set = gpr_set(rxn1)
+    rxn2_set = gpr_set(rxn2)
+    return rxn1_set == rxn2_set
+
+
+def gpr_set(reaction):
+    rxn_proteins = reaction['modelReactionProteins']
+    prots = set()
+    for i in range(0, len(rxn_proteins)):
+        prot = set()
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = [f.split('/')[-1] for f in unit['feature_refs']]
+            prot.add(frozenset(ftrs))
+        prots.add(frozenset(prot))
+    return frozenset(prots)
+
+def ftr_set(reaction):
+    features = set()
+    for protein in reaction['modelReactionProteins']:
+        for sub in protein['modelReactionProteinSubunits']:
+            features |= set([i.split('/')[-1] for i in sub['feature_refs']])
+    return features
+
+def get_reaction_dict(modelobj):
+    '''takes a model object and returns a set of the reactions in the model
+    in rxn12345_c0 form'''
+    list = modelobj['data']['modelreactions']
+    rxn_dict = dict()
+    for rxn in list:
+        reaction = rxn['reaction_ref'].split('/')[-1] + '_' + rxn['modelcompartment_ref'].split('/')[-1]
+        rxn_dict[reaction] = rxn
+    return rxn_dict
+
+# deletes all objects except for the narrative object in the test_space or
+# specified workspade
 

@@ -1,8 +1,19 @@
-Media	Mediaws Growth	gene_kos							    	additionalCompounds
-19		11783	1		kb|g.587.peg.673			    			None	 
-19		11783	1		kb|g.587.peg.2481			      			None	 
-19		11783	0		kb|g.587.peg.491			          		None	 
-19		11783	0		kb|g.587.peg.3087			    	    	None	 
-19		11783	0		kb|g.587.peg.2782			        		None	 
-19		11783	1		kb|g.587.peg.673, kb|g.587.peg.2782		    None	 
-19		11783	0		kb|g.587.peg.2782, kb|g.587.peg.2481	    None	 
+Media	Mediaws Growth	gene_kos							    	additionalCompounds     Comments
+3		12091	1		kb|g.587.peg.673			    			None	                Mtr          
+3		12091	1		kb|g.587.peg.2481			      			None	                Mer
+3		12091	0		kb|g.587.peg.491			          		None	                Mtd
+3		12091	0		kb|g.587.peg.3087			    	    	None	                Ftr 
+3		12091	1		kb|g.587.peg.673, kb|g.587.peg.2782		    None	                FaeA/Mtr
+3		12091	0		kb|g.587.peg.2782, kb|g.587.peg.2481	    None	                FaeA/Mer
+MEOH
+2		12091	0		kb|g.587.peg.673			    			None	                Mtr          
+2		12091	1		kb|g.587.peg.119			    			None	                Ech          
+2		12091	0		kb|g.587.peg.1615			    			None	                Mch          
+2		12091	1		kb|g.587.peg.1411			    			None	                Fpo          
+ADD MORE HERE AND SEPERATE PHENOTYPE FILES FOR EACH KIND OF MODEL
+2		12091	0		kb|g.587.peg.2481			      			None	                Mer
+2		12091	0		kb|g.587.peg.491			          		None	                Mtd
+2		12091	0		kb|g.587.peg.3087			    	    	None	                Ftr 
+2		12091	0		kb|g.587.peg.673, kb|g.587.peg.2782		    None	                FaeA/Mtr
+2		12091	0		kb|g.587.peg.2782, kb|g.587.peg.2481	    None	                FaeA/Mer
+

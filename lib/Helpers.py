@@ -10,7 +10,7 @@ import os
 def make_morph(ws_id=None):
     args = dict()
     args['genome'] = '3'
-    args['src_model'] = '19'
+    args['src_model'] = '5'
     args['probanno'] = '15'
     args['protcomp'] = '6'
     args['genomews'] = '9145'
@@ -217,6 +217,13 @@ def clone_morph(morph):
 def copy_object(objid, wsid, new_ws, name=None):
     obj = get_object(objid, wsid, name=name)
     return save_object(obj['data'], obj['info'][2], new_ws, name=obj['info'][1])[0]
+
+def empty_ws(ws_id):
+    # get all object ids in {'id': x} form excluding the narrative object
+    object_ids = [{'objid': info[0], 'wsid': ws_id} for info in
+                 Client.ws_client.list_objects({'ids': [ws_id]}) if not info[2].startswith('KBaseNarrative')]
+    if len(object_ids) > 0:
+        Client.ws_client.delete_objects(object_ids)
 
 
 fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)
