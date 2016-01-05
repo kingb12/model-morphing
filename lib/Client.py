@@ -562,24 +562,37 @@ def build_supermodel(morph):
     """
     morph = copy.deepcopy(morph)
     model = morph.objects['source_model']
+    trans = morph.objects['trans_model']
     recon = morph.objects['recon_model']
     super_rxns = list()
     # Add the GENE_NO_MATCH reactions:
-    for rxn_id in morph.rxn_labels['gene-no-match']:
+    gnm_set = set(morph.rxn_labels['gene-no-match'].keys())
+    recon_set = set()
+    for i in range(len(recon['modelreactions'])):
+        #anni e.g. rxn_id = rxn01316_c0
+        mdlrxn = recon['modelreactions'][i]
+        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        recon_set.add(rxn_id)
+    for rxn_id in (gnm_set - recon_set):
         # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = model['modelreactions'][morph.rxn_labels['gene-no-match'][rxn_id][0]]
         #TODO: See what more you can fix/add (gpr?)
         # shouldn't have genes
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
-    # Add the recon reactions:
-    for rxn_id in morph.rxn_labels['recon']:
-        # morph.rxn_labels['recon'][0] gives the index of the reaction in the
-        # recon['modelreactions'] list to make this look up O(1) instead of O(n)
-        reaction = recon['modelreactions'][morph.rxn_labels['recon'][rxn_id][0]]
-        #TODO: See what more you can fix/add (gpr?)
+    # Add the trans only gene-match reactions:
+    gm_set = set(morph.rxn_labels['gene-match'].keys())
+    for rxn_id in (gm_set - recon_set):
+        reaction = trans['modelreactions'][morph.rxn_labels['gene-match'][rxn_id][0]]
         gpr = _get_gpr(reaction)
         super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr))
-    morph.model = fba_client.add_reactions({'model': morph.trans_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
+    ng_set = set(morph.rxn_labels['no-gene'].keys())
+    for rxn_id in (ng_set - recon_set):
+        # morph.rxn_labels['recon'][0] gives the index of the reaction in the
+        # recon['modelreactions'] list to make this look up O(1) instead of O(n)
+        reaction = trans['modelreactions'][morph.rxn_labels['no-gene'][rxn_id][0]]
+        #TODO: See what more you can fix/add (gpr?)
+        super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
+    morph.model = fba_client.add_reactions({'model': morph.recon_model, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
     return morph
 
 def removal_list(rxn_dict, list_range=None):

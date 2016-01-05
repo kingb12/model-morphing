@@ -164,51 +164,54 @@ def all_removal(media, mediaws):
     #all at once removal
     redo = 0
     morph = make_morph(ws_id=11783)
+    #all at once removal
     morph.media = media
     morph.mediaws = mediaws
+    media_name = Helpers.get_object(media, mediaws)['info'][1]
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
             redo = 9
         except ServerError:
             redo += 1
-    morph = Client.remove_reactions_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id = 'gnm-removed')
-    morph_ng = Client.remove_reactions_by_dict(morph, morph.rxn_labels['no-gene'], output_id = 'gnm-and-ng-removed')
+    morph = Client.remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id =media_name +  '-gnm-removed')
+    morph_ng = Client.remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id =media_name +  '-gnm-and-ng-removed')
 
     #various gapfillings
     redo = 0
     while(redo < 5):
         try:
-            m2 = Client.probanno_fill(morph, name='gnm-rmv-prob-fill')
+            m2 = Client.probanno_fill(morph, name=media_name + '-gnm-rmv-prob-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m3 = Client.probanno_fill(morph_ng, name='gnm-and-ng-rmv-prob-fill')
+            m3 = Client.probanno_fill(morph_ng, name=media_name + '-gnm-and-ng-rmv-prob-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m4 = Client.parse_fill(morph, name='gnm-rmv-parse-fill')
+            m4 = Client.parse_fill(morph, name=media_name + '-gnm-rmv-parse-fill')
             redo = 9
         except ServerError:
             redo += 1
     redo = 0
     while(redo < 5):
         try:
-            m5 = Client.parse_fill(morph_ng, name='gnm-and-ng-rmv-parse-fill')
+            m5 = Client.parse_fill(morph_ng, name=media_name + '-gnm-and-ng-rmv-parse-fill')
             redo = 9
         except ServerError:
             redo += 1
 
-    dump(m2, '../data/morph-all1-prob.pkl')
-    dump(m3, '../data/morph-all2-prob.pkl')
-    dump(m4, '../data/morph-all1-parse.pkl')
-    dump(m5, '../data/morph-all2-parse.pkl')
+    dump(m2, '../data/morph-' + media_name + '-all1-prob.pkl')
+    dump(m3, '../data/morph-' + media_name + '-all2-prob.pkl')
+    dump(m4, '../data/morph-' + media_name + '-all1-parse.pkl')
+    dump(m5, '../data/morph-' + media_name + '-all2-parse.pkl')
+
 
 def find_kbaliases(filename, genome_id, ws_id):
     """
