@@ -96,10 +96,11 @@ class ClientTest(unittest.TestCase):
         m3obj_recon = Helpers.get_object(m3.recon_model, m3.ws_id)
         trans_rxns2 = get_reaction_dict(m3obj)
         recon_rxns = get_reaction_dict(m3obj_recon)
-        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon'}
+        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon', 'common'}
         labels = dict()
         for key in m3.rxn_labels:
-            labels[key] = set(m3.rxn_labels[key].keys())
+            if key != 'common':
+                labels[key] = set(m3.rxn_labels[key].keys())
         trans_set = set(trans_rxns.keys())
         src_set = set(src_rxns.keys())
         recon_set = set(recon_rxns.keys())
@@ -107,14 +108,13 @@ class ClientTest(unittest.TestCase):
         self.assertTrue(m2.ws_id == test_space, msg='test architecture')
         self.assertFalse(m2 is self.morph, msg='aliasing issues')
         self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
-        self.assertTrue(set(labels.keys()) == labelnames)
         self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
     #Mechanism Checks
-        # self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
-        self.assertTrue(labels['gene-no-match'] == src_set - trans_set - recon_set, msg='incorrect gene-no-match mechanism')
-        # self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
-                     #   msg='incorrect genematch/nogene mechanism')
-        # self.assertTrue(labels['recon'].isdisjoint(src_set), msg='recon reaction in source')
+        self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
+        self.assertTrue(labels['gene-no-match'] == src_set - trans_set, msg='incorrect gene-no-match mechanism')
+        self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
+                       msg='incorrect genematch/nogene mechanism')
+        self.assertTrue(labels['recon'].isdisjoint(src_set), msg='recon reaction in source')
         items = labels.items()
         for i in range(0, len(items)):
             for j in range(0, len(items)):
@@ -152,7 +152,7 @@ class ClientTest(unittest.TestCase):
         supm_rxns = get_reaction_dict(supm_obj)
         recon_obj = Helpers.get_object(recon.recon_model, recon.ws_id)
         recon_rxns = get_reaction_dict(recon_obj)
-        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon'}
+        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon', 'common'}
         labels = dict()
         for key in m3.rxn_labels:
             labels[key] = set(supm.rxn_labels[key].keys())
@@ -168,7 +168,6 @@ class ClientTest(unittest.TestCase):
         self.assertTrue(len(supm_rxns) > 0, msg='there are supm rxns')
         self.assertTrue(len(recon_rxns) > 0, msg='there are recon rxns')
         self.assertTrue(len(src_rxns) > 0, msg='there are src rxns')
-        self.assertTrue(set(labels.keys()) == labelnames, msg='improper test set up (method specific)')
         # Mechanism Checks
         self.assertTrue(supm_set == recon_set | trans_set | labels['gene-no-match'], msg='supermodel mechanism off')
         self.assertTrue(supm_set == recon_set | src_set, msg='supermodel mechanism off (definition of trans)')

@@ -106,8 +106,10 @@ def five_model_morpher(media, mediaws):
         except ServerError:
             redo += 1
     reaction_list = Client.removal_list(morph.rxn_labels['gene-no-match'])
+    reaction_list = [r for r in reaction_list if r[0] not in morph.rxn_labels['common']]
     morph = Client.process_reactions(morph, rxn_list=reaction_list)
     reaction_list = Client.removal_list(morph.rxn_labels['no-gene'])
+    reaction_list = [r for r in reaction_list if r[0] not in morph.rxn_labels['common']]
     morph = Client.process_reactions(morph, rxn_list=reaction_list)
     dump(morph, '../data/morph-' + media_name + '.pkl')
 
@@ -121,8 +123,12 @@ def five_model_morpher(media, mediaws):
             redo = 9
         except ServerError:
             redo += 1
-    morph = Client.remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id =media_name +  '-gnm-removed')
-    morph_ng = Client.remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id =media_name +  '-gnm-and-ng-removed')
+    gnm_list = Client.removal_list(morph.rxn_labels['gene-no-match'])
+    gnm_list = [r[0] for r in gnm_list if r[0] not in morph.rxn_labels['common']]
+    ng_list = Client.removal_list(morph.rxn_labels['no-gene'])
+    ng_list = [r[0] for r in ng_list if r[0] not in morph.rxn_labels['common']]
+    morph = Client.remove_reactions(morph, gnm_list, output_id =media_name +  '-gnm-removed')
+    morph_ng = Client.remove_reactions(morph, ng_list, output_id =media_name +  '-gnm-and-ng-removed')
 
     #various gapfillings
     redo = 0
@@ -174,8 +180,12 @@ def all_removal(media, mediaws):
             redo = 9
         except ServerError:
             redo += 1
-    morph = Client.remove_rxns_by_dict(morph, morph.rxn_labels['gene-no-match'], output_id =media_name +  '-gnm-removed')
-    morph_ng = Client.remove_rxns_by_dict(morph, morph.rxn_labels['no-gene'], output_id =media_name +  '-gnm-and-ng-removed')
+    gnm_list = Client.removal_list(morph.rxn_labels['gene-no-match'])
+    gnm_list = [r[0] for r in gnm_list if r[0] not in morph.rxn_labels['common']]
+    ng_list = Client.removal_list(morph.rxn_labels['no-gene'])
+    ng_list = [r[0] for r in ng_list if r[0] not in morph.rxn_labels['common']]
+    morph = Client.remove_reactions(morph, gnm_list, output_id =media_name +  '-gnm-removed')
+    morph_ng = Client.remove_reactions(morph, ng_list, output_id =media_name +  '-gnm-and-ng-removed')
 
     #various gapfillings
     redo = 0
