@@ -132,6 +132,12 @@ def get_object(objid, wsid, name=None):
         return Client.ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
     else:
         return Client.ws_client.get_objects([{'name':name, 'wsid':wsid}])[0]
+def get_info(objid, wsed, name=None):
+    if (name is None):
+        return Client.ws_client.get_object_info_new({'objects': [{'objid':objid, 'wsid':wsid}]})[0]
+    else:
+        return Client.ws_client.get_objects_info_new({'objects': [{'name':name, 'wsid':wsid}]})[0]
+
 def dump(object, filepath):
     with open(filepath, 'w') as f:
         pickle.dump(object, f)
@@ -208,6 +214,13 @@ def runfba(morph):
     fbaMeta = Client.fba_client.runfba(fba_params)
     return fbaMeta
 
+def runmodelfba(model, wsid, media, mediaws):
+    fba_formulation = {'media': media, 'media_workspace': mediaws}
+    fba_params = {'workspace': wsid, 'model' : model, 'model_workspace':wsid,
+                  'formulation': fba_formulation}
+    fbaMeta = Client.fba_client.runfba(fba_params)
+    return fbaMeta
+
 def clone_morph(morph):
     morph = copy.deepcopy(morph)
     info = Client.ws_client.clone_workspace({'wsi': {'id': morph.ws_id}, 'workspace':str('morphclone' + str(morph.ws_id) + str(random.randint(0, 1000000)))})
@@ -225,5 +238,201 @@ def empty_ws(ws_id):
     if len(object_ids) > 0:
         Client.ws_client.delete_objects(object_ids)
 
+def rename_object(obj_id, ws_id, new_name):
+    Client.ws_client.rename_object({'obj': {'wsid': ws_id, 'objid': obj_id}, 'new_name': new_name})
 
 fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)
+
+def get_rxn_id(modelreaction_obj):
+    '''
+    returns the reaction id of a model reaction object (i.e. rxn34565_c0)
+    '''
+    return modelreaction_obj['reaction_ref'].split('/')[-1] + '_' + modelreaction_obj['modelcompartment_ref'].split('/')[-1]
+def classify_gprs(gpr_comparison_set):
+    gprs = gpr_comparison_set
+    for rxn in gprs:
+        print gprs[rxn][0] - gprs[rxn][1]
+
+
+        # differences = ['','',''] #prot, sub, ftr
+        # for prot in gprs[0]: # iterate over the set of proteins of first model
+
+            # if prot not in gprs[1]:
+                # they differ by this protein somehow
+                # get the list of proteins in gprs[1] that contain some ftr in
+                # prot
+                # if the length of this list is 0, they differ by protein OR by
+                # feature
+
+def same_gpr(rxn1, rxn2):
+    rxn1_set = gpr_set(rxn1)
+    rxn2_set = gpr_set(rxn2)
+    return rxn1_set == rxn2_set
+
+def gpr_set(reaction):
+    rxn_proteins = reaction['modelReactionProteins']
+    prots = set()
+    for i in range(0, len(rxn_proteins)):
+        prot = set()
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = [f.split('/')[-1] for f in unit['feature_refs']]
+            if len(ftrs) > 0:
+                prot.add(frozenset(ftrs))
+        if len(prot) > 0:
+            prots.add(frozenset(prot))
+    if len(prots) > 0:
+        return frozenset(prots)
+    return None
+
+def ftr_set(reaction):
+    features = set()
+    for protein in reaction['modelReactionProteins']:
+        for sub in protein['modelReactionProteinSubunits']:
+            for f in [i.split('/')[-1] for i in sub['feature_refs']]:
+                features.add(f)
+    return features
+def gpr_exclude_features(reaction, features):
+    '''
+    returns a gpr set like gpr_set but excludes features in features
+    '''
+    rxn_proteins = reaction['modelReactionProteins']
+    prots = set()
+    for i in range(0, len(rxn_proteins)):
+        prot = set()
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = [f.split('/')[-1] for f in unit['feature_refs'] if f.split('/')[-1] not in features]
+            if len(ftrs) > 0:
+                prot.add(frozenset(ftrs))
+        if len(prot) > 0:
+            prots.add(frozenset(prot))
+    if len(prots) > 0:
+        return frozenset(prots)
+    return None
+
+def get_reaction_dict(modelobj):
+    '''takes a model object and returns a set of the reactions in the model
+    in rxn12345_c0 form'''
+    list = modelobj['data']['modelreactions']
+    rxn_dict = dict()
+    for rxn in list:
+        reaction = rxn['reaction_ref'].split('/')[-1] + '_' + rxn['modelcompartment_ref'].split('/')[-1]
+        rxn_dict[reaction] = rxn
+    return rxn_dict
+
+# deletes all objects except for the narrative object in the test_space or
+# specified workspade
+
+def _unnest_sets(nested_set):
+    '''
+    Takes anything in a nested set form and returns a single set of it's non-set elements
+
+    i.e. {{{a}}{{b, c}}{{d}{e}}} -->  {a, b, c, d, e,}
+    '''
+    single_set = set()
+    for item in nested_set:
+        if type(item) is set or type(item) is frozenset:
+            single_set |= _unnest_sets(item)
+        else:
+            single_set.add(item)
+    return single_set
+
+def gpr_tostring(gpr_set):
+    proteins = list(gpr_set)
+    proteins_str = ""
+    for i in range(0, len(proteins)):
+        units_str = ""
+        subunits = list(proteins[i])
+        for j in range(0, len(subunits)):
+            unit = list(subunits[j])
+            features = ""
+            for k in range(0, len(unit)):
+                feature = unit[k]
+                if (k > 0):
+                    feature = " or " + feature
+                features += feature
+            unit_str = "(" + features + ")"
+            if j > 0:
+                unit_str = " and " + unit_str
+            units_str += unit_str
+        protein = "(" + units_str + ")"
+        if (i > 0):
+            protein = " or " + protein
+        proteins_str += protein
+    gpr = "(" + proteins_str + ")"
+    return gpr
+
+def get_equation(rxn_object):
+    '''
+    takes a modelreaction object (type dict) and returns it's equation
+    '''
+    eq = ''
+    for cpd in rxn_object['modelReactionReagents']:
+        if cpd['coefficient'] < 0:
+            if cpd['coefficient'] != -1:
+                eq += '(' + str(-1*cpd['coefficient']) + ')'
+            eq += cpd['modelcompound_ref'].split('/')[-1] + ' + '
+    if eq.endswith('+ '):
+        eq = eq[:-2]
+    eq += rxn_object['direction'] + ' '
+    for cpd in rxn_object['modelReactionReagents']:
+        if cpd['coefficient'] > 0:
+            if cpd['coefficient'] != 1:
+                eq += '(' + str(cpd['coefficient']) + ')'
+            eq += cpd['modelcompound_ref'].split('/')[-1] + ' + '
+    if eq.endswith('+ '):
+        eq = eq[:-2]
+    return eq
+
+
+
+
+def mari_to_janna(ws_id=None):
+    args = dict()
+    args['genome'] = '36'
+    args['src_model'] = '37'
+    args['probanno'] = '31'
+    args['protcomp'] = '27'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '24'
+    args['ws_id'] = ws_id
+    return Morph(args)
+def _get_gpr(reaction):
+    rxn_proteins = reaction['modelReactionProteins']
+    proteins_str = ""
+    for i in range(0, len(rxn_proteins)):
+        units_str = ""
+        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        for j in range(0, len(subunits)):
+            unit = subunits[j]
+            ftrs = unit['feature_refs']
+            features = ""
+            if (len(ftrs) == 0):
+                if unit['note'] != "":
+                    features = "(Unknown)"
+                else:
+                   continue
+            else:
+                for k in range(0, len(ftrs)):
+                    feature = ftrs[k].split('/')[-1]
+                    if (k > 0):
+                        feature = " or " + feature
+                    features += feature
+            unit_str = "(" + features + ")"
+            if j > 0:
+                unit_str = " and " + unit_str
+            units_str += unit_str
+        protein = "(" + units_str + ")"
+        if (i > 0):
+            protein = " or " + protein
+        proteins_str += protein
+    gpr = "(" + proteins_str + ")"
+    return gpr
+

@@ -90,10 +90,15 @@ def supermodel_check(morph):
                 super_unit = super_subs[j]
                 assert recon_unit['feature_refs'] == super_unit['feature_refs']
 
-def five_model_morpher(media, mediaws):
+def five_model_morpher(media, mediaws, source_biomass=None,src_morph=None):
     workspaces = (11782, 11783)
     #one by one
     morph = make_morph(ws_id=workspaces[0])
+    if src_morph is None:
+        morph = make_morph(ws_id=workspaces[0])
+    else:
+        morph = src_morph
+        morph.ws_id = workspaces[0]
     #update media
     morph.media = media
     morph.mediaws = mediaws
@@ -102,6 +107,8 @@ def five_model_morpher(media, mediaws):
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
+            if source_biomass is not None:
+                morph.model = biomass_additions(morph.model, morph.ws_id, source_biomass, morph.media, morph.mediaws)
             redo = 9
         except ServerError:
             redo += 1
@@ -114,12 +121,18 @@ def five_model_morpher(media, mediaws):
     dump(morph, '../data/morph-' + media_name + '.pkl')
 
     #all at once removal
-    morph = make_morph(ws_id=workspaces[1])
+    if src_morph is None:
+        morph = make_morph(ws_id=workspaces[1])
+    else:
+        morph = src_morph
+        morph.ws_id = workspaces[1]
     morph.media = media
     morph.mediaws = mediaws
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
+            if source_biomass is not None:
+                morph.model = biomass_additions(morph.model, morph.ws_id, source_biomass, morph.media, morph.mediaws)
             redo = 9
         except ServerError:
             redo += 1
@@ -165,11 +178,15 @@ def five_model_morpher(media, mediaws):
     dump(m4, '../data/morph-' + media_name + '-all1-parse.pkl')
     dump(m5, '../data/morph-' + media_name + '-all2-parse.pkl')
 
-def all_removal(media, mediaws):
+def all_removal(media, mediaws, source_biomass=None, src_morph=None):
 
     #all at once removal
     redo = 0
-    morph = make_morph(ws_id=11783)
+    if src_morph is None:
+        morph = make_morph(ws_id=11783)
+    else:
+        morph = src_morph
+        morph.ws_id = 11783
     #all at once removal
     morph.media = media
     morph.mediaws = mediaws
@@ -177,6 +194,8 @@ def all_removal(media, mediaws):
     while(redo < 5):
         try:
             morph = Client.prepare_supermodel(morph)
+            if source_biomass is not None:
+                morph.model = biomass_additions(morph.model, morph.ws_id, source_biomass, morph.media, morph.mediaws)
             redo = 9
         except ServerError:
             redo += 1
@@ -244,7 +263,7 @@ def find_kbaliases(filename, genome_id, ws_id):
         genes[gene_list[i]] = gene_hash[gene_list[i].split('\n')[0]]
     return genes
 
-def simulate_all_models(ws_id, media_id, phenotype_id):
+def simulate_all_models(ws_id, phenotype_id):
     #Get all the objects in ws_id
     models = list() # A list of tuples of the form (obj_id, ws_id, obj_name)
     objects = Client.ws_client.list_objects({'ids' : [ws_id]})
@@ -262,9 +281,12 @@ def simulate_all_models(ws_id, media_id, phenotype_id):
         args['workspace'] = ws_id
         args['phenotypeSet'] = phenotype_id
         args['phenotypeSet_workspace'] = ws_id
+        args['phenotypeSimulationSet'] = str(model[2]) + '-pheno_data'
         args['overwrite'] = False
         print args
-        Client.fba_client.simulate_phenotypes(args)
+        info = Client.fba_client.simulate_phenotypes(args)
+        Helpers.rename_object(info[0], ws_id, args['phenotypeSimulationSet'])
+
 def try_FBA_geneKO(model, media, ws_id):
     formulation = {'media': media, 'media_workspace': ws_id, 'rxnko': ['rxn03079_c0']}
     Client.fba_client.runfba({'model' : model, 'model_workspace': ws_id, 'formulation':formulation, 'fba':'testFBAgeneKO', 'workspace':ws_id})
@@ -290,6 +312,17 @@ def _allmodelsinws(ws_id):
         if 'FBAModel' in type: #is it a model
             models.append((obj[0], obj[6], obj[1]))
     return models
+def reaction_in_model(model_obj, reaction):
+    compartment = None
+    if len(reaction.split('_')) == 2:
+        compartment = reaction.split('_')[1]
+        reaction = reaction.split('_')[0]
+    for rxn in model_obj['modelreactions']:
+        if rxn['reaction_ref'].split('/')[-1] == reaction:
+            if compartment is None or rxn['modelcompartment_ref'].split('/')[-1] == compartment:
+                return True
+    return False
+
 
 def all_models_counts(ws_id, model_names):
     names = _names_dict(ws_id)
@@ -414,38 +447,88 @@ def simple_classify(common_set, recon_rxns, trans_rxns):
 
     return result
 
+def genes_to_reactions(model_object, list_of_genejs):
+    '''
+    returns a dictionary of reactions associateed with the listed genes. The genes are keys
+    '''
+    ftr_hash = feature_hash(model_object)
+    result = dict()
+    for gene in list_of_genes:
+        try:
+            result[gene] = ftr_hash[gene]
+        except KeyError:
+            print str(gene) + ' not found in model'
+    return result
+
+def feature_hash(model_object):
+    '''
+    returns a dictionary of all gene features to their associated reactions
+    '''
+    result = dict()
+    for rxn in model_object['modelreactions']:
+        features = set()
+        for protein in rxn['modelReactionProteins']:
+            for sub in protein['modelReactionProteinSubunits']:
+                features |= set([i.split('/')[-1] for i in sub['feature_refs']])
+        for ftr in features:
+           result[ftr] = Helpers.get_rxn_id(rxn)
+    return result
+
+def isInModel(model_obj, compound_id):
+    for rxn in model_obj['data']['modelreactions']:
+        for cpd in rxn['modelReactionReagents']:
+            if(cpd['modelcompound_ref'].find(compound_id) >= 0):
+                return True
+    return False
+
+def biomass_additions(model, wsid, source_biomass, media, mediaws):
+    #parse a list of compounds and coeffs from source_model that need to be added
+    # for loop adjust biomass. run fba after every oteration and make sure flux > 0
+    a = Client.ws_client.copy_object({'from': {'objid': model, 'wsid': wsid}, 'to':{'name': 'model_copy', 'wsid': wsid}})
+    model = a[0]
+    model_obj = get_object(model, wsid)
+    bio1 = model_obj['data']['biomasses'][0]
+    compounds = list()
+    coeffs = list()
+    for c in source_biomass['biomasscompounds']:
+        cpd = c['modelcompound_ref'].split('/')[-1]
+        coeff = c['coefficient']
+        compounds.append(cpd)
+        coeffs.append(coeff)
+    bio1_cpds = set([c['modelcompound_ref'].split('/')[-1] for c in bio1['biomasscompounds']])
+    curr_model = model
+    assert len(compounds) == len(coeffs)
+    added_cpds = set()
+    non_added = set()
+    for i in range(0, len(compounds)):
+        if compounds[i] not in bio1_cpds:
+            a = Client.ws_client.copy_object({'from': {'objid': curr_model, 'wsid': wsid}, 'to':{'name': 'biomass' + str(i), 'wsid': wsid}})
+            info = Client.fba_client.adjust_biomass_reaction({'model': a[0], 'workspace': wsid, 'compounds': [compounds[i]], 'coefficients':[coeffs[i]]})
+            new_model = info[0]
+            fba = Helpers.runmodelfba(new_model, wsid, media, mediaws)
+            if(fba[-1]['Objective'] > 0):
+                curr_model = new_model
+                added_cpds.add(compounds[i])
+            else:
+                non_added.add(compounds[i])
+    return curr_model
+
+def compare_biomasses(bio1, bio2):
+    bio1_cpds = set([c['modelcompound_ref'].split('/')[-1] for c in bio1['biomasscompounds']])
+    bio2_cpds = set([c['modelcompound_ref'].split('/')[-1] for c in bio2['biomasscompounds']])
+    both = set()
+    firstonly = set()
+    secondonly = set()
+    both = bio1_cpds & bio2_cpds
+    firstonly = bio1_cpds - bio2_cpds
+    secondonly = bio2_cpds - bio1_cpds
+    return both, firstonly, secondonly
 
 
-
-
-
-
-
-def same_gpr(rxn1, rxn2):
-    rxn1_set = gpr_set(rxn1)
-    rxn2_set = gpr_set(rxn2)
-    return rxn1_set == rxn2_set
-
-
-def gpr_set(reaction):
-    rxn_proteins = reaction['modelReactionProteins']
-    prots = set()
-    for i in range(0, len(rxn_proteins)):
-        prot = set()
-        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
-        for j in range(0, len(subunits)):
-            unit = subunits[j]
-            ftrs = [f.split('/')[-1] for f in unit['feature_refs']]
-            prot.add(frozenset(ftrs))
-        prots.add(frozenset(prot))
-    return frozenset(prots)
-
-def ftr_set(reaction):
-    features = set()
-    for protein in reaction['modelReactionProteins']:
-        for sub in protein['modelReactionProteinSubunits']:
-            features |= set([i.split('/')[-1] for i in sub['feature_refs']])
-    return features
+# save functions as variables in Runs
+same_gpr = Helpers.same_gpr
+gpr_set = Helpers.gpr_set
+ftr_set = Helpers.ftr_set
 
 def get_reaction_dict(modelobj):
     '''takes a model object and returns a set of the reactions in the model

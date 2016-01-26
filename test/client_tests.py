@@ -104,12 +104,12 @@ class ClientTest(unittest.TestCase):
         trans_set = set(trans_rxns.keys())
         src_set = set(src_rxns.keys())
         recon_set = set(recon_rxns.keys())
-    #Sanity checks
+        #Sanity checks
         self.assertTrue(m2.ws_id == test_space, msg='test architecture')
         self.assertFalse(m2 is self.morph, msg='aliasing issues')
         self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
         self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
-    #Mechanism Checks
+        #Mechanism Checks
         self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
         self.assertTrue(labels['gene-no-match'] == src_set - trans_set, msg='incorrect gene-no-match mechanism')
         self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
@@ -120,7 +120,7 @@ class ClientTest(unittest.TestCase):
             for j in range(0, len(items)):
                 if i != j:
                     self.assertTrue(items[i][1].isdisjoint(items[j][1]), 'a reaction is in two label sets')
-    # Definition Checks
+        # Definition Checks
         self.assertTrue(labels['gene-no-match'].isdisjoint(trans_set), msg='a gnm reaction is in the trans model')
         gene_rxns = set()
         for rxn in src_rxns:
@@ -177,16 +177,47 @@ class ClientTest(unittest.TestCase):
             recon_gpr = _gpr_set(recon_rxns[rxn])
             supm_gpr = _gpr_set(supm_rxns[rxn])
             self.assertTrue(_ftr_set(supm_rxns[rxn]).issubset(_ftr_set(recon_rxns[rxn])), msg=str(rxn))
-# CURRENTLY FAILS BECAUSE OF A FLAW IN OUR ALGORITHM!!!!!!
-#            self.assertTrue(recon_gpr == supm_gpr, msg='\n mismatched gprs: ' + str(rxn) + '\n' +
-#                          Client._get_gpr(recon_rxns[rxn]) + ' \n' + Client._get_gpr(supm_rxns[rxn]))
+        # CURRENTLY FAILS BECAUSE OF A FLAW IN OUR ALGORITHM!!!!!!
+        #            self.assertTrue(recon_gpr == supm_gpr, msg='\n mismatched gprs: ' + str(rxn) + '\n' +
+        #                          Client._get_gpr(recon_rxns[rxn]) + ' \n' + Client._get_gpr(supm_rxns[rxn]))
 
 
 
-    #ng
-    #gm
-    #
+            #ng
+            #gm
 
+    def test_merge_gprs(self):
+        #test sets
+        a = frozenset([frozenset([frozenset(['kb1', 'kb2'])])])
+        b = frozenset([frozenset([frozenset(['kb2'])])])
+        c = frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])])
+        d = frozenset([frozenset([frozenset(['kb1', 'kb3'])])])
+        e = frozenset([frozenset([frozenset(['kb4'])])])
+        f = frozenset([frozenset([frozenset(['kb4', 'kb2'])])])
+        g = frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset('kb4'])])
+        #Homolog cases
+        result = Client.merge_gprs(a, b)
+        self.assertEqual(result, a, msg='failure on adding one homolog T->R')
+        result = Client.merge_gprs(b, a)
+        self.assertEqual(result, a, msg='failure on adding one homolog R->T')
+        result = Client.merge_gprs(a, d)
+        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2', 'kb3'])])]), msg="(((1,2)])]) and ((((1,3)])]) fails merge gpr")
+        result = Client.merge_gprs(a, c)
+        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb2'])]),
+                                            frozenset([frozenset(['kb1','kb2'])])]), msg="(((1,2))) and ((((1,3))) fails merge gpr:" + '\n' + str(result))
+        result = Client.merge_gprs(a, a)
+        self.assertEqual(result, a, msg='failure on identity case')
+        #Subunit Disagreement cases
+
+
+        #Isofunctional cases
+        self.assetEqual(Client.merge_gprs(b,e), f)
+
+
+# Further Tests:
+    # At (label-reactions, build_supermodel, or translate features) test that
+    # you get the correct GPR, direction, etc.
+    # at process reactions. compare with reaction sensitivity analysis
 def _ftr_set(reaction):
     features = set()
     for protein in reaction['modelReactionProteins']:

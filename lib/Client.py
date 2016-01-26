@@ -473,7 +473,7 @@ def label_reactions(morph):
     for i in range(len(recon['modelreactions'])):
         #anni e.g. rxn_id = rxn01316_c0
         mdlrxn = recon['modelreactions'][i]
-        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        rxn_id = Helpers.get_rxn_id(mdlrxn)
         recon_set.add(rxn_id)
     # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict(), 'common': dict()}
@@ -485,7 +485,7 @@ def label_reactions(morph):
     for i in range(len(trans_model['modelreactions'])):
         #anni e.g. rxn_id = rxn01316_c0
         mdlrxn = trans_model['modelreactions'][i]
-        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        rxn_id = Helpers.get_rxn_id(mdlrxn)
         rxn_prot = mdlrxn['modelReactionProteins']
         if (len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal'):
             try:
@@ -500,7 +500,7 @@ def label_reactions(morph):
     # Label gene-no-match as those unique to model compared with translation
     for i in range(len(model['modelreactions'])):
         mdlrxn = model['modelreactions'][i]
-        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        rxn_id = Helpers.get_rxn_id(mdlrxn)
         if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']):
             try:
                 rxn_labels['gene-no-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
@@ -509,7 +509,7 @@ def label_reactions(morph):
     # label recon as those unique to recon compared with model (model = gene-match + gene-no-match + no-gene)
     for i in range(len(recon['modelreactions'])):
         mdlrxn = recon['modelreactions'][i]
-        rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+        rxn_id = Helpers.get_rxn_id(mdlrxn)
         # if the recon reaction is already in the model
         if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']) and (rxn_id not in rxn_labels['gene-no-match']):
             try:
@@ -577,6 +577,7 @@ def build_supermodel(morph):
     trans = morph.objects['trans_model']
     recon = morph.objects['recon_model']
     super_rxns = list()
+    specials = list()
     # copy the recon model
     recon_copy = ws_client.copy_object({'from': {'wsid':morph.ws_id, 'objid':morph.recon_model}, 'to': {'wsid':morph.ws_id, 'name': u'recon_copy'}})[0]
     # Add the GENE_NO_MATCH reactions:
@@ -590,7 +591,12 @@ def build_supermodel(morph):
             if  direction != recon_rxn['direction']:
                 fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
         else:
-            super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
+            if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
+                equation = Helpers.get_equation(reaction)
+                specials.append(reaction)
+                #super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], None, None, None, None, None, equation))
+            else:
+                super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
     # Add the trans only gene-match reactions:
     for rxn_id in morph.rxn_labels['gene-match']:
         reaction = trans['modelreactions'][morph.rxn_labels['gene-match'][rxn_id][0]]
@@ -598,11 +604,21 @@ def build_supermodel(morph):
         if rxn_id in morph.rxn_labels['common']:
             #throws a key error if it is not a recon reaction (good news, then we dont have to check direction)
             recon_rxn = recon['modelreactions'][morph.rxn_labels['common'][rxn_id][0]]
+            (trans_gpr, recon_gpr) = gpr_sets(reaction, recon_rxn)
+            merge_set = merge_gprs(trans_gpr, recon_gpr)
+            # re-assign gpr string if successfully merged with reconstruction gpr
+            if merge_set is not None:
+                gpr = Helpers.gpr_tostring(merge_set)
             direction = _general_direction(reaction, recon_rxn)
             if  direction != recon_rxn['direction']:
                 fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
         else:
-            super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr))
+            if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
+                equation = Helpers.get_equation(reaction)
+                #super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr, None, None, None, None, equation))
+                specials.append(reaction)
+            else:
+                super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
     for rxn_id in morph.rxn_labels['no-gene']:
         # morph.rxn_labels['recon'][0] gives the index of the reaction in the
         # recon['modelreactions'] list to make this look up O(1) instead of O(n)
@@ -614,10 +630,26 @@ def build_supermodel(morph):
             if  direction != recon_rxn['direction']:
                 fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
         else:
-            super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
+            if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
+                equation = Helpers.get_equation(reaction)
+                specials.append(reaction)
+                #super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], None, None, None, None, None, equation))
+            else:
+                super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
 
         #TODO: See what more you can fix/add (gpr?)
+#    for r in super_rxns:
+#        try:
+#            morph.model = fba_client.add_reactions({'model': recon_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': [r]})[0]
+#        except:
+#            print str(r) + '\n'
+#            print 'caused error'
     morph.model = fba_client.add_reactions({'model': recon_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
+    model = Helpers.get_object(morph.model, morph.ws_id)
+    for r in specials:
+        model['data']['modelreactions'].append(r)
+    info = Helpers.save_object(model['data'], model['info'][2], morph.ws_id, name='super_modelspc')
+    morph.model = info[0][0]
     return morph
 
 def removal_list(rxn_dict, list_range=None):
@@ -992,7 +1024,7 @@ def get_morph_rxns(morph, label=None):
         model = modelobj['data']
         for i in range(len(model['modelreactions'])):
             mdlrxn = model['modelreactions'][i]
-            rxn_id = mdlrxn['reaction_ref'].split('/')[-1] + '_' + str(mdlrxn['modelcompartment_ref'].split('/')[-1]) # -1 index gets the last in the list
+            rxn_id = Helpers.get_rxn_id(mdlrxn)
             rxnlist.append(rxn_id)
     if label is "essential":
         if morph.essential_ids is not None:
@@ -1284,7 +1316,107 @@ def compare_morphmodels(list_of_morphs):
 def prob_annotate(genome_id, ws_id):
     print "to be implemented"
 ws_client, fba_client = _init_clients()
-def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=False):
+def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=False, biochem=None, biochemws=None, name=None):
+    """
+    Builds a KBase media object from a txt file in tab delimited format and saves it in a workspace
+
+    Note
+    ----
+    Function Requirements:
+        - `filename` is a valid path to a properly formatted text file representing a media object
+        - `ws_id` corresponds to a KBase workspace you are authorized to write to
+
+    Parameters
+    ----------
+    filename: String
+        a String with the path to a txt file representing a media in tab-delimitted format. See MediaDB for an example
+    ws_id: Integer
+        a `workspace_id` for the media destination (can also be a string so long as the string represents an integer)
+    suppressError: Boolean, optional
+        a boolean flag for suppressing improperly formatted compound errors. Best used if one or more compounds does
+        not have a kbase compound_id but they are NOT essential to the media. Default is `False`
+    objid: Integer, optional
+        a `object_id` for where to save the media (optional, for workspace system control)
+    isMinimal: Boolean, optional
+        a boolean indicating whether the given media is minimal. Default is `False`
+
+    Returns
+    -------
+    (objid, wsid): ((Integer, Integer))
+        An `object_id` and `workspace_id` in a tuple that correspond to the ObjectIdentity of the media in KBase
+
+    Examples
+    --------
+    Proper file format example:
+    ::
+        Compound    Concentration   Production_Bound(-)    Uptake_Bound(+)
+        cpd00001[e0]    0.01    -1000.000000    1000.000000
+        cpd00009[e0]    0.01    -1000.000000    1000.000000
+        cpd00011[e0]    0.01    -1000.000000    1000.000000
+        cpd00013[e0]    0.01    -1000.000000    1000.000000
+        cpd00029[e0]    0.01    -1000.000000    1000.000000
+        cpd00030[e0]    0.01    -1000.000000    1000.000000
+        cpd00034[e0]    0.01    -1000.000000    1000.000000`
+    - First Row is headers for the columns below
+    - Each row is tab-delimitted ('\\t'), the 4th term ending with a new new
+    line
+
+    First, put a media txt file of the above form in a directory sucl as (relative) '../media/mymedia.txt'
+
+    `>>>Client.build_media('../media/mymedia.txt', 9145)`
+    (15, 9145)
+
+    >>>`
+
+    """
+    compounds = list()
+    if biochem is not None and biochemws is not None:
+        b = Helpers.get_info(biochem, biochemws)
+        bio_addr = u'' + str(b[6]) + '/' + str(b[0]) + '/' + str(b[4]) + '/compounds/id/'
+    else:
+        bio_addr = '489/6/6/compounds/id/'
+    with open(filename,'r') as file:
+        cpds =  file.readlines()[1:]
+    for c in cpds:
+        item = dict()
+        c = c.split('\n')[0]
+        values = c.split('\t')
+        if values[0][0:3] == "cpd":
+            values[0] = values[0][0:8] #+  '_' + values[0][9:11]
+            item[u'compound_ref'] = bio_addr + values[0]
+            item[u'concentration'] = float(values[1])
+            item[u'minFlux'] = float(values[2])
+            item[u'maxFlux'] = float(values[3])
+            compounds.append(item)
+        elif (values[0].find('[') > -1):
+            k = values[0].find('[')
+            values[0] = str(values[0][0:k]) + '_' + str(values[0][k+1:values[0].find(']')])
+            print values[0]
+            item[u'compound_ref'] = bio_addr + values[0]
+            item[u'concentration'] = float(values[1])
+            item[u'minFlux'] = float(values[2])
+            item[u'maxFlux'] = float(values[3])
+            compounds.append(item)
+
+        else:
+            if suppressError:
+                print values[0] + " not added to media!!"
+            else:
+                raise MediaFormatError(values[0] + 'is not a properly formed KBase compound_id')
+    if name is None:
+        name = filename.split('/')[-1].split('.')[0]
+    obj = Helpers.load('blankmedia.pkl')
+    obj =copy.deepcopy(obj)
+    media = obj['data']
+    media[u'name'] = name
+    media[u'source_id'] = name
+    if isMinimal:
+        media['isMinimal'] = 1
+    media[u'mediacompounds'] = compounds
+    info = Helpers.save_object(media, obj['info'][2], ws_id, objid, name=name)[0]
+    return (info[0], info[6])
+
+def build_media2(filename, ws_id, suppressError=False, objid=None, isMinimal=False, isDefined=False, name=None):
     """
     Builds a KBase media object from a txt file in tab delimited format and saves it in a workspace
 
@@ -1340,33 +1472,45 @@ def build_media(filename, ws_id, suppressError=False, objid=None, isMinimal=Fals
     compounds = list()
     with open(filename,'r') as file:
         cpds =  file.readlines()[1:]
-        for c in cpds:
-            item = dict()
-            c = c.split('\n')[0]
-            values = c.split('\t')
-            if values[0][0:3] == "cpd":
-                values[0] = values[0][0:8] + '_' + values[0][9:11]
-                item[u'compound_ref'] = u'489/6/1/compounds/id/' + values[0]
-                item[u'concentration'] = float(values[1])
-                item[u'minFlux'] = float(values[2])
-                item[u'maxFlux'] = float(values[3])
-                compounds.append(item)
+    for c in cpds:
+        item = dict()
+        c = c.split('\n')[0]
+        values = c.split('\t')
+        if values[0][0:3] == "cpd":
+            values[0] = values[0][0:8] #+  '_' + values[0][9:11]
+            item[u'compound_ref'] = values[0]
+            item[u'concentration'] = float(values[1])
+            item[u'minflux'] = float(values[2])
+            item[u'maxflux'] = float(values[3])
+            compounds.append(item)
+        elif (values[0].find('[') > -1):
+            k = values[0].find('[')
+            values[0] = str(values[0][0:k]) + '_' + str(values[0][k+1:values[0].find(']')])
+            print values[0]
+            item[u'compound_ref'] = values[0]
+            item[u'concentration'] = float(values[1])
+            item[u'minflux'] = float(values[2])
+            item[u'maxflux'] = float(values[3])
+            compounds.append(item)
+
+        else:
+            if suppressError:
+                print values[0] + " not added to media!!"
             else:
-                if suppressError:
-                    print values[0] + " not added to media!!"
-                else:
-                    raise MediaFormatError(values[0] + 'is not a properly formed KBase compound_id')
-    name = filename.split('/')[-1].split('.')[0]
-    obj = Helpers.load('blankmedia.pkl')
-    obj =copy.deepcopy(obj)
-    media = obj['data']
-    media[u'name'] = name
-    media[u'source_id'] = name
-    if isMinimal:
-        media['isMinimal'] = 1
-    media[u'mediacompounds'] = compounds
-    info = Helpers.save_object(media, obj['info'][2], ws_id, objid, name=name)[0]
-    return (info[0], info[6])
+                raise MediaFormatError(values[0] + 'is not a properly formed KBase compound_id')
+    if name is None:
+        name = filename.split('/')[-1].split('.')[0]
+    args = dict()
+    args['compounds'] = [c['compound_ref'] for c in compounds]
+    args['concentrations'] = [c['concentration'] for c in compounds]
+    args['maxflux'] = [c['maxflux'] for c in compounds]
+    args['minflux'] = [c['minflux'] for c in compounds]
+    args['media'] = name
+    args['isMinimal'] = isMinimal
+    args['isDefined'] = isDefined
+    args['workspace'] = ws_id
+    info = fba_client.addmedia(args)
+    return info
 
 def parse_fill(morph, name=None):
     """
@@ -1447,7 +1591,10 @@ def build_phenotype_set(filename, genome_id, genome_ws, ws_id, name=None):
     for i  in range(1, len(lines)):
         line = lines[i]
         run = dict()
-        elements = re.split("\t+", line.split('\n')[0])
+        pattern = "\t+|\s\s+" # "[^a-zA-Z0-9_.\|]"
+        def isNonEmpty(str):
+            return str != ''
+        elements = filter(isNonEmpty, re.split(pattern, line.split('\n')[0]))
         # first two elements are media ObjectIdentity
         next_media = (elements[0], elements[1])
         if next_media != media_ref:
@@ -1510,6 +1657,79 @@ def _general_direction(rxn1_struct, rxn2_struct):
         return '='
     else:
         raise Exception('direcctions are incompatible')
+
+def __import_fbamodel(reactions_file, compounds_file, genome_id):
+    tup_list = list()
+    with open(reactions_file, 'r') as f:
+        lines = f.readlines()
+    for line in lines[2:]:
+        line = line.split('\n')[0]
+        values = line.split('\t')
+        rxn = values[0].split('[')[0]
+        compartment = values[0].split('[')[1][0:2]
+        tup = (rxn, values[2], compartment, values[3])
+        tup_list.append(tup)
+        fba_client.import_fbamodel({'genome': genome_id, 'genome_workspace': 0})
+
+def gpr_sets(rxn_object1, rxn_object2):
+    return (Helpers.gpr_set(rxn_object1), Helpers.gpr_set(rxn_object2))
+
+    # make get_gpr() for gpr sets.
+
+def merge_gprs(gpr_set1, gpr_set2):
+    # if at least one is None, attempt to return a possibly non-None one
+    if gpr_set1 is None or gpr_set2 is None:
+        if gpr_set1 is None:
+            return gpr_set2
+        return gpr_set1
+    g1 = gpr_set1
+    g2 = set(gpr_set2)
+    # enclosing set is the set of proteins
+    for protein in g1:
+        if protein not in g2:
+            matchedProtein = False
+            proteinsToRemove = set()
+            proteinsToAdd = set()
+            # Look for a nearly matching protein
+            for g2_protein in g2:
+                #if they share a subunit or any feature (catches homolog and subunit cases)
+                if  len(Helpers._unnest_sets(protein) & (Helpers._unnest_sets(g2_protein))) != 0:
+                    proteinsToRemove.add(g2_protein)
+                    prot = set(g2_protein)
+                    matchedProtein = True
+                    # Look for a matching subunit
+                    matchedSub = False
+                    for subunit in protein:
+                        if subunit not in g2_protein:
+                            for other in g2_protein:
+                                if len(subunit & other) != 0:
+                                    matchedSub = True
+                                    prot.remove(other)
+                                    prot.add(frozenset(subunit.union(other)))
+                                    if frozenset(prot) not in proteinsToAdd:
+                                        proteinsToAdd.add(frozenset(prot))
+                    if not matchedSub:
+                        proteinsToRemove.remove(g2_protein)
+                        # do nothing, but better other solutions should be
+                        # implememted
+                            # recon  - do nothing
+                            # trans - always push
+                            # stronger/weaker
+            assert (len(proteinsToRemove) > 0 or not matchedProtein or (matchedProtein and not matchedSub))
+            g2 = g2 - set(proteinsToRemove)
+            g2 |= set(proteinsToAdd)
+            #Simple Case, proteins don't conflict
+            if not matchedProtein or not matchedSub:
+                g2.add(protein)
+    return frozenset(g2)
+
+
+
+
+
+
+
+
 
 
 class MediaFormatError(Exception):
