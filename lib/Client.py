@@ -34,7 +34,6 @@ def _init_clients():
     with open ("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
         url = myfile.read().replace('\n','')
     fba_client = fbaModelServices(url)
-
     return ws_client, fba_client
 
 def prepare_supermodel(morph, fill_src=True):
