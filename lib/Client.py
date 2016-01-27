@@ -610,15 +610,14 @@ def build_supermodel(morph):
             if merge_set is not None:
                 gpr = Helpers.gpr_tostring(merge_set)
             direction = _general_direction(reaction, recon_rxn)
-            if  direction != recon_rxn['direction']:
-                fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
+            fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True, 'gpr': [gpr]})
         else:
             if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
                 equation = Helpers.get_equation(reaction)
                 #super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr, None, None, None, None, equation))
                 specials.append(reaction)
             else:
-                super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction']))
+                super_rxns.append((reaction['reaction_ref'].split('/')[-1], str(reaction['modelcompartment_ref'].split('/')[-1][0]), reaction['direction'], gpr))
     for rxn_id in morph.rxn_labels['no-gene']:
         # morph.rxn_labels['recon'][0] gives the index of the reaction in the
         # recon['modelreactions'] list to make this look up O(1) instead of O(n)
@@ -646,8 +645,22 @@ def build_supermodel(morph):
 #            print 'caused error'
     morph.model = fba_client.add_reactions({'model': recon_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
     model = Helpers.get_object(morph.model, morph.ws_id)
+    modelcompounds = [m['id'] for m in model['data']['modelcompounds']]
     for r in specials:
         model['data']['modelreactions'].append(r)
+        compounds = [c['modelcompound_ref'].split('/')[-1] for c in r['modelReactionReagents']]
+        for c in compounds:
+            cpd_alias = c.split('_')[0]
+            if c not in modelcompounds:
+                print "dingus"
+                cpd = {u'aliases': [u'mdlid:' + cpd_alias],
+                        u'charge': 0,
+                        u'compound_ref': u'489/6/6/compounds/id/cpd00000',
+                        u'formula': u'',
+                        u'id': c,
+                        u'modelcompartment_ref': u'~/modelcompartments/id/' + c.split('_')[-1],
+                        u'name': c}
+                model['data']['modelcompounds'].append(cpd)
     info = Helpers.save_object(model['data'], model['info'][2], morph.ws_id, name='super_modelspc')
     morph.model = info[0][0]
     return morph
@@ -782,7 +795,7 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
                 assert removal_list[i][1][1] <= removal_list[i + 1][1][1]
         rxn_dict = morph.rxn_labels['no-gene']
         removal_list.append(sorted(rxn_dict.items(), key=get_key))
-        removal_list = [r for r in removal_list if r not in morph.rxn_labels['common']]
+        removal_list = [r for r in removal_list if r[0] not in morph.rxn_labels['common']]
     else:
         removal_list = rxn_list
     # instantiate lists only if needed
@@ -795,6 +808,13 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         name = 'MM'
     for i in range(len(removal_list)):
         reaction_id = removal_list[i][0]
+        try:
+            if reaction_id.startswith('rxn00000'):
+                print '\n + SKIPPING: ' + str(reaction_id)
+                continue
+        except:
+            print str(reaction_id) + "FAILED REMOVAL"
+            continue
         print 'Reaction to remove: ' + str(removal_list[i])
         #TODO Find someway to fix the behaivior bug if model_id is not in ws, etc.
         new_model_id = fba_client.remove_reactions({'model': morph.model, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]

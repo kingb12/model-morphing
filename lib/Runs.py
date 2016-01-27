@@ -524,6 +524,46 @@ def compare_biomasses(bio1, bio2):
     secondonly = bio2_cpds - bio1_cpds
     return both, firstonly, secondonly
 
+def reconcile_models(good_model, working_model, ws_id):
+    '''
+    Takes a working model and tries to make it as close to good model as possible. requires in same ws
+    '''
+    # Classify reactions in models
+    good = get_object(good_model, ws_id)
+    working = get_object(working_model, ws_id)
+    good_rxns = dict()
+    woring_rxns = dict()
+    common = set()
+    good_only = set()
+    working_only = set()
+    for r in good['data']['modelreactions']:
+        good_rxns[get_rxn_id(r)] = r
+    for r in working['data']['modelreactions']:
+        working_rxns[get_rxn_id(r)] = r
+        if get_rxn_id(r) in good_rxns:
+            common.add(get_rxn_id(r))
+        else:
+            working_only.add(get_rxn_id(r))
+    for rxn_id in good_rxns:
+        if rxn_id not in common:
+            good_only.add(rxn_id)
+    # Add good reactions
+    new_model = None
+
+    # Adjust common reactions
+    # Remove unnecessary reactions
+def model_checker(model_rxns, super_rxns):
+    results = list()
+    for r in super_rxns:
+        if r in model_rxns:
+            if super_rxns[r]['modelReactionReagents'] != model_rxns[r]['modelReactionReagents']:
+                for c in super_rxns[r]['modelReactionReagents']:
+                    if c not in model_rxns[r]['modelReactionReagents']:
+                        results.append(r)
+                for c in model_rxns[r]['modelReactionReagents']:
+                    if c not in super_rxns[r]['modelReactionReagents']:
+                        results.append(r)
+    return results
 
 # save functions as variables in Runs
 same_gpr = Helpers.same_gpr
@@ -542,4 +582,15 @@ def get_reaction_dict(modelobj):
 
 # deletes all objects except for the narrative object in the test_space or
 # specified workspade
+
+def morph_comparison(morph, super_model):
+    comp = Client.fba_client.compare_models({'models': [morph.model, morph.src_model, morph.recon_model, morph.trans_model], 'workspaces': [morph.ws_id, morph.src_modelws, morph.ws_id, morph.ws_id]})
+    # General Comparisons
+    a = Client.fba_client.generate_model_stats({'model': morph.model, 'model_workspace': morph.ws_id})
+    b = Client.fba_client.generate_model_stats({'model': morph.src_model, 'model_workspace': morph.src_modelws})
+    c = Client.fba_client.generate_model_stats({'model': morph.trans_model, 'model_workspace': morph.ws_id})
+    d = Client.fba_client.generate_model_stats({'model': morph.recon_model, 'model_workspace': morph.ws_id})
+    # Gene comparisons
+    return [a,b,c,d]
+    # Probanno comparisons
 
