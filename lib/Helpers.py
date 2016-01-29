@@ -1,4 +1,5 @@
 from Morph import Morph
+from Morph import Gpr
 import copy
 import json
 import pickle
@@ -270,6 +271,9 @@ def same_gpr(rxn1, rxn2):
     return rxn1_set == rxn2_set
 
 def gpr_set(reaction):
+    '''
+    deprecate - GPR is now a type with its own methods
+    '''
     rxn_proteins = reaction['modelReactionProteins']
     prots = set()
     for i in range(0, len(rxn_proteins)):
