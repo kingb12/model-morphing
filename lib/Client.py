@@ -588,6 +588,7 @@ def build_supermodel(morph):
             recon_rxn = recon['modelreactions'][morph.rxn_labels['common'][rxn_id][0]]
             direction = _general_direction(reaction, recon_rxn)
             if  direction != recon_rxn['direction']:
+                print rxn_id
                 fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
         else:
             if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
@@ -609,6 +610,7 @@ def build_supermodel(morph):
             if merge_set is not None:
                 gpr = Helpers.gpr_tostring(merge_set)
             direction = _general_direction(reaction, recon_rxn)
+            print rxn_id
             fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True, 'gpr': [gpr]})
         else:
             if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):
@@ -626,6 +628,7 @@ def build_supermodel(morph):
             recon_rxn = recon['modelreactions'][morph.rxn_labels['common'][rxn_id][0]]
             direction = _general_direction(reaction, recon_rxn)
             if  direction != recon_rxn['direction']:
+                print rxn_id
                 fba_client.adjust_model_reaction({'model': recon_copy, 'workspace': morph.ws_id, 'reaction': [rxn_id], 'direction': [direction], 'overwrite': True})
         else:
             if(reaction['reaction_ref'].split('/')[-1] == 'rxn00000'):

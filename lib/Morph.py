@@ -3,6 +3,7 @@ from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
 import random
+import copy
 import json
 import argparse
 import time
@@ -95,8 +96,13 @@ class Gpr():
         creates a GPR object t represent the gene-protein-reaction relationship for a rxn/model
         '''
         if reaction is not None:
-            self.gpr = self._gpr_set(reaction)
+            self.gpr, self.gpr_type = self._gpr_set(reaction)
             self.ftrs = self._feature_set()
+            if self.gpr_type is None:
+                if len(self.ftrs) > 0:
+                    self.gpr_type = 'genes'
+                else:
+                    self.gpr_type = 'no-gene'
         else:
             self.gpr = None
         self._check_rep()
@@ -130,15 +136,29 @@ class Gpr():
         gpr = "(" + proteins_str + ")"
         return gpr
     def __repr__(self):
-        return str(self.gpr)
+        return repr(self.gpr)
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.gpr == other.gpr
+        else:
+            return False
+    def __ne__(self, other):
+        return not self.__eq__(other)
     def __unicode__(self):
         return unicode(str(self))
     def _gpr_set(self, rxn_object):
+        '''
+        creates the gpr set for the self.gpr field. Intended to only be called once
+
+        A gpr with no features is a frozenset(frozenset(frozenset()))
+        '''
         reaction = rxn_object
         rxn_proteins = reaction['modelReactionProteins']
         prots = set()
         for i in range(0, len(rxn_proteins)):
             prot = set()
+            if rxn_proteins[i]['note'] == u'spontaneous' or rxn_proteins[i]['note'] == u'universal':
+                return frozenset([frozenset([frozenset([])])]), rxn_proteins[i]['note']
             subunits = rxn_proteins[i]['modelReactionProteinSubunits']
             for j in range(0, len(subunits)):
                 unit = subunits[j]
@@ -148,8 +168,15 @@ class Gpr():
             if len(prot) > 0:
                 prots.add(frozenset(prot))
         if len(prots) > 0:
-            return frozenset(prots)
-        return None
+            return frozenset(prots), None
+        return frozenset([frozenset([frozenset([])])]), None
+
+    def __iter__(self):
+        '''
+        returns an interator over the gpr attribute
+        '''
+        if self.gpr is not None:
+            return self.gpr.__iter__()
 
     def _feature_set(self):
         features = set()
@@ -195,6 +222,7 @@ class Gpr():
             return gpr_set1
         g1 = gpr_set1
         g2 = set(gpr_set2)
+        examineGPR = False
         # enclosing set is the set of proteins
         for protein in g1:
             if protein not in g2:
@@ -204,7 +232,8 @@ class Gpr():
                 # Look for a nearly matching protein
                 for g2_protein in g2:
                     #if they share a subunit or any feature (catches homolog and subunit cases)
-                    if  len(self._unnest_sets(protein) & (self._unnest_sets(g2_protein))) != 0:
+                    # AND they are equal in number of subunits
+                    if  len(protein) == len(g2_protein) and len(self._unnest_sets(protein) & (self._unnest_sets(g2_protein))) != 0:
                         proteinsToRemove.add(g2_protein)
                         prot = set(g2_protein)
                         matchedProtein = True
@@ -216,16 +245,22 @@ class Gpr():
                                     if len(subunit & other) != 0:
                                         matchedSub = True
                                         prot.remove(other)
-                                        prot.add(frozenset(subunit.union(other)))
+                                        new_sub = subunit.union(other)
+                                        if new_sub in prot:
+                                            examineGPR = True
+                                        else:
+                                            prot.add(frozenset(subunit.union(other)))
                                         if frozenset(prot) not in proteinsToAdd:
                                             proteinsToAdd.add(frozenset(prot))
                         if not matchedSub:
                             proteinsToRemove.remove(g2_protein)
+
                             # do nothing, but better other solutions should be
                             # implememted
                                 # recon  - do nothing
                                 # trans - always push
                                 # stronger/weaker
+
                 assert (len(proteinsToRemove) > 0 or not matchedProtein or (matchedProtein and not matchedSub))
                 g2 = g2 - set(proteinsToRemove)
                 g2 |= set(proteinsToAdd)
@@ -233,8 +268,47 @@ class Gpr():
                 if not matchedProtein or not matchedSub:
                     g2.add(protein)
         return_gpr = self.new_gpr(frozenset(g2))
+        return_gpr.remove_redundancy()
+        if examineGPR:
+            return_gpr.gpr_type = u'potential merge conflict'
+        else:
+            return_gpr.gpr_type = u'merge'
+        return_gpr.parents = (self, other_gpr)
         return_gpr._check_rep()
         return return_gpr
+    def remove_redundancy(self):
+        '''
+        finds proteins that are subsets of each other and removes the smaller one
+
+        e.g. ((a or b)) or ((a or b or c or d)) ==> ((a or b or c or d))
+        performing this check prevents redundancy and helps ensure symmetry in T.merge(R) == R.merge(T)
+        '''
+        matches = dict()
+        for protein in self.gpr:
+            for protein2 in self.gpr:
+                if protein != protein2 and self._unnest_sets(protein).issubset(self._unnest_sets(protein2)):
+                    matches[protein] = protein2
+        for protein in matches:
+            #we know that all features in prot are in protein2
+            protein2 = copy.deepcopy(matches[protein])
+            matched_subs = set()
+            for sub in protein:
+                # sub should be a subset of a sub in p2
+                for sub2 in protein2:
+                    if sub.issubset(sub2):
+                        matched_subs.add(sub2)
+                        protein2 = protein2 - sub2
+            if len(matched_subs) == len(matches[protein]):
+                assert matched_subs == matches[protein]
+                i = len(self.gpr)
+                self.gpr = self.gpr - frozenset([protein])
+                assert len(self.gpr) == i - 1
+
+    def isEmpty(self):
+        self.check_rep()
+        return  len(self.ftrs) == 0
+
+
 
     def new_gpr(self, gpr_set):
         '''
@@ -252,6 +326,27 @@ class Gpr():
         '''
         if self.gpr is not None and self.ftrs is None:
             raise RepresentationError(self)
+        if hasattr(self, 'ftrs'):
+            feature_set = self._unnest_sets(self.gpr)
+            if len(self.ftrs) == 0 and self.gpr != frozenset([frozenset([frozenset([])])]):
+                raise RepresentationError(self)
+            for f in self.ftrs:
+                if f not in feature_set:
+                    raise RepresentationError(self)
+            for f in feature_set:
+                if not self.contains_feature(f):
+                    raise RepresentationError(self)
+        # verify structure
+        if hasattr(self, 'gpr') and self.gpr is not None:
+            assert type(self.gpr) is frozenset
+            for protein in self.gpr:
+                assert type(protein) is frozenset
+                for sub in protein:
+                    assert type(sub) is frozenset
+                    for ftr in sub:
+                        assert type(ftr) is str or type(ftr) is unicode
+
+
     def _unnest_sets(self, nested_set):
         '''
         Takes anything in a nested set form and returns a single set of it's non-set elements

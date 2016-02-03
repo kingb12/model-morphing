@@ -28,9 +28,18 @@ class GprTest(unittest.TestCase):
     # to, and finally clear the test_space workspace. Thus each test gets
     # unmutated data and a 'fresh' workspace to work with
 
+    def __init__(self, *args, **kwargs):
+        super(GprTest, self).__init__(*args, **kwargs)
+        morph = Helpers.make_morph(12056)
+        morph = Client.translate_features(morph)
+        morph = Client.reconstruct_genome(morph)
+        morph = Client.label_reactions(morph)
+        self.recon = morph.objects['recon_model']
+        self.trans = morph.objects['trans_model']
+
     def setUp(self):
-        recon = morph.objects['recon_model']
-        trans = morph.objects['trans_model']
+        self.recon_gprs = [(Morph.Gpr(r), r) for r in self.recon['modelreactions']]
+        self.trans_gprs = [(Morph.Gpr(r), r) for r in self.trans['modelreactions']]
 
     def tearDown(self):
         _clear_testspace()
@@ -41,168 +50,88 @@ class GprTest(unittest.TestCase):
         self.superobj = None
         self.srcfillobj = None
 
-    def test_translate_features(self):
-    # assert trans is a subset of original
-        m2 = Client.translate_features(self.morph)
-        m2obj = Helpers.get_object(m2.trans_model, m2.ws_id)
-        trans_rxns = get_reaction_dict(m2obj)
-        src_rxns = get_reaction_dict(self.srcobj)
-        genome = Helpers.get_object(m2.genome, m2.genomews)['data']
-    # Sanity Checks
-        self.assertTrue(m2.ws_id == test_space, msg='test architecture')
-        self.assertFalse(m2 is self.morph, msg='aliasing issues')
-        self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
-    # Translation Definitions and Tests
-        trans_set = set(trans_rxns.keys())
-        src_set = set(src_rxns.keys())
-        self.assertTrue(trans_set.issubset(src_set), msg='translation subset defn')
-        # make sure all translation rxns that have genes reference correct
-        # genome (no old features)
-        # also make sure all trans w/ gene's have gene's in source
-        for rxn in trans_rxns:
-            prots = trans_rxns[rxn]['modelReactionProteins']
-            if len(prots) > 0:
-                for p in prots:
-                    subunits = p['modelReactionProteinSubunits']
-                    for s in subunits:
-                        for ftr in s['feature_refs']:
-                            self.assertTrue(ftr.split('/')[-1].startswith(genome['id']), msg='incorrect feature ref')
-                            self.assertTrue(_has_gene(src_rxns[rxn]),
-                                msg='source has no gene for ' + str(rxn) + 'in trans')
-        # make sure all removed reactions had genes in source (otherwise, we've
-                                # removed a no gene rxn)
-        gnm_rxns = src_set - trans_set
-        for rxn in gnm_rxns:
-            for p in src_rxns[rxn]['modelReactionProteins']:
-                self.assertTrue(len(p['modelReactionProteinSubunits']) > 0, msg='removed a rxn w/o a gene in source')
-
-    def test_label_reactions(self):
-        m2 = Client.translate_features(self.morph)
-        m2obj = Helpers.get_object(m2.trans_model, m2.ws_id)
-        trans_rxns = get_reaction_dict(m2obj)
-        src_rxns = get_reaction_dict(self.srcobj)
-        m4 = Client.reconstruct_genome(m2)
-        m3 = Client.label_reactions(m4)
-        m3obj = Helpers.get_object(m3.trans_model, m3.ws_id)
-        m3obj_recon = Helpers.get_object(m3.recon_model, m3.ws_id)
-        trans_rxns2 = get_reaction_dict(m3obj)
-        recon_rxns = get_reaction_dict(m3obj_recon)
-        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon', 'common'}
-        labels = dict()
-        for key in m3.rxn_labels:
-            if key != 'common':
-                labels[key] = set(m3.rxn_labels[key].keys())
-        trans_set = set(trans_rxns.keys())
-        src_set = set(src_rxns.keys())
-        recon_set = set(recon_rxns.keys())
-        #Sanity checks
-        self.assertTrue(m2.ws_id == test_space, msg='test architecture')
-        self.assertFalse(m2 is self.morph, msg='aliasing issues')
-        self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
-        self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
-        #Mechanism Checks
-        self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
-        self.assertTrue(labels['gene-no-match'] == src_set - trans_set, msg='incorrect gene-no-match mechanism')
-        self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
-                       msg='incorrect genematch/nogene mechanism')
-        self.assertTrue(labels['recon'].isdisjoint(src_set), msg='recon reaction in source')
-        items = labels.items()
-        for i in range(0, len(items)):
-            for j in range(0, len(items)):
-                if i != j:
-                    self.assertTrue(items[i][1].isdisjoint(items[j][1]), 'a reaction is in two label sets')
-        # Definition Checks
-        self.assertTrue(labels['gene-no-match'].isdisjoint(trans_set), msg='a gnm reaction is in the trans model')
-        gene_rxns = set()
-        for rxn in src_rxns:
-            if _has_gene(src_rxns[rxn]):
-                gene_rxns.add(rxn)
-        self.assertTrue(len(gene_rxns) > 0)
-        self.assertTrue(labels['gene-no-match'].isdisjoint(trans_rxns), msg='a gnm reaction is in the trans model')
-        self.assertTrue(labels['gene-no-match'].issubset(gene_rxns), msg='there is a rxn in gnm but has no gene in source')
-        self.assertTrue(labels['gene-match'].issubset(gene_rxns), msg='there is a rxn in gene match without a gene in source')
-        self.assertTrue(labels['gene-match'].issubset(trans_rxns), msg='there is a rxn in gene match not in tanslation')
-        # no gene definition
-        self.assertTrue(labels['no-gene'].isdisjoint(gene_rxns), msg='a no gene rxn has a gene in source')
-        self.assertTrue(labels['no-gene'].issubset(trans_set), msg='a no gene rxn is not in translation')
-        self.assertTrue(labels['no-gene'].issubset(src_set), msg='a no gene rxn is not in source')
-        # recon definition
-        for r in recon_rxns:
-            self.assertTrue(_has_gene(recon_rxns[r]), msg='recon rxn has no gene')
-
-    def test_build_supermodel(self):
-        # Set Up (method specific)
-        src_rxns = get_reaction_dict(self.srcobj)
-        trans = Client.translate_features(self.morph)
-        trans_obj = Helpers.get_object(trans.trans_model, trans.ws_id)
-        trans_rxns = get_reaction_dict(trans_obj)
-        recon = Client.reconstruct_genome(trans)
-        m3 = Client.label_reactions(recon)
-        supm = Client.build_supermodel(m3)
-        supm_obj = Helpers.get_object(supm.model, supm.ws_id)
-        supm_rxns = get_reaction_dict(supm_obj)
-        recon_obj = Helpers.get_object(recon.recon_model, recon.ws_id)
-        recon_rxns = get_reaction_dict(recon_obj)
-        labelnames = {'gene-no-match', 'gene-match', 'no-gene', 'recon', 'common'}
-        labels = dict()
-        for key in m3.rxn_labels:
-            labels[key] = set(supm.rxn_labels[key].keys())
-        trans_set = set(trans_rxns.keys())
-        src_set = set(src_rxns.keys())
-        recon_set = set(recon_rxns.keys())
-        supm_set = set(supm_rxns.keys())
-        # Sanity Checks
-        self.assertTrue(supm.ws_id == test_space, msg='test architecture')
-        self.assertFalse(trans is self.morph, msg='aliasing issues')
-        self.assertFalse(m3 is supm, msg='aliasing issues')
-        self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
-        self.assertTrue(len(supm_rxns) > 0, msg='there are supm rxns')
-        self.assertTrue(len(recon_rxns) > 0, msg='there are recon rxns')
-        self.assertTrue(len(src_rxns) > 0, msg='there are src rxns')
-        # Mechanism Checks
-        self.assertTrue(supm_set == recon_set | trans_set | labels['gene-no-match'], msg='supermodel mechanism off')
-        self.assertTrue(supm_set == recon_set | src_set, msg='supermodel mechanism off (definition of trans)')
-        # Definition Checks
-        for rxn in recon_rxns:
-            self.assertTrue(rxn in supm_rxns, msg='recon rxn not in super (redundant check, prevent keyerror)')
-            recon_gpr = _gpr_set(recon_rxns[rxn])
-            supm_gpr = _gpr_set(supm_rxns[rxn])
-            self.assertTrue(_ftr_set(supm_rxns[rxn]).issubset(_ftr_set(recon_rxns[rxn])), msg=str(rxn))
-        # CURRENTLY FAILS BECAUSE OF A FLAW IN OUR ALGORITHM!!!!!!
-        #            self.assertTrue(recon_gpr == supm_gpr, msg='\n mismatched gprs: ' + str(rxn) + '\n' +
-        #                          Client._get_gpr(recon_rxns[rxn]) + ' \n' + Client._get_gpr(supm_rxns[rxn]))
-
-
-
-            #ng
-            #gm
-
-    def test_merge_gprs(self):
-        #test sets
-        a = frozenset([frozenset([frozenset(['kb1', 'kb2'])])])
-        b = frozenset([frozenset([frozenset(['kb2'])])])
-        c = frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])])
-        d = frozenset([frozenset([frozenset(['kb1', 'kb3'])])])
-        e = frozenset([frozenset([frozenset(['kb4'])])])
-        f = frozenset([frozenset([frozenset(['kb4', 'kb2'])])])
-        g = frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset('kb4'])])
+    def test_gpr_structure(self):
+        '''
+        verifies that the gpr is structurally sound
+        '''
+        def test(g):
+            structure = False
+            for protein in g[0]:
+                self.assertEqual(type(protein), frozenset, msg=str(protein) + ' is a protein w/ wrong type')
+                for subunit in protein:
+                    self.assertEqual(type(subunit), frozenset, msg=str(subunit) + ' is a subunit w/ wrong type')
+                    structure = True
+                    for feature in subunit:
+                        self.assertTrue(feature is not None, msg='feature in ' + str(subunit) + ' is None')
+            self.assertTrue(structure, msg='could not iterate over sets to features ' + repr(g))
+        for g in self.recon_gprs:
+            test(g)
+        for g in self.trans_gprs:
+            test(g)
+    def test_merge(self):
+        # the features of each should always be in merged, and mergin should be
+        # symmetric
+        recon_dict = dict()
+        trans_dict = dict()
+        for g in self.recon_gprs:
+            rxn_id = Helpers.get_rxn_id(g[1])
+            recon_dict[rxn_id] = g[0]
+        for g in self.trans_gprs:
+            rxn_id = Helpers.get_rxn_id(g[1])
+            trans_dict[rxn_id] = g[0]
+        #TODO: Below code simply ignores rxn00000, a KBase dependency
+        for r in recon_dict:
+            if r in trans_dict and r is not 'rxn00000':
+                merge1 = trans_dict[r].merge(recon_dict[r])
+                merge2 = recon_dict[r].merge(trans_dict[r])
+                self.assertTrue(merge1 == merge2, msg=str(r) + ' merge ' + repr(merge1) +  'Not symetrical to merge ' + repr(merge2))
+                for ftr in recon_dict[r].ftrs:
+                    self.assertTrue(ftr in merge1.ftrs and ftr in merge2.ftrs, msg=str(r) + 'merge: ' +  str(ftr) + ' in arguments but not in merge')
+                for ftr in trans_dict[r].ftrs:
+                    self.assertTrue(ftr in merge1.ftrs and ftr in merge2.ftrs, msg=str(r) + 'merge: ' +  str(ftr) + ' in arguments but not in merge')
+                # the proteins of each if they have no features in the other should
+                # always be in both
+                if len(recon_dict[r].ftrs) > 0 and len(trans_dict[r].ftrs):
+                    for protein in recon_dict[r]:
+                        if len(recon_dict[r]._unnest_sets(protein) & trans_dict[r].ftrs) == 0:
+                            self.assertTrue(merge1.contains_protein(protein), msg=str(protein) + ' has no common features with ' + repr(merge1) + ' but is not in merge')
+                    for protein in trans_dict[r]:
+                        if len(trans_dict[r]._unnest_sets(protein) & recon_dict[r].ftrs) == 0:
+                            self.assertTrue(merge1.contains_protein(protein), msg=str(protein) + ' has no common features with ' + repr(merge1) + ' but is not in merge')
+        # prime examples
+        a = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb2'])])]))
+        b = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb2'])])]))
+        c = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])]))
+        d = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb3'])])]))
+        e = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb4'])])]))
+        f = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb4', 'kb2'])])]))
+        g = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb4'])])]))
+        h = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb2'])]), frozenset([frozenset(['kb4'])])]))
+        i = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb2'])]), frozenset([frozenset(['kb1']), frozenset(['kb2'])])]))
+        j = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb2'])]), frozenset([frozenset(['kb3'])])]))
+        k = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb3', 'kb4'])]), frozenset([frozenset(['kb2'])])]))
+        l = Morph.Gpr().new_gpr(frozenset([frozenset([frozenset(['kb1', 'kb2', 'kb3', 'kb4'])])]))
         #Homolog cases
-        result = Client.merge_gprs(a, b)
+        result = a.merge(b)
         self.assertEqual(result, a, msg='failure on adding one homolog T->R')
-        result = Client.merge_gprs(b, a)
+        result = b.merge(a)
         self.assertEqual(result, a, msg='failure on adding one homolog R->T')
-        result = Client.merge_gprs(a, d)
-        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2', 'kb3'])])]), msg="(((1,2)])]) and ((((1,3)])]) fails merge gpr")
-        result = Client.merge_gprs(a, c)
-        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb2'])]),
-                                            frozenset([frozenset(['kb1','kb2'])])]), msg="(((1,2))) and ((((1,3))) fails merge gpr:" + '\n' + str(result))
-        result = Client.merge_gprs(a, a)
-        self.assertEqual(result, a, msg='failure on identity case')
+        result = a.merge(d)
+        self.assertEqual(result.gpr, frozenset([frozenset([frozenset(['kb1', 'kb2', 'kb3'])])]), msg= repr(result) + " fails merge gpr: " + repr(a) + '\n' + repr(d))
+        result = a.merge(a)
+        self.assertEqual(result, a, msg='failure on identity case ' + repr(a)  + '\n' + repr(result))
         #Subunit Disagreement cases
+        # case you discovered yesterday
+        self.assertEqual(j.merge(k), l)
+        self.assertEqual(k.merge(j), l)
 
+        # classic case
+        self.assertEqual(a.merge(c) , a, msg= repr(a.merge(c)) + '\n' + repr(a))
 
         #Isofunctional cases
-        self.assetEqual(Client.merge_gprs(b,e), f)
+        self.assertEqual(b.merge(e), h)
+
+
 
 def _clear_testspace(ws_id=test_space):
     # get all object ids in {'id': x} form excluding the narrative object

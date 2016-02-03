@@ -188,13 +188,16 @@ class ClientTest(unittest.TestCase):
 
     def test_merge_gprs(self):
         #test sets
-        a = frozenset([frozenset([frozenset(['kb1', 'kb2'])])])
-        b = frozenset([frozenset([frozenset(['kb2'])])])
-        c = frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])])
-        d = frozenset([frozenset([frozenset(['kb1', 'kb3'])])])
-        e = frozenset([frozenset([frozenset(['kb4'])])])
-        f = frozenset([frozenset([frozenset(['kb4', 'kb2'])])])
-        g = frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset('kb4'])])
+        a = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb2'])])]))
+        b = Morph.newgpr(frozenset([frozenset([frozenset(['kb2'])])]))
+        c = Morph.newgpr(frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])]))
+        d = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb3'])])]))
+        e = Morph.newgpr(frozenset([frozenset([frozenset(['kb4'])])]))
+        f = Morph.newgpr(frozenset([frozenset([frozenset(['kb4', 'kb2'])])]))
+        g = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb4'])])]))
+        print a.gpr
+        return
+
         #Homolog cases
         result = Client.merge_gprs(a, b)
         self.assertEqual(result, a, msg='failure on adding one homolog T->R')
