@@ -111,7 +111,7 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
         #Mechanism Checks
         self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
-        self.assertTrue(labels['gene-no-match'] == src_set - trans_set, msg='incorrect gene-no-match mechanism')
+        self.assertTrue(labels['gene-no-match'] == src_set - trans_set - recon_set, msg='incorrect gene-no-match mechanism')
         self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
                        msg='incorrect genematch/nogene mechanism')
         self.assertTrue(labels['recon'].isdisjoint(src_set), msg='recon reaction in source')
@@ -126,11 +126,14 @@ class ClientTest(unittest.TestCase):
         for rxn in src_rxns:
             if _has_gene(src_rxns[rxn]):
                 gene_rxns.add(rxn)
+        for rxn in recon_rxns:
+            if _has_gene(recon_rxns[rxn]):
+                gene_rxns.add(rxn)
         self.assertTrue(len(gene_rxns) > 0)
         self.assertTrue(labels['gene-no-match'].isdisjoint(trans_rxns), msg='a gnm reaction is in the trans model')
         self.assertTrue(labels['gene-no-match'].issubset(gene_rxns), msg='there is a rxn in gnm but has no gene in source')
         self.assertTrue(labels['gene-match'].issubset(gene_rxns), msg='there is a rxn in gene match without a gene in source')
-        self.assertTrue(labels['gene-match'].issubset(trans_rxns), msg='there is a rxn in gene match not in tanslation')
+        self.assertTrue(labels['gene-match'].issubset(trans_set.union(recon_set)), msg='there is a rxn in gene match not in tanslation')
         # no gene definition
         self.assertTrue(labels['no-gene'].isdisjoint(gene_rxns), msg='a no gene rxn has a gene in source')
         self.assertTrue(labels['no-gene'].issubset(trans_set), msg='a no gene rxn is not in translation')

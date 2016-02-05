@@ -11,6 +11,7 @@ import re
 import copy
 from operator import itemgetter
 from Morph import Morph
+from Morph import Gpr
 
 # This module is the Client for the model morphing service. It performs
 # operations necessary to morphing models. It is a module, performing
@@ -355,6 +356,152 @@ def _get_objects(morph):
         morph.probhash[rxn[0]] = rxn[1]
     return morph
 def label_reactions(morph):
+    """
+    Labels morph's reactions from translated model, reconstruction, and source
+
+    Populates the rxn_labels attribute in the Morph object with a Dictionary of four dictionaries of reactrion_id -> value tuples.
+    The first level dicts are named with the keys:
+        - gene-match
+        - gene-no-match
+        - no-gene
+        - recon
+    Populates morph.probhash with a dictionary of compartment-truncated reaction_ids to their probability relative to genome in question
+        (derived from morph.probanno).
+    Also populates morph.objects, morph.info with data from KBase objects (advanced use)
+
+    Technical Details (Consult if you are encountering issues):
+    For simplicity, an end user can treat the interiors of each dictionary like a set of reaction ids, but it is important to note the
+    this is actually a nested dictionary with entries of the form: reaction_id -> (model_index, probability)
+    Thus, some set like behavior works, but some doesn't, the user must account for the fact that these are dictionaries:
+
+        >>>'rxn09073_c0' in morph.rxn_labels['gene-no'match']
+
+            works and returns True or False, indicating whether or not rxn09073_c0 is a gene-no-match reaction
+
+        >>>morph.rxn_labels['gene-match'].add('rxn00456_c0')
+
+        fails and throws an exception. add() is a set method and can't be used on dictionaries. (You could set an
+        entry with real or arbitrary value to get around this if you really wished)
+
+    Each inner dictionary is keyed with reaction_ids, hashed to tuples as such: (model_index, probability)
+    Where reaction_id is a kbase reaction id with the compartment info appended to the end (e.g. rxn01316_c0),
+    model_index is the index of the reaction in the objects['x_model'][modelreactions] list, and the probability
+    is the reaction probability associated with each reaction from the probanno object. Reactions not in ProbAnno
+    are given an arbitrary probability of -1.0
+
+    Example evaluations:
+    rxn_labels['gene-no-match']['rxn01316_c0'][0] evaluates to the index of rxn01316_c0 in morph.objects['trans_model']['modelreactions']
+    rxn_labels['gene-no-match']['rxn01316_c0'][1] evaluates to the reaction probability of rxn01316_c0
+    'rxn01316_c0' in rxn_labels['gene-no-match'] will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)
+
+    Note
+    ----
+    Function Requirements:
+        - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+        - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+        - morph.recon_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.trans_model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+        - morph.ws_id is the ID of a readable/writeable KBase workspace
+
+    Parameters
+    ----------
+    morph: Morph
+        the morph fo which you want to generate reaction labels
+
+    Returns
+    -------
+    Morph
+        a morph in which morph.rxn_labels holds a dictionary with the keys 'gene-match', gene-no-match', 'recon'
+        and 'no-gene'. The value of each key holds a dictionary with 0 or more entries of the form:
+            reaction_id -> (model_index, probability)
+        morph.probhash contains a dictionary of reaction_ids (COMPARTMENT TRUNCATED) mapped to their probabilities
+            e.g. rxn09876 -> 0.04545339
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attricutes shown):
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        trans_model: 3
+        probhash: None
+        rxn_labels: None
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        morph.objects = None
+        morph.info = None
+
+    >>>morph = Client.label_reactions(morph)
+
+    would produce something like:
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        trans_model: 3
+        probhash: ['rxn05653', 'rxn12345', rxn59595', 'rxn45644' ... (more)]
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.info = ['source_model', 'recon_model', 'trans_model', 'probanno']
+
+    These could be examined like so:
+
+    >>>morph.rxn_labels['no-gene'].keys()[1]
+    u'rxn10316_c0'
+
+    >>>morph.rxn_labels['no-gene']['rxn10316_c0'][1]
+    0.444456666959
+
+    >>>'rxn10316_c0' in morph.rxn_labels['no-gene']
+    True
+    """
+    morph = copy.deepcopy(morph)
+    morph = _get_objects(morph)
+    # create local vars for parts of the morph
+    trans_model = morph.objects['trans_model']
+    model = morph.objects['source_model']
+    recon = morph.objects['recon_model']
+    # get reaction sets
+    recon_dict = get_rxnid_dict(recon)
+    trans_dict = get_rxnid_dict(trans_model)
+    model_dict = get_rxnid_dict(model)
+    # create the rxn_labels dictionary
+    rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict(), 'common': dict()}
+    # Build a hash of rxn_ids to probability to save look up time
+    prob_hash = morph.probhash
+    # Some reference sets
+    all_reactions = set(model_dict.keys()).union(recon_dict.keys())  # TODO: runtime will make you cry
+    for rxn in all_reactions:
+        #get gpr
+        if rxn in trans_dict and rxn in recon_dict:
+            rxn_labels['common'][rxn] = recon_dict[rxn]
+        if rxn in model_dict and rxn not in trans_dict:
+            if rxn not in recon_dict:
+                rxn_labels['gene-no-match'][rxn] = model_dict[rxn]
+            else:
+                rxn_labels['gene-match'][rxn] = recon_dict[rxn]
+        if rxn in trans_dict:
+            gpr = Gpr(reaction=trans_dict[rxn])
+            if gpr.gpr_type != 'genes' and rxn not in recon_dict:
+                rxn_labels['no-gene'][rxn] = trans_dict[rxn]
+            else:
+                if rxn in recon_dict:
+                    rxn_labels['gene-match'][rxn] = recon_dict[rxn]
+                else:
+                    rxn_labels['gene-match'][rxn] = trans_dict[rxn]
+        if rxn in recon_dict and rxn not in trans_dict and rxn not in model_dict:
+            rxn_labels['recon'][rxn] = recon_dict[rxn]
+    morph.rxn_labels = rxn_labels
+    return morph
+
+def label_reactions2(morph):
     """
     Labels morph's reactions from translated model, reconstruction, and source
 
@@ -1745,6 +1892,22 @@ def merge_gprs(gpr_set1, gpr_set2):
                 g2.add(protein)
     return frozenset(g2)
 
+def get_rxnid_dict(model_object):
+    '''
+    returns a set of reaction_ids (rxn12345_c0) from a import model object/dictionary
+    '''
+    m = model_object
+    result = dict()
+    for r in m['modelreactions']:
+        result[Helpers.get_rxn_id(r)] = r
+    return result
+
+def get_prob(morph, rxn_id):
+    '''
+    returns the probanno likelihood for a reaction in a morph
+    '''
+    #TODO: Will Users ever have their own probannos? YES
+    return morph.probhash[rxn_id.split('_')[0]]
 
 
 
