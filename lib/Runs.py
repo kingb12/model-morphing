@@ -594,3 +594,27 @@ def morph_comparison(morph, super_model):
     return [a,b,c,d]
     # Probanno comparisons
 
+def test(m):
+    a = list()
+    supm = get_object(m.model, m.ws_id)['data']
+    src = get_object(m.src_model, m.ws_id)['data']
+    b = dict()
+    c = dict()
+    for r in supm['modelreactions']:
+        b[get_rxn_id(r)] = r
+    for r in src['modelreactions']:
+        c[get_rxn_id(r)] = r
+        k = None
+        for key in m.rxn_labels:
+            if get_rxn_id(r) in m.rxn_labels[key]:
+                k = key
+    for r in c:
+        if r not in b:
+            for key in m.rxn_labels:
+                if r in m.rxn_labels[key]:
+                    k = key
+            print key
+            a.append((c[r], key))
+    return a
+
+

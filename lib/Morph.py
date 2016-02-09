@@ -308,6 +308,10 @@ class Gpr():
         self.check_rep()
         return  len(self.ftrs) == 0
 
+    def to_prot_dicT(self):
+        proteins = list()
+        for prot in self.gpr:
+
 
 
     def new_gpr(self, gpr_set):

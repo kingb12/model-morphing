@@ -19,7 +19,7 @@ def make_morph(ws_id=None):
     args['probannows'] = '9145'
     args['protcompws'] = '9145'
     args['mediaws'] = '9145'
-    args['media'] = '18'
+    args['media'] = '24'
     args['ws_id'] = ws_id
     return Morph(args)
 def modelargs(morph):
@@ -248,7 +248,10 @@ def get_rxn_id(modelreaction_obj):
     '''
     returns the reaction id of a model reaction object (i.e. rxn34565_c0)
     '''
-    return modelreaction_obj['reaction_ref'].split('/')[-1] + '_' + modelreaction_obj['modelcompartment_ref'].split('/')[-1]
+    rxn_id = modelreaction_obj['reaction_ref'].split('/')[-1] + '_' + modelreaction_obj['modelcompartment_ref'].split('/')[-1]
+    if rxn_id.startswith('rxn00000'):
+        return modelreaction_obj['id']
+    return rxn_id
 def classify_gprs(gpr_comparison_set):
     gprs = gpr_comparison_set
     for rxn in gprs:
@@ -272,13 +275,13 @@ def same_gpr(rxn1, rxn2):
 
 def gpr_set(reaction):
     '''
-    deprecate - GPR is now a type with its own methods
+    deprecate - gpr is now a type with its own methods
     '''
-    rxn_proteins = reaction['modelReactionProteins']
+    rxn_proteins = reaction['modelreactionproteins']
     prots = set()
     for i in range(0, len(rxn_proteins)):
         prot = set()
-        subunits = rxn_proteins[i]['modelReactionProteinSubunits']
+        subunits = rxn_proteins[i]['modelreactionproteinsubunits']
         for j in range(0, len(subunits)):
             unit = subunits[j]
             ftrs = [f.split('/')[-1] for f in unit['feature_refs']]
@@ -288,12 +291,12 @@ def gpr_set(reaction):
             prots.add(frozenset(prot))
     if len(prots) > 0:
         return frozenset(prots)
-    return None
+    return none
 
 def ftr_set(reaction):
     features = set()
-    for protein in reaction['modelReactionProteins']:
-        for sub in protein['modelReactionProteinSubunits']:
+    for protein in reaction['modelreactionproteins']:
+        for sub in protein['modelreactionproteinsubunits']:
             for f in [i.split('/')[-1] for i in sub['feature_refs']]:
                 features.add(f)
     return features

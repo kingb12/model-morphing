@@ -109,18 +109,13 @@ class ClientTest(unittest.TestCase):
         self.assertFalse(m2 is self.morph, msg='aliasing issues')
         self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
         self.assertEqual(trans_rxns, trans_rxns2, msg='mutated trans reactions in labeling or reconstruction')
-        #Mechanism Checks
-        self.assertTrue(labels['recon'] == recon_set - src_set, msg='incorrect recon mechanism')
+        # Definition Checks
         self.assertTrue(labels['gene-no-match'] == src_set - trans_set - recon_set, msg='incorrect gene-no-match mechanism')
-        self.assertTrue(labels['gene-match'] | labels['no-gene'] == src_set - labels['gene-no-match'],
-                       msg='incorrect genematch/nogene mechanism')
-        self.assertTrue(labels['recon'].isdisjoint(src_set), msg='recon reaction in source')
         items = labels.items()
         for i in range(0, len(items)):
             for j in range(0, len(items)):
                 if i != j:
                     self.assertTrue(items[i][1].isdisjoint(items[j][1]), 'a reaction is in two label sets')
-        # Definition Checks
         self.assertTrue(labels['gene-no-match'].isdisjoint(trans_set), msg='a gnm reaction is in the trans model')
         gene_rxns = set()
         for rxn in src_rxns:
@@ -133,6 +128,7 @@ class ClientTest(unittest.TestCase):
         self.assertTrue(labels['gene-no-match'].isdisjoint(trans_rxns), msg='a gnm reaction is in the trans model')
         self.assertTrue(labels['gene-no-match'].issubset(gene_rxns), msg='there is a rxn in gnm but has no gene in source')
         self.assertTrue(labels['gene-match'].issubset(gene_rxns), msg='there is a rxn in gene match without a gene in source')
+        self.assertTrue(labels['gene-match'].isdisjoint(labels['recon']), msg='there is a rxn in gene match without a gene in source')
         self.assertTrue(labels['gene-match'].issubset(trans_set.union(recon_set)), msg='there is a rxn in gene match not in tanslation')
         # no gene definition
         self.assertTrue(labels['no-gene'].isdisjoint(gene_rxns), msg='a no gene rxn has a gene in source')
@@ -165,6 +161,7 @@ class ClientTest(unittest.TestCase):
         supm_set = set(supm_rxns.keys())
         # Sanity Checks
         self.assertTrue(supm.ws_id == test_space, msg='test architecture')
+        self.assertTrue(supm.rxn_labels == m3.rxn_labels)
         self.assertFalse(trans is self.morph, msg='aliasing issues')
         self.assertFalse(m3 is supm, msg='aliasing issues')
         self.assertTrue(len(trans_rxns) > 0, msg='there are trans rxns')
@@ -179,7 +176,28 @@ class ClientTest(unittest.TestCase):
             self.assertTrue(rxn in supm_rxns, msg='recon rxn not in super (redundant check, prevent keyerror)')
             recon_gpr = _gpr_set(recon_rxns[rxn])
             supm_gpr = _gpr_set(supm_rxns[rxn])
-            self.assertTrue(_ftr_set(supm_rxns[rxn]).issubset(_ftr_set(recon_rxns[rxn])), msg=str(rxn))
+        all_rxns = set()
+        for key in supm.rxn_labels:
+            for r in supm.rxn_labels[key]:
+                all_rxns.add(r)
+        badrxns = list()
+        for rxn in all_rxns:
+            self.assertTrue(rxn in supm_rxns)
+            if rxn in supm.rxn_labels['common']:
+                trans_gpr = Morph.Gpr(supm.rxn_labels['common'][rxn][0])
+                recon_gpr = Morph.Gpr(supm.rxn_labels['common'][rxn][1])
+                merge_gpr = trans_gpr.merge(recon_gpr)
+                supm_gpr = Morph.Gpr(supm_rxns[rxn])
+                for key in supm.rxn_labels:
+                    if rxn in supm.rxn_labels[key] and key != 'common':
+                        break
+                #self.assertTrue(merge_gpr.ftrs == supm_gpr.ftrs, msg=str(rxn) + '\n' + str(merge_gpr) + '\n' + str(supm_gpr) + '\n' + str(trans_gpr)+ '\n' + str(recon_gpr) + str(key))
+                #self.assertTrue(merge_gpr == supm_gpr, msg=str(rxn) + '\n' + str(merge_gpr) + '\n' + str(supm_gpr) + '\n' + str(trans_gpr)+ '\n' + str(recon_gpr) + str(key))
+                if merge_gpr != supm_gpr:
+                    badrxns.append((rxn, key))
+                    print supm_gpr
+                    print merge_gpr
+        self.assertTrue(len(badrxns) == 0, msg=str(badrxns) +  '\n' + str(len(badrxns)))
         # CURRENTLY FAILS BECAUSE OF A FLAW IN OUR ALGORITHM!!!!!!
         #            self.assertTrue(recon_gpr == supm_gpr, msg='\n mismatched gprs: ' + str(rxn) + '\n' +
         #                          Client._get_gpr(recon_rxns[rxn]) + ' \n' + Client._get_gpr(supm_rxns[rxn]))
@@ -188,36 +206,6 @@ class ClientTest(unittest.TestCase):
 
             #ng
             #gm
-
-    def test_merge_gprs(self):
-        #test sets
-        a = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb2'])])]))
-        b = Morph.newgpr(frozenset([frozenset([frozenset(['kb2'])])]))
-        c = Morph.newgpr(frozenset([frozenset([frozenset(['kb1']), frozenset(['kb2'])])]))
-        d = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb3'])])]))
-        e = Morph.newgpr(frozenset([frozenset([frozenset(['kb4'])])]))
-        f = Morph.newgpr(frozenset([frozenset([frozenset(['kb4', 'kb2'])])]))
-        g = Morph.newgpr(frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb4'])])]))
-        print a.gpr
-        return
-
-        #Homolog cases
-        result = Client.merge_gprs(a, b)
-        self.assertEqual(result, a, msg='failure on adding one homolog T->R')
-        result = Client.merge_gprs(b, a)
-        self.assertEqual(result, a, msg='failure on adding one homolog R->T')
-        result = Client.merge_gprs(a, d)
-        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2', 'kb3'])])]), msg="(((1,2)])]) and ((((1,3)])]) fails merge gpr")
-        result = Client.merge_gprs(a, c)
-        self.assertEqual(result, frozenset([frozenset([frozenset(['kb1', 'kb2']), frozenset(['kb2'])]),
-                                            frozenset([frozenset(['kb1','kb2'])])]), msg="(((1,2))) and ((((1,3))) fails merge gpr:" + '\n' + str(result))
-        result = Client.merge_gprs(a, a)
-        self.assertEqual(result, a, msg='failure on identity case')
-        #Subunit Disagreement cases
-
-
-        #Isofunctional cases
-        self.assetEqual(Client.merge_gprs(b,e), f)
 
 
 # Further Tests:

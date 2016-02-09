@@ -2,6 +2,7 @@
 from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
+import Reaction
 import random
 import argparse
 import time
@@ -475,18 +476,17 @@ def label_reactions(morph):
     # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict(), 'common': dict()}
     # Build a hash of rxn_ids to probability to save look up time
-    prob_hash = morph.probhash
     # Some reference sets
     all_reactions = set(model_dict.keys()).union(recon_dict.keys())  # TODO: runtime will make you cry
     for rxn in all_reactions:
         #get gpr
         if rxn in trans_dict and rxn in recon_dict:
-            rxn_labels['common'][rxn] = recon_dict[rxn]
+            rxn_labels['common'][rxn] = (trans_dict[rxn], recon_dict[rxn])
         if rxn in model_dict and rxn not in trans_dict:
             if rxn not in recon_dict:
                 rxn_labels['gene-no-match'][rxn] = model_dict[rxn]
             else:
-                rxn_labels['gene-match'][rxn] = recon_dict[rxn]
+                rxn_labels['recon'][rxn] = recon_dict[rxn]
         if rxn in trans_dict:
             gpr = Gpr(reaction=trans_dict[rxn])
             if gpr.gpr_type != 'genes' and rxn not in recon_dict:
@@ -619,7 +619,7 @@ def label_reactions2(morph):
     for i in range(len(recon['modelreactions'])):
         #anni e.g. rxn_id = rxn01316_c0
         mdlrxn = recon['modelreactions'][i]
-        rxn_id = Helpers.get_rxn_id(mdlrxn)
+        rxn_id = Reaction.get_rxn_id(mdlrxn)
         recon_set.add(rxn_id)
     # create the rxn_labels dictionary
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict(), 'common': dict()}
@@ -631,7 +631,7 @@ def label_reactions2(morph):
     for i in range(len(trans_model['modelreactions'])):
         #anni e.g. rxn_id = rxn01316_c0
         mdlrxn = trans_model['modelreactions'][i]
-        rxn_id = Helpers.get_rxn_id(mdlrxn)
+        rxn_id = Reaction.get_rxn_id(mdlrxn)
         rxn_prot = mdlrxn['modelReactionProteins']
         if (len(rxn_prot) == 1 and len(rxn_prot[0]['modelReactionProteinSubunits']) == 0 and rxn_prot[0]['note'] != 'spontaneous' and rxn_prot[0]['note'] != 'universal'):
             try:
@@ -646,7 +646,7 @@ def label_reactions2(morph):
     # Label gene-no-match as those unique to model compared with translation
     for i in range(len(model['modelreactions'])):
         mdlrxn = model['modelreactions'][i]
-        rxn_id = Helpers.get_rxn_id(mdlrxn)
+        rxn_id = Reaction.get_rxn_id(mdlrxn)
         if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']):
             try:
                 rxn_labels['gene-no-match'][rxn_id] = (i, prob_hash[mdlrxn['reaction_ref'].split('/')[-1]])
@@ -655,7 +655,7 @@ def label_reactions2(morph):
     # label recon as those unique to recon compared with model (model = gene-match + gene-no-match + no-gene)
     for i in range(len(recon['modelreactions'])):
         mdlrxn = recon['modelreactions'][i]
-        rxn_id = Helpers.get_rxn_id(mdlrxn)
+        rxn_id = Reaction.get_rxn_id(mdlrxn)
         # if the recon reaction is already in the model
         if (rxn_id not in rxn_labels['gene-match']) and (rxn_id not in rxn_labels['no-gene']) and (rxn_id not in rxn_labels['gene-no-match']):
             try:
@@ -724,8 +724,104 @@ def build_supermodel(morph):
     recon = morph.objects['recon_model']
     super_rxns = list()
     specials = list()
-    # copy the recon model
-    recon_copy = ws_client.copy_object({'from': {'wsid':morph.ws_id, 'objid':morph.recon_model}, 'to': {'wsid':morph.ws_id, 'name': u'recon_copy'}})[0]
+    # copy the trans model
+    trans_copy = ws_client.copy_object({'from': {'wsid':morph.ws_id, 'objid':morph.trans_model}, 'to': {'wsid':morph.ws_id, 'name': u'trans_copy'}})[0]
+    # Adding reactions into the translation.
+    # First, go through every reaction they have in common and adjust if
+    # necessary:
+    removal_args = {'model': trans_copy, 'workspace': morph.ws_id, 'reaction': [], 'removeReaction': True}
+    adjustment_args = {'model': trans_copy, 'workspace': morph.ws_id, 'reaction': [], 'direction': [], 'gpr': [], 'addReaction': True}
+    for rxn_id in morph.rxn_labels['common']:
+        trans_rxn = morph.rxn_labels['common'][rxn_id][0]
+        recon_rxn = morph.rxn_labels['common'][rxn_id][1]
+        trans_gpr = Gpr(reaction=trans_rxn)
+        recon_gpr = Gpr(reaction=recon_rxn)
+        merge_gpr = trans_gpr.merge(recon_gpr)
+        direction = _general_direction(trans_rxn, recon_rxn)
+        trans_dir = Reaction.get_direction(trans_rxn)
+        if trans_gpr != merge_gpr or trans_dir != direction:
+            super_rxns.append((Reaction.get_rxn_ref(recon_rxn), Reaction.get_comp_ref(recon_rxn), direction, str(merge_gpr)))
+            removal_id = Reaction.get_removal_id(trans_rxn)
+            print removal_id
+            removal_args['reaction'].append(removal_id)
+    # removes the rxns we need to remove in place vs. making a new copy
+    print len(removal_args['reaction'])
+    l1 = len(Helpers.get_object(trans_copy, morph.ws_id)['data']['modelreactions'])
+    fba_client.adjust_model_reaction(removal_args)
+    l2 = len(Helpers.get_object(trans_copy, morph.ws_id)['data']['modelreactions'])
+    assert (l1 - l2) == len(removal_args['reaction']), str(l1 - l2) + ', ' + str(len(removal_args['reaction']))
+    # Next, add all the reactions that aren't already in the translation:
+    # Add the GENE_NO_MATCH reactions:
+    for rxn_id in morph.rxn_labels['gene-no-match']:
+        # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+        reaction = morph.rxn_labels['gene-no-match'][rxn_id]
+        rxn_ref = Reaction.get_rxn_ref(reaction)
+        if (rxn_ref) == 'rxn00000':
+            specials.append(reaction)
+        else:
+            super_rxns.append((rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction)))
+    # Add the RECON reactions:
+    for rxn_id in morph.rxn_labels['recon']:
+        # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
+        reaction = morph.rxn_labels['recon'][rxn_id]
+        rxn_ref = Reaction.get_rxn_ref(reaction)
+        if (rxn_ref) == 'rxn00000':
+            specials.append(reaction)
+        else:
+            super_rxns.append((rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction), str(Gpr(reaction=reaction))))
+    morph.model = fba_client.add_reactions({'model': trans_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
+    l3 = len(Helpers.get_object(morph.model, morph.ws_id)['data']['modelreactions'])
+    assert (l3 - l2) == len(super_rxns), str(l3 - l2) + ', ' + str(len(super_rxns))
+    morph = fix_specials_manually(morph, specials)
+    return morph
+    # TEMPORARY FIX FOR KBASE GPR BUG
+
+def fix_specials_manually(morph, specials):
+    morph = copy.deepcopy(morph)
+    object = Helpers.get_object(morph.model, morph.ws_id)
+    model = object['data']
+    cpds = dict([(c['id'], c) for c in model['modelcompounds']])
+    for r in specials:
+        model['modelreactions'].append(r)
+        for cpd in r['modelReactionReagents']:
+            c = cpd['modelcompound_ref'].split('/')[-1]
+            if c not in cpds:
+                compound = {'id': c, 'name': c, 'aliases': [u'mdlid:' + c.split('_')[0]], 'charge': '0', 'compound_ref': '489/6/6/compounds/id/cpd00000'}
+                compound['modelcompartment_ref'] = '~/modelcompartments/id/' + c.split('_')[-1]
+                model['modelcompounds'].append(compound)
+                #refresh cpds
+                cpds = dict([(c['id'], c) for c in model['modelcompounds']])
+    info = Helpers.save_object(object['data'], object['info'][2], morph.ws_id, name = 'super_modelspc')
+    morph.model = info[0][0]
+    return morph
+
+
+
+
+
+def fix_gprs_manually(morph):
+    morph = morph.deepcopy(morph)
+    gpr_fixes = dict()
+    for rxn in morph.rxn_labels['common']:
+        trans_rxn = morph.rxn_labels['common'][rxn_id][0]
+        recon_rxn = morph.rxn_labels['common'][rxn_id][1]
+        merge_gpr = Gpr(reaction=trans_rxn).merge(Gpr(reaction=trans_rxn))
+        gpr_fixes[rxn] = merge_gpr
+    for rxn in morph.rxn_labels['recon']:
+        gpr_fixes[rxn] = Gpr(reaction=morph.rxn_labels['recon'][rxn])
+    object = get_object(morph.model, morph.ws_id)
+    supm = object['data']
+    for r in supm['modelreactions']:
+        rxn = get_rxn_id(r)
+        if rxn in gpr_fixes:
+            rxn['modelReactionProteins'] = gpr_fixes[rxn].to_prot_dict()
+
+
+
+
+    return morph
+
+def dat_old_bulshit(jpeg):
     # Add the GENE_NO_MATCH reactions:
     for rxn_id in morph.rxn_labels['gene-no-match']:
         # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
@@ -854,7 +950,7 @@ def removal_list(rxn_dict, list_range=None):
     """
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
-        return item[1][1]
+        return get_prob(morph, item[0])
     removal_list = sorted(rxn_dict.items(), key=get_key)
     if list_range is not None:
        return removal_list[list_range[0]:list_range[1]]
@@ -934,14 +1030,15 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
     ws = morph.ws_id
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
-        return item[1][1]
+        return get_prob(morph, item[0])
     # label argument behavior
     if (rxn_list is None):
         rxn_dict = morph.rxn_labels['gene-no-match']
         removal_list = sorted(rxn_dict.items(), key=get_key)
+        debug = True
         if (debug):
             for i in range(len(removal_list) - 1):
-                assert removal_list[i][1][1] <= removal_list[i + 1][1][1]
+                assert get_prob(removal_list[i][0]) <= get_prob(removal_list[i + 1][0])
         rxn_dict = morph.rxn_labels['no-gene']
         removal_list.append(sorted(rxn_dict.items(), key=get_key))
         removal_list = [r for r in removal_list if r[0] not in morph.rxn_labels['common']]
@@ -1131,6 +1228,13 @@ def probanno_optimization(morph, rxn_list=None):
         b = new_probability
     return morph, m, a, b, new_reactions, probhash
 
+def add_high_likelihoods(morph, cutoff=.85):
+    '''
+    adds all reactions in the probanno to a model in the morph with label no-gene
+    '''
+    for r in morph.probhash:
+        if morph.probhash[r] > cutoff:
+            additions.append(r)
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
@@ -1193,7 +1297,7 @@ def get_morph_rxns(morph, label=None):
         model = modelobj['data']
         for i in range(len(model['modelreactions'])):
             mdlrxn = model['modelreactions'][i]
-            rxn_id = Helpers.get_rxn_id(mdlrxn)
+            rxn_id = Reaction.get_rxn_id(mdlrxn)
             rxnlist.append(rxn_id)
     if label is "essential":
         if morph.essential_ids is not None:
@@ -1818,14 +1922,14 @@ def _get_gpr(reaction):
 
 def _general_direction(rxn1_struct, rxn2_struct):
     '''picks the more general of the two directions from reactions passed in'''
-    r1d = rxn1_struct['direction']
-    r2d = rxn2_struct['direction']
+    r1d = Reaction.get_direction(rxn1_struct)
+    r2d = Reaction.get_direction(rxn2_struct)
     if r1d == r2d:
         return r1d
     elif r1d == '=' or r2d == '=':
         return '='
     else:
-        raise Exception('direcctions are incompatible')
+        raise Exception('directions are incompatible')
 
 def __import_fbamodel(reactions_file, compounds_file, genome_id):
     tup_list = list()
@@ -1899,7 +2003,7 @@ def get_rxnid_dict(model_object):
     m = model_object
     result = dict()
     for r in m['modelreactions']:
-        result[Helpers.get_rxn_id(r)] = r
+        result[Reaction.get_rxn_id(r)] = r
     return result
 
 def get_prob(morph, rxn_id):
