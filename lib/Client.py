@@ -742,14 +742,9 @@ def build_supermodel(morph):
         if trans_gpr != merge_gpr or trans_dir != direction:
             super_rxns.append((Reaction.get_rxn_ref(recon_rxn), Reaction.get_comp_ref(recon_rxn), direction, str(merge_gpr)))
             removal_id = Reaction.get_removal_id(trans_rxn)
-            print removal_id
             removal_args['reaction'].append(removal_id)
     # removes the rxns we need to remove in place vs. making a new copy
-    print len(removal_args['reaction'])
-    l1 = len(Helpers.get_object(trans_copy, morph.ws_id)['data']['modelreactions'])
     fba_client.adjust_model_reaction(removal_args)
-    l2 = len(Helpers.get_object(trans_copy, morph.ws_id)['data']['modelreactions'])
-    assert (l1 - l2) == len(removal_args['reaction']), str(l1 - l2) + ', ' + str(len(removal_args['reaction']))
     # Next, add all the reactions that aren't already in the translation:
     # Add the GENE_NO_MATCH reactions:
     for rxn_id in morph.rxn_labels['gene-no-match']:
@@ -770,13 +765,17 @@ def build_supermodel(morph):
         else:
             super_rxns.append((rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction), str(Gpr(reaction=reaction))))
     morph.model = fba_client.add_reactions({'model': trans_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
-    l3 = len(Helpers.get_object(morph.model, morph.ws_id)['data']['modelreactions'])
-    assert (l3 - l2) == len(super_rxns), str(l3 - l2) + ', ' + str(len(super_rxns))
+    print len(super_rxns)
+    print len(morph.rxn_labels['recon'])
+    print len(morph.rxn_labels['gene-no-match'])
     morph = fix_specials_manually(morph, specials)
     return morph
     # TEMPORARY FIX FOR KBASE GPR BUG
 
 def fix_specials_manually(morph, specials):
+    '''
+    Manually fix special reactions within the the object itself
+    '''
     morph = copy.deepcopy(morph)
     object = Helpers.get_object(morph.model, morph.ws_id)
     model = object['data']

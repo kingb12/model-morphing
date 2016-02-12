@@ -532,7 +532,7 @@ def reconcile_models(good_model, working_model, ws_id):
     good = get_object(good_model, ws_id)
     working = get_object(working_model, ws_id)
     good_rxns = dict()
-    woring_rxns = dict()
+    working_rxns = dict()
     common = set()
     good_only = set()
     working_only = set()
