@@ -2,6 +2,7 @@
 from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
+import Model
 import Reaction
 import random
 import argparse
@@ -720,9 +721,10 @@ def build_supermodel(morph):
     """
     morph = copy.deepcopy(morph)
     model = morph.objects['source_model']
+    src_rxns = dict([(Reaction.get_rxn_id(r), r) for r in Model.get_reactions(model)])
     trans = morph.objects['trans_model']
     recon = morph.objects['recon_model']
-    super_rxns = list()
+    super_rxns = dict()
     specials = list()
     # copy the trans model
     trans_copy = ws_client.copy_object({'from': {'wsid':morph.ws_id, 'objid':morph.trans_model}, 'to': {'wsid':morph.ws_id, 'name': u'trans_copy'}})[0]
@@ -740,7 +742,7 @@ def build_supermodel(morph):
         direction = _general_direction(trans_rxn, recon_rxn)
         trans_dir = Reaction.get_direction(trans_rxn)
         if trans_gpr != merge_gpr or trans_dir != direction:
-            super_rxns.append((Reaction.get_rxn_ref(recon_rxn), Reaction.get_comp_ref(recon_rxn), direction, str(merge_gpr)))
+            super_rxns[rxn_id] = (Reaction.get_rxn_ref(recon_rxn), Reaction.get_comp_ref(recon_rxn), direction, str(merge_gpr))
             removal_id = Reaction.get_removal_id(trans_rxn)
             removal_args['reaction'].append(removal_id)
     # removes the rxns we need to remove in place vs. making a new copy
@@ -754,16 +756,22 @@ def build_supermodel(morph):
         if (rxn_ref) == 'rxn00000':
             specials.append(reaction)
         else:
-            super_rxns.append((rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction)))
+            super_rxns[rxn_id] = (rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction))
     # Add the RECON reactions:
     for rxn_id in morph.rxn_labels['recon']:
         # morph.rxn_labels['gene-no-match'][0] gives the index of the reaction in the model['modelreactions'] list to make this look up O(1) instead of O(n)
         reaction = morph.rxn_labels['recon'][rxn_id]
         rxn_ref = Reaction.get_rxn_ref(reaction)
+        if rxn_id in src_rxns:
+            direction = _general_direction(reaction, src_rxns[rxn_id])
+        else:
+            direction = Reaction.get_direction(reaction)
         if (rxn_ref) == 'rxn00000':
             specials.append(reaction)
         else:
-            super_rxns.append((rxn_ref, Reaction.get_comp_ref(reaction), Reaction.get_direction(reaction), str(Gpr(reaction=reaction))))
+            if rxn_id not in super_rxns:
+                super_rxns[rxn_id] = (rxn_ref, Reaction.get_comp_ref(reaction), direction, str(Gpr(reaction=reaction)))
+    super_rxns = super_rxns.values()
     morph.model = fba_client.add_reactions({'model': trans_copy, 'model_workspace': morph.ws_id, 'output_id': 'super_model', 'workspace': morph.ws_id, 'reactions': super_rxns})[0]
     print len(super_rxns)
     print len(morph.rxn_labels['recon'])
