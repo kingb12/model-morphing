@@ -917,7 +917,7 @@ def dat_old_bulshit(jpeg):
     morph.model = info[0][0]
     return morph
 
-def removal_list(rxn_dict, list_range=None):
+def removal_list(morph, rxn_dict, list_range=None):
     """
     Generates a removal list from the rxn_dict (e.g. morph.rxn_labels['no-gene'])
 
@@ -1045,10 +1045,12 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         debug = True
         if (debug):
             for i in range(len(removal_list) - 1):
-                assert get_prob(removal_list[i][0]) <= get_prob(removal_list[i + 1][0])
+                assert get_prob(morph, removal_list[i][0]) <= get_prob(morph, removal_list[i + 1][0])
         rxn_dict = morph.rxn_labels['no-gene']
-        removal_list.append(sorted(rxn_dict.items(), key=get_key))
+        removal_list += sorted(rxn_dict.items(), key=get_key)
+        print "pre-filter: " + str(len(removal_list))
         removal_list = [r for r in removal_list if r[0] not in morph.rxn_labels['common']]
+        print "post-filter: " + str(len(removal_list))
     else:
         removal_list = rxn_list
     # instantiate lists only if needed
@@ -1060,7 +1062,8 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
     if name == '':
         name = 'MM'
     for i in range(len(removal_list)):
-        reaction_id = removal_list[i][0]
+        reaction_id = Reaction.get_removal_id(removal_list[i][1])
+        rxn = removal_list[i][0]
         try:
             if reaction_id.startswith('rxn00000'):
                 print '\n + SKIPPING: ' + str(reaction_id)
@@ -1068,7 +1071,7 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         except:
             print str(reaction_id) + "FAILED REMOVAL"
             continue
-        print 'Reaction to remove: ' + str(removal_list[i])
+        print 'Reaction to remove: ' + str(reaction_id) + " / " + str(rxn)
         #TODO Find someway to fix the behaivior bug if model_id is not in ws, etc.
         new_model_id = fba_client.remove_reactions({'model': morph.model, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]
         if iterative_models:
@@ -1239,9 +1242,22 @@ def add_high_likelihoods(morph, cutoff=.85):
     '''
     adds all reactions in the probanno to a model in the morph with label no-gene
     '''
+    morph = copy.deepcopy(morph)
+    additions = list()
+    biochem = Helpers.get_object(6, 489)['data']
+    kb_rxns = set([r['id'] for r in biochem['reactions']])
+    reactions = set([Reaction.get_rxn_id(r) for r in Model.get_reactions(Helpers.get_object(morph.model, morph.ws_id)['data'])])
     for r in morph.probhash:
-        if morph.probhash[r] > cutoff:
+        r1 = r + '_c0'
+        r2 = r + '_e0'
+        if morph.probhash[r] > cutoff and r in kb_rxns and (r1 not in reactions and r2 not in reactions):
             additions.append(r)
+    additions = [(a,) for a in additions]
+    labels = ['no-gene' for a in additions]
+    add_reactions(morph, additions ,labels=labels)
+    print len(additions)
+    return morph
+
 
 # Finishing/Cleanup  Steps
 def _finish(morph, save_ws=False):
@@ -2018,15 +2034,122 @@ def get_prob(morph, rxn_id):
     returns the probanno likelihood for a reaction in a morph
     '''
     #TODO: Will Users ever have their own probannos? YES
-    return morph.probhash[rxn_id.split('_')[0]]
+    try:
+        result = morph.probhash[rxn_id.split('_')[0]]
+    except KeyError:
+        result = -1.0
+    return result
+
+def add_reactions(morph, reactions, labels=None):
+    '''
+    adds reactions to morph.model, if a label is given, adds it to rxn_labels at given location
+
+    both arguments are lists, and must be of equal length or rxn_labels is None
+    the reactions list must be a list of tuples of the form in the fbaModelReactions add_reactions
+    method of the KBase API:
+		list<tuple<string reaction_id,string compartment,string direction,string gpr,string pathway,string name,string reference,string enzyme,string equation>> reactions;
+
+    '''
+    morph = copy.deepcopy(morph)
+    if morph.model is None:
+        raise ModelNotFoundException("morph.model is None")
+    if labels is not None and len(labels) != len(reactions):
+        raise ValueError("labels and reactions should be of same length")
+    name = Helpers.get_info(morph.model, morph.ws_id)[1]
+    morph.model = fba_client.add_reactions({'model': morph.model, 'model_workspace': morph.ws_id, 'workspace': morph.ws_id, 'reactions': reactions})[0]
+    if labels is not None:
+        for i in range(0, len(labels)):
+            if reactions[i] not in morph.rxn_labels[labels[i]]:
+                morph.rxn_labels[reactions[i] + '_c0'] = labels[0]
+    return morph
+
+def translate_media(morph, new_media, new_mediaws):
+    '''
+    transfers a growing model to a new media and ensures growth in this media, gpafilling if necessary
+    '''
+    morph = copy.deepcopy(morph)
+    morph.media = new_media
+    morph.mediaws = new_mediaws
+    if not Helpers.runfba(morph)[-1]['Objective'] > 0:
+        m = morph
+        ws_id = m.ws_id
+        fba_formulation = {'media': m.media, 'media_workspace': m.mediaws}
+        if m.removed_ids is not None:
+            blacklisted_rxns = [i.split('_')[0] for i in m.removed_ids]
+        else:
+            blacklisted_rxns = []
+        gap_formulation = {'probabilisticAnnotation' : m.probanno, 'probabilisticAnnotation_workspace' : m.probannows, u'formulation': fba_formulation, u'blacklisted_rxns':blacklisted_rxns}
+        params = {'model': morph.model, 'model_workspace': ws_id, 'workspace' : ws_id, 'formulation' : gap_formulation, 'integrate_solution' : True, 'gapFill' : 'gf', 'completeGapfill': False, 'out_model': 'gapfill'}
+        model_info = fba_client.gapfill_model(params)
+        filled_model = model_info[0]
+        print model_info[1]
+        object = ws_client.get_objects([{'name': model_info[1] + '.gffba', 'wsid': params['workspace']}])[0]
+        gapfill = object['data']['gapfillingSolutions'][0]
+        rxn_dicts = gapfill['gapfillingSolutionReactions']
+        gap_reactions = [a['reaction_ref'].split('/')[-1] + '_' + a['compartment_ref'].split('/')[-1] + str(0) for a in rxn_dicts]
+        modelreactions = set()
+        for key in m.rxn_labels:
+            modelreactions |= set(m.rxn_labels[key].keys())
+        new_reactions = [r for r in gap_reactions if r not in modelreactions]
+        src_rxns = dict([(Reaction.get_rxn_id(r), r) for r in Model.get_reactions(Helpers.get_object(filled_model, model_info[6])['data'])])
+        for r in src_rxns:
+            inModel = False
+            for key in morph.rxn_labels:
+                if r in morph.rxn_labels[key]:
+                    inModel = True
+            if r in new_reactions:
+                inModel = True
+            assert inModel, r
+        for r in new_reactions:
+            morph.rxn_labels['no-gene'][r] = src_rxns[r]
+        morph.model = filled_model
+    return morph
 
 
+def add_media_transporters(morph):
+    '''
+    takes the model in morph and adds all transporters for the compounds in a media to the model
+    '''
+    morph = copy.deepcopy(morph)
+    pheno = _make_pheno(morph, morph.media, morph.mediaws)
+    args = {}
+    args['phenotypeSet'] = pheno[0]
+    args['phenotypeSet_workspace'] = pheno[1]
+    args['model'] = morph.model
+    args['model_workspace'] = morph.ws_id
+    args['outmodel'] = 'transporters_added'
+    args['all_transporters'] = True
+    args['workspace'] = morph.ws_id
+    info = fba_client.add_media_transporters(args)
+    morph.model = info[0]
+    return morph
 
+def _make_pheno(morph, media, mediaws):
+    info = Helpers.get_info(media, mediaws)
+    genome_obj = Helpers.get_object(morph.genome, morph.genomews)
+    genome = genome_obj['data']['id']
+    phenotypeSet = Helpers.load('blankpheno.pkl')
+    media_ref = str(info[6]) + '/' + str(info[0]) + '/' + str(info[4])
+    pheno = {u'additionalcompound_refs': [],
+             u'geneko_refs': [],
+             u'id': genome + 'phe.3.pheno.1',
+             u'media_ref': media_ref,
+             u'name': genome + 'phe.3.pheno.1',
+             u'normalizedGrowth': 1}
+    phenotypeSet['data']['phenotypes'] = [pheno]
+    phenotypeSet['data']['id'] = genome + 'phe.3'
+    phenotypeSet['data']['name'] = genome + 'essentiality data'
+    info = genome_obj['info']
+    genome_ref = str(info[6]) + '/' + str(info[0]) + '/' + str(info[4])
+    phenotypeSet['data']['genome_ref'] = genome_ref
+    info = Helpers.save_object(phenotypeSet['data'], phenotypeSet['info'][2], morph.ws_id, name='mediapheno')[0]
+    return (info[0], info[6])
 
-
-
-
-
+class ModelNotFoundException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class MediaFormatError(Exception):
     def __init__(self, value):

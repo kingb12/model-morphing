@@ -133,7 +133,7 @@ def get_object(objid, wsid, name=None):
         return Client.ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
     else:
         return Client.ws_client.get_objects([{'name':name, 'wsid':wsid}])[0]
-def get_info(objid, wsed, name=None):
+def get_info(objid, wsid, name=None):
     if (name is None):
         return Client.ws_client.get_object_info_new({'objects': [{'objid':objid, 'wsid':wsid}]})[0]
     else:

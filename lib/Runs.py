@@ -1,4 +1,5 @@
 import Helpers
+import Reaction
 from Helpers import *
 import Client
 from biokbase.fbaModelServices.Client import ServerError
@@ -617,4 +618,31 @@ def test(m):
             a.append((c[r], key))
     return a
 
+
+def mari_to_janna_morph(ws_id, newmedia=None, newmediaws=None):
+    m = mari_to_janna(ws_id=ws_id)
+    m = Client.prepare_supermodel(m, fill_src=False)
+    if newmedia is not None:
+        m2 = Client.translate_media(m, newmedia, newmediaws)
+    else:
+        m2 = copy.deepcopy(m)
+    m3 = Client.process_reactions(m2)
+    dump(m3, '../data/mari_to_janna_morph.pkl')
+
+def gene_analysis(model, ws_id):
+    model = Helpers.get_object(model, ws_id)['data']
+    gprs = dict()
+    genes = set()
+    spontaneous = 0
+    reactions_with_genes = 0
+    for r in model['modelreactions']:
+        gpr = Gpr(reaction=r)
+        if gpr.gpr_type is 'genes':
+            reactions_with_genes += 1
+            genes |= gpr.ftrs
+        if gpr.gpr_type == 'spontaneous' or gpr.gpr_type == 'universal':
+            spontaneous += 1
+        gprs[Reaction.get_rxn_id(r)] = gpr
+    result = {'genes': len(genes), 'reactions_with_genes': reactions_with_genes, 'gprs': gprs, 'spontaneous': spontaneous}
+    return result
 
