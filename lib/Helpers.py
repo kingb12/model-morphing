@@ -8,20 +8,6 @@ import Client
 from firebase import firebase
 import os
 
-def make_morph(ws_id=None):
-    args = dict()
-    args['genome'] = '3'
-    args['src_model'] = '5'
-    args['probanno'] = '15'
-    args['protcomp'] = '6'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
-    args['ws_id'] = ws_id
-    return Morph(args)
 def modelargs(morph):
     args = dict()
     args['model'] = morph.model
@@ -211,7 +197,7 @@ def process_iterated(morph):
 def runfba(morph):
     fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
     fba_params = {'workspace': morph.ws_id, 'model' : morph.model, 'model_workspace':morph.ws_id,
-                  'formulation': fba_formulation}
+                  'formulation': fba_formulation, 'fva': True}
     fbaMeta = Client.fba_client.runfba(fba_params)
     return fbaMeta
 
@@ -394,15 +380,84 @@ def get_equation(rxn_object):
         eq = eq[:-2]
     return eq
 
+def print_dict(dic, f=None, g=None):
+    for key in dic:
+        if f is None:
+            if g is None:
+                print str(key) + ': ' + str(dic[key])
+            else:
+                if g(dic[key]):
+                    print str(key) + ': ' + str(dic[key])
+        else:
+            if g is not None:
+                if g(dic[key]):
+                    print str(key) + ': ' + str(f(dic[key]))
+            else:
+                print str(key) + ': ' + str(f(dic[key]))
 
 
-
+def ace_to_bark(ws_id=None):
+    args = dict()
+    args['genome'] = '3'
+    args['src_model'] = '5'
+    args['probanno'] = '15'
+    args['protcomp'] = '6'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '24'
+    args['ws_id'] = ws_id
+    return Morph(args)
 def mari_to_janna(ws_id=None):
     args = dict()
     args['genome'] = '36'
     args['src_model'] = '37'
     args['probanno'] = '31'
     args['protcomp'] = '27'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '24'
+    args['ws_id'] = ws_id
+    return Morph(args)
+def mari_to_bark(ws_id=None):
+    args = dict()
+    args['genome'] = '3'
+    args['src_model'] = '37'
+    args['probanno'] = '15'
+    args['protcomp'] = '51'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '24'
+    args['ws_id'] = ws_id
+    return Morph(args)
+def mari_to_stadt(ws_id=None):
+    args = dict()
+    args['genome'] = '35'
+    args['src_model'] = '37'
+    args['probanno'] = '33'
+    args['protcomp'] = '28'
+    args['genomews'] = '9145'
+    args['src_modelws'] = '9145'
+    args['probannows'] = '9145'
+    args['protcompws'] = '9145'
+    args['mediaws'] = '9145'
+    args['media'] = '24'
+    args['ws_id'] = ws_id
+    return Morph(args)
+def mari_to_mari(ws_id=None):
+    args = dict()
+    args['genome'] = '26'
+    args['src_model'] = '37'
+    args['probanno'] = '30'
+    args['protcomp'] = '50'
     args['genomews'] = '9145'
     args['src_modelws'] = '9145'
     args['probannows'] = '9145'

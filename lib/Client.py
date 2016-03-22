@@ -3,6 +3,7 @@ from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
 import Model
+import GrowthConditions
 import Reaction
 import random
 import argparse
@@ -963,7 +964,7 @@ def removal_list(morph, rxn_dict, list_range=None):
        return removal_list[list_range[0]:list_range[1]]
     return removal_list
 
-def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False, iterative_models=True):
+def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=False, iterative_models=True, growth_condition = GrowthConditions.SimpleCondition()):
     """
     Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
 
@@ -1038,6 +1039,7 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
     # Sort by probanno. items() returns (K, V=(model_index, prob))
     def get_key(item):
         return get_prob(morph, item[0])
+
     # label argument behavior
     if (rxn_list is None):
         rxn_dict = morph.rxn_labels['gene-no-match']
@@ -1076,12 +1078,7 @@ def process_reactions(morph, rxn_list=None, name='', process_count=0, get_count=
         new_model_id = fba_client.remove_reactions({'model': morph.model, 'model_workspace':ws, 'output_id': name + '-' + str(process_count), 'workspace':morph.ws_id, 'reactions':[reaction_id]})[0]
         if iterative_models:
             process_count += 1
-        fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
-        fba_params = {'fba': str(name + '-FBA-' + str(process_count)), 'workspace': ws, 'model' : new_model_id, 'model_workspace':ws, 'formulation': fba_formulation}
-        fbaMeta = fba_client.runfba(fba_params)
-        flux = fbaMeta[-1]['Objective']
-        print 'FBA Flux: ' + str(flux)
-        if (flux > 0.0):
+        if(growth_condition.evaluate({'morph': morph, 'model': new_model_id, 'fba_name': name + '-FBA-' + str(process_count)})):
             # removed successfully
             print 'Removed ' + str(reaction_id)
             morph.model = new_model_id

@@ -5,9 +5,6 @@ from biokbase.fbaModelServices.Client import fbaModelServices
 import random
 import copy
 import json
-import argparse
-import time
-import traceback
 from operator import itemgetter
 
 def _init_clients():
@@ -360,6 +357,27 @@ class Gpr():
                 single_set.add(item)
         return single_set
 
+class AbstractGrowthCondition():
+    '''
+    an interface for processing reactions according to some condition
+
+    Subclases must implement evaluate(args) and return true or false. The primary use
+    for this class is in the process_reactions method of the Client module, which removes
+    reactions iteratiely, and decides to keep or remove a reaction based on the outcome of
+    a GrowthCondition.  Here is an example:
+        class SimpleCondition(AbstractGrowthCondition):
+            def evaluate(args):
+                # args must have attribute model
+                fba = runfba(args['model'])
+                return fba['Objective'] > 0
+    This SimpleCondition keeps all reactions that are absolutely necessary for the models growth
+    '''
+    def evaluate(self, args):
+        raise NotImplementedError()
+
+
+
+
 
 
 class RepresentationError(Exception):
@@ -370,3 +388,4 @@ class RepresentationError(Exception):
 
 
 
+ws_client, fba_client = _init_clients()

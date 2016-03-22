@@ -1,5 +1,8 @@
 import Helpers
 import Reaction
+import Model
+import GrowthConditions
+import itertools
 from Helpers import *
 import Client
 from biokbase.fbaModelServices.Client import ServerError
@@ -629,6 +632,44 @@ def mari_to_janna_morph(ws_id, newmedia=None, newmediaws=None):
     m3 = Client.process_reactions(m2)
     dump(m3, '../data/mari_to_janna_morph.pkl')
 
+def mari_to_bark_morph(ws_id, newmedia=None, newmediaws=None, filename='../data/mari_to_bark_morph.pkl'):
+    m = mari_to_bark(ws_id=ws_id)
+    m = Client.prepare_supermodel(m, fill_src=False)
+    if newmedia is not None:
+        m2 = Client.translate_media(m, newmedia, newmediaws)
+    else:
+        m2 = copy.deepcopy(m)
+    m3 = Client.process_reactions(m2)
+    dump(m3, filename)
+
+def mari_to_bark3_morph(ws_id, newmedia=None, newmediaws=None, filename='../data/mari_to_bark_morph.pkl'):
+    m = mari_to_bark(ws_id=ws_id)
+    m = Client.prepare_supermodel(m, fill_src=False)
+    media = [(24, 9145), (7, 12091), (8, 12091)]
+    for med in media:
+        m = Client.translate_media(m, med[0], med[1])
+    else:
+        m = copy.deepcopy(m)
+    m3 = Client.process_reactions(m, growth_condition= GrowthConditions.AllMedia(media))
+    dump(m3, filename)
+
+def mari_to_stadt_morph(ws_id, newmedia=None, newmediaws=None):
+    m = mari_to_stadt(ws_id=ws_id)
+    m = Client.prepare_supermodel(m, fill_src=False)
+    if newmedia is not None:
+        m2 = Client.translate_media(m, newmedia, newmediaws)
+    else:
+        m2 = copy.deepcopy(m)
+    m3 = Client.process_reactions(m2)
+    dump(m3, '../data/mari_to_stadt_morph.pkl')
+
+def mari_to_mari_morph(ws_id):
+    m = mari_to_mari(ws_id=ws_id)
+    m = Client.prepare_supermodel(m, fill_src=False)
+    m2 = copy.deepcopy(m)
+    m3 = Client.process_reactions(m2)
+    dump(m3, '../data/mari_to_mari_morph.pkl')
+
 def gene_analysis(model, ws_id):
     model = Helpers.get_object(model, ws_id)['data']
     gprs = dict()
@@ -645,4 +686,104 @@ def gene_analysis(model, ws_id):
         gprs[Reaction.get_rxn_id(r)] = gpr
     result = {'genes': len(genes), 'reactions_with_genes': reactions_with_genes, 'gprs': gprs, 'spontaneous': spontaneous}
     return result
+
+
+def reaction_analysis(model_identities):
+    models = list()
+    for m in model_identities:
+        model = Helpers.get_object(m[0], m[1])
+        models.append((model['info'][1], frozenset([Helpers.get_rxn_id(r) for r in Model.get_reactions(model['data'])])))
+    all_models = set(models)
+    rxn_sets = dict()
+    for model_set in powerset(models):
+        if len(model_set) > 0:
+            rxn_set = model_set[0][1]
+            keys = set(model_set)
+            skips = all_models - keys
+            key = ""
+            for m in model_set:
+                key += m[0] + " + "
+            key = key[0:-3]
+            for m in model_set:
+                rxn_set = rxn_set.intersection(m[1])
+            print [m[0] for m in skips]
+            for m in skips:
+                rxn_set = rxn_set - m[1]
+
+
+            rxn_sets[key] = rxn_set
+    return rxn_sets
+
+def gene_percents(model, rxn_analysis):
+    result = dict()
+    gprs = dict()
+    for r in model['modelreactions']:
+        gprs[Reaction.get_rxn_id(r)] = Gpr(r)
+    for group in rxn_analysis:
+        i = 0
+        for r in rxn_analysis[group]:
+            try:
+                if gprs[r].gpr_type == 'no-gene':
+                    i += 1
+            except KeyError:
+                i += 1
+        if len(rxn_analysis[group]) > 0:
+            percentage = float(len(rxn_analysis[group]) - i) / float(len(rxn_analysis[group])) * 100.0
+        else:
+            percentage = 0.0
+        result[group] = percentage
+    return result
+def powerset(lst):
+    result = [[]]
+    for x in lst:
+        result.extend([subset + [x] for subset in result])
+    return result
+
+def reaction_sources(morph):
+    result = dict()
+    for key in morph.rxn_labels:
+        result[key] = []
+    model = Helpers.get_object(morph.model, morph.ws_id)['data']
+    reactions = set([get_rxn_id(r) for r in model['modelreactions']])
+    for r in reactions:
+        for key in morph.rxn_labels:
+            if r in morph.rxn_labels[key]:
+                result[key].append(r)
+    return result
+
+def reaction_analysis_info(rxn_analysis):
+    result = dict()
+    for key in rxn_analysis:
+        rxn_list = list()
+        for r in rxn_analysis[key]:
+            rxn_list.append(r.split('_')[0])
+        result[key] = Client.fba_client.get_reactions({'reactions' : rxn_list})
+    return result
+
+def feature_sources(morph):
+    result = dict()
+    translation = set()
+    reconstruction = set()
+    for r in Model.get_reactions(morph.objects['trans_model']):
+        gpr = Gpr(reaction=r)
+        translation |= gpr.ftrs
+    for r in Model.get_reactions(morph.objects['recon_model']):
+        gpr = Gpr(reaction=r)
+        reconstruction |= gpr.ftrs
+    result['both'] = translation.intersection(reconstruction)
+    result['recon_only'] = reconstruction - translation
+    result['trans_only'] = translation - reconstruction
+    return result
+
+def gene_reactions(models, rxn_list):
+    for m in models:
+        model = get_object(m[0], m[1])
+        reactions = dict()
+        for r in Model.get_reactions(model['data']):
+            reactions[Reaction.get_rxn_id(r)] = r
+        for r in rxn_list:
+            gpr = Gpr(reactions[r])
+            if gpr.gpr_type == 'no-gene':
+                rxn_list.remove(r)
+            print gpr.gpr_type
 
