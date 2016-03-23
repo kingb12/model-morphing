@@ -11,14 +11,14 @@ from operator import itemgetter
 
 
 class SimpleCondition(AbstractGrowthCondition):
-    '''
+    """
     a growth conditon for absolute growth (objective > 0)
 
     Required attributes of args:
         - morph
         - model
         - fba_name
-    '''
+    """
     def evaluate(self, args):
         morph = args['morph']
         ws = morph.ws_id
@@ -28,10 +28,12 @@ class SimpleCondition(AbstractGrowthCondition):
         flux = fbaMeta[-1]['Objective']
         print "Flux is " + str(flux)
         return flux > 0.0
+
+
 class BarkeriCondition(AbstractGrowthCondition):
-    '''
+    """
     a growth condition for barkeri (3 media)
-    '''
+    """
     def evaluate(self, args):
         morph = args['morph']
         ws = morph.ws_id
@@ -41,9 +43,14 @@ class BarkeriCondition(AbstractGrowthCondition):
         flux = fbaMeta[-1]['Objective']
         print "Flux is " + str(flux)
         raise NotImplementedError()
+
+
 class AllMedia(AbstractGrowthCondition):
+
     def __init__(self, media):
         self.media = media
+        #TODO: Non-pragmatic, AbstractGrowthCondition has no __init__ but if one is added it is not called here
+
     def evaluate(self, args):
         morph = args['morph']
         ws = morph.ws_id

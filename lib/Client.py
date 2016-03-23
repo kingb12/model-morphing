@@ -1569,7 +1569,7 @@ def remove_reaction(morph, rxn):
     Returns
     -------
     Morph
-        a morph such that morph,model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reaction rxn)
+        a morph such that morph.model, morph.ws_id forms an ObjectIdentity for a KBase model object (the previous morph.model minus reaction rxn)
 
     Examples
     --------

@@ -357,6 +357,7 @@ class Gpr():
                 single_set.add(item)
         return single_set
 
+
 class AbstractGrowthCondition():
     '''
     an interface for processing reactions according to some condition

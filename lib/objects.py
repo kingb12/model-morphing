@@ -31,12 +31,21 @@ class StoredObject:
         # TODO: Implement clone or copy
 
 
+class Biochemistry(StoredObject):
+    """
+    a class representing a Biochemistry Object
+    """
+    pass
+
+
 class FBAModel(StoredObject):
     """
     A class representing an FBA Model in the stored environment
 
     Parent Classes: StoredObject -> FBAModel
     """
+
+    DEFAULT_BIOCHEM = Biochemistry(6, 489)
 
     def get_reactions(self):
         """
@@ -58,10 +67,110 @@ class ModelReaction:
         :return:
         """
         self.gpr = Gpr(reaction_obj)
-    #TODO add features from Reactions Module
+        self.data = reaction_obj
+
+    # TODO add features from Reactions Module
+
+    def rxn_id(self):
+        """
+        returns the reaction id of a model reaction object (i.e. rxn34565_c0)
+        """
+        rxn_id = str(self.data['reaction_ref'].split('/')[-1]) + '_' + self.data['modelcompartment_ref'].split('/')[-1]
+        if rxn_id.startswith('rxn00000'):
+            return self.data['id']
+        return rxn_id
+
+    def get_equation(self):
+        """
+
+        :return: equation of the reaction
+        """
+        return [Compound(cpd) for cpd in self.data['modelReactionReagents']]
+
+    def get_rxn_ref(self):
+        """
+        gets the reaction object reference if it is associated with a KBase Biochemistry. 'rxn00000' if not in a biochem
+        """
+        return self.data['reaction_ref'].split('/')[-1]
+
+    def get_removal_id(self):
+        """
+        returns the ID which can be used by the service to remove the reaction from a model
+        :return: the ID which can be used to address and remove the reaction in the model by the service
+        """
+        return self.data['id']
+
+    def get_biochem_ref(self):
+        """
+        returns a tuple with the reference to a
+        """
+        ref = self.data['reaction_ref'].split('/')
+        return Biochemistry(ref[1], ref[0])
+
+
+class Compound(object):
+    """
+    small wrapper class for compound coefficient and ID.
+    """
+
+    def __init__(self, compound_obj, biochem=FBAModel.DEFAULT_BIOCHEM):
+        """
+        initializes a Compound Object
+
+        :param compound_obj:
+        :param biochem: (optional, default is KBase Default Biochem) the biochemistry in which a compound can be
+            referenced. If it is not found in the biochemistry
+        :return:
+        """
+        self.coeff = compound_obj['coefficient']
+        self.compound_id = compound_obj['modelcompound_ref'].split('/')[-1]
+        self.biochem = biochem
+
+    def get_info(self):
+        """
+        returns the information about this compound frmo its referenced biochemistry
+
+        :return: (type=dict) the information on the biochemistry for this compound, with the following keys:
+            [u'cues',
+            u'name',
+            u'pkas',
+            u'deltaGErr',
+            u'pkbs',
+            u'abbreviation',
+            u'mass',
+            u'isCofactor',
+            u'deltaG',
+            u'formula',
+            u'id',
+            u'defaultCharge',
+            u'unchargedFormula']
+        """
+        biochem = self.biochem.get_object()
+        for cpd in biochem['compounds']:
+            if cpd['id'] == self.compound_id:
+                return cpd
+        raise BiochemistryError("Information not found in provided biochemistry")
+
+    def __str__(self):
+        """
+        returns a str readable format of compound, e.g: -3*(cpd01111)
+        :return:
+        """
+        return str(self.coeff) + '*(' + str(self.compound_id) + ')'
+
+    def formula(self):
+        """
+        returns the formula for the compound
+
+        :return: the formula for the compound
+        """
+        return self.get_info()['formula']
 
 
 class Gpr:
+    """
+    a class representing the Gene -> Protein -> Reaction relationship for a ModelReaction in a model
+    """
     def __init__(self, reaction=None):
         """
         creates a GPR object that represent the gene-protein-reaction relationship for a ModelReaction
@@ -343,6 +452,48 @@ class Gpr:
             else:
                 single_set.add(item)
         return single_set
+
+
+class Genome(StoredObject):
+    """
+    a class representing a genome in the stored environment
+    """
+    pass
+
+
+class Media(StoredObject):
+    """
+    a class representing a media in the stored environment
+    """
+    pass
+
+
+class FBA(StoredObject):
+    """
+    a class representing an FBA result in the stored environment
+    """
+    pass
+
+
+class ProteomeComparison(StoredObject):
+    """
+    a class representing a Porteome Comparison in the stored environment
+    """
+    pass
+
+
+class ReactionProbabilities(StoredObject):
+    """
+    a class representing a ReactionProbabilities in the stored environment
+    """
+    pass
+
+
+class BiochemistryError(Exception):
+    """
+    an error for when a look-up in a Biochemistry Object fails
+    """
+    pass
 
 
 class RepresentationError(Exception):
