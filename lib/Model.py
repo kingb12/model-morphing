@@ -60,6 +60,10 @@ def find_disagreement_impact(model_obj, disagreements):
                     info['reactions'][rxn_id] = rxn
             result[cpd] = info
     return result
+def has_reaction(model_obj, reaction_id): # NOT PRAGMATIC
+    reactions = [Reaction.get_rxn_id(r) for r in get_reactions(model_obj)]
+    return reaction_id in reactions
+
 
 
 

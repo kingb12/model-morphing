@@ -787,3 +787,79 @@ def gene_reactions(models, rxn_list):
                 rxn_list.remove(r)
             print gpr.gpr_type
 
+
+def find_reactions_by_compounds(models, compound_list):
+    result = set()
+    for m in models:
+        model = Helpers.get_object(m[0], m[1])['data']
+        result |= set([Reaction.get_rxn_id(r) for r in Model.find_compound_uses(model, compound_list[0])])
+    for c in compound_list[1:len(compound_list)]:
+        rxn_set = set()
+        for m in models:
+            model = Helpers.get_object(m[0], m[1])['data']
+            rxn_set |= set([Reaction.get_rxn_id(r) for r in Model.find_compound_uses(model, c)])
+        result = result.intersection(rxn_set)
+    return result
+
+def find_reaction_uses(model_list, reaction_list):
+    '''
+
+    :param model_list: model tuples
+    :param reaction_list: reaction_ids
+    :return: a dictionary where keys are elements of reaction_list and values are the models which have this reaction
+    '''
+    result = dict()
+    for r in reaction_list:
+        models = list()
+        for m in model_list:
+            model = get_object(m[0], m[1])['data']
+            if Model.has_reaction(model, r):
+                models.append(m[2])
+        result[r] = models
+    return result
+
+def find_missing_reactions(model, filename):
+    '''
+
+    :param model: model_object
+    :param filename: tab separated file for KBase Import
+    :return: list of reactions not correctly added
+    '''
+    reactions = list()
+    result = list()
+    with open(filename) as f:
+        # SKIPPING HEADER AND BIOMASS
+        for line in f.readlines()[2:]:
+            elements = line.split('\t')
+            reaction = elements[0].split('[')
+            try:
+                reaction = reaction[0] + '_' + reaction[1][0:2]
+            except:
+                print reaction
+                raise RuntimeError
+            print reaction
+            reactions.append(reaction)
+    for r in reactions:
+        if not Model.has_reaction(model, r) and not r.startswith('EX'):
+            result.append(r)
+    return result
+
+def find_missing_genes(model, filename):
+    '''
+
+    :param model: model_object
+    :param filename: tab separated file for KBase Import
+    :param reactions: list of reactions with no gene in model
+    :return: dict of rxns to GPRS in file
+    '''
+    genes = set()
+    file = set()
+    for r in Model.get_reactions(model):
+        gpr = Gpr(r)
+        genes |= gpr.features()
+    with open(filename) as f:
+        lines = f.readlines()
+        file = set([g.split('\'')[1] for g in lines])
+    return file - genes
+
+
