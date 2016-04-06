@@ -1,9 +1,11 @@
 
 import unittest
-import Client
-import Helpers
-import Morph
+import lib.Client as Client
+import lib.Helpers as Helpers
+import lib.Morph as Morph
 import copy
+from lib.objects import *
+import lib.service as service
 
 def refresh_variables(narrative_wsid):
     morph = Helpers.make_morph(ws_id=narrative_wsid)
@@ -15,10 +17,9 @@ def refresh_variables(narrative_wsid):
     Helpers.dump(morph, '../test/morph.pkl')
     Helpers.dump(supermorph, '../test/supermorph.pkl')
 
-test_bank = 12055 #Workspace ID of the test bank
-test_space = 12056 #Workspace ID of the test space
-fba_client = Client.fba_client
-ws_client = Client.ws_client
+test_bank = 12055  # Workspace ID of the test bank
+test_space = 12056  # Workspace ID of the test space
+
 
 class GprTest(unittest.TestCase):
 
@@ -132,13 +133,41 @@ class GprTest(unittest.TestCase):
         self.assertEqual(b.merge(e), h)
 
 
+class StoredObjectTest(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(StoredObjectTest, self).__init__(*args, **kwargs)
+        _clear_testspace(test_space)
+
+    def setUp(self):
+        self.test_objects = service.list_objects(test_bank)
+
+    def tearDown(self):
+        _clear_testspace()
+
+    def test_overwrite(self):
+        obj = StoredObject(self.test_objects[0])
+        try:
+            obj.object_id = "This should fail"
+            self.fail(msg="StoredObject permitted a mutation")
+        except MutationError:
+            pass
+
+    def test_get_object(self):
+        for info in self.test_objects:
+            obj = StoredObject(info)
+            object = obj.get_object()
+            self.assertTrue(object is not None, msg="getting object " + str(info) + " failed")
+
+
+
+
+
+
+
+
 
 def _clear_testspace(ws_id=test_space):
-    # get all object ids in {'id': x} form excluding the narrative object
-    object_ids = [{'objid': info[0], 'wsid': ws_id} for info in
-                 ws_client.list_objects({'ids': [ws_id]}) if not info[2].startswith('KBaseNarrative')]
-    if len(object_ids) > 0:
-        ws_client.delete_objects(object_ids)
+    service.clear_workspace(ws_id)
 
 if __name__ == '__main__':
         unittest.main()

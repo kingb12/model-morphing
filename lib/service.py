@@ -1,22 +1,44 @@
 from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
+import sys
+
 
 def _init_clients():
     # Get workspace service URL parameter
-    with open ("./urls/.kbase_workspaceURL", "r") as myfile:
-        url = myfile.read().replace('\n','')
-    ws_client = Workspace(url)
+    with open("./urls/.kbase_workspaceURL", "r") as myfile:
+        url = myfile.read().replace('\n', '')
+    ws_c = Workspace(url)
     # Get FBA Model Services URL parameter
-    with open ("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
-        url = myfile.read().replace('\n','')
-    fba_client = fbaModelServices(url)
-    return ws_client, fba_client
+    with open("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
+        url = myfile.read().replace('\n', '')
+    fba_c = fbaModelServices(url)
+    return ws_c, fba_c
 
-ws_client, fba_client =  _init_clients()
+
+ws_client, fba_client = _init_clients()
+
+
+# =====================================================================================================================
+# Type Strings From KBase
+
+def types():
+    return {'FBAModel': 'KBaseFBA.FBAModel',
+            'Biochemistry': 'KBaseBiochem.Biochemistry',
+            'Genome': 'KBaseGenomes.Genome',
+            'FBA': 'KBaseFBA.FBA',
+            'ReactionProbabilities': 'ProbabilisticAnnotation.RxnProbs',
+            'ProteomeComparison': 'GenomeComparison.ProteomeComparison',
+            'Media': 'KBaseBiochem.Media'
+            }
+
+
+# TODO: More pragmatic approach, have these stored in some sort of XML or plain text file that can be read in
+# =====================================================================================================================
+
 
 def get_object(objid, wsid, name=None):
-    '''
+    """
     Returns an object and it's associated KBase information
 
     Returns an ObjectData (dictionary) like what is returned in the workspace service 'get_objects' function:
@@ -58,8 +80,72 @@ def get_object(objid, wsid, name=None):
 		string handle_stacktrace;
 	} ObjectData;
 
-    '''
-    if (name is None):
-        return ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
+    :param name: (optional) the name for the object to be retrieved. if included, favored over ID
+    :param wsid: the workspace to retrieve the object from
+    :param objid: the id of the object to be retrieved
+
+    """
+    if name is None:
+        return ws_client.get_objects([{'objid': objid, 'wsid': wsid}])[0]
     else:
-        return ws_client.get_objects([{'name':name, 'wsid':wsid}])[0]
+        return ws_client.get_objects([{'name': name, 'wsid': wsid}])[0]
+
+
+def save_object(data, type, wsid, objid=None, name=None):
+    """
+    Saves an object in KBase
+
+    :param data: data representing the object to be saved
+    :param type: a string representing the KBase type of the object
+    :param wsid: destination workspace
+    :param objid: (optional) ID for location of object to be saved (use with care, overwriting/failures are at KBase's
+        discretion).
+    :param name: (optional) string name for the pbject to be saved
+    :return: a list of information about the object as it is stored in KBase
+    """
+    sv = {u'data': data, u'type': type, u'name': name}
+    if objid is not None:
+        sv[u'objid'] = objid
+    if name is not None:
+        sv[u'name'] = name
+    return ws_client.save_objects({u'id': wsid, u'objects': [sv]})[0]
+
+
+def list_objects(workspace_id, typestr=None):
+    """
+    returns a list of all the objects within a workspace in tuples (obj_id, ws_id, object_name)
+
+    :param type: (optional) the type of object to return (a filter of default case)
+    :param workspace_id: the workspace to list the objects from
+    :return: a list of tuples of objects
+    """
+    objects = ws_client.list_objects({'ids': [workspace_id]})
+    for obj in objects:
+        object_type = obj[2]
+        result = list()
+        if typestr is None or typestr in object_type:  # type filtering of our list
+            result.append((obj[0], obj[6], obj[1]))
+    return result
+
+
+def clear_workspace(workspace_id):
+    """
+    clear all objects in a workspace (except for a Narrative object if applicable)
+    :param workspace_id: workspace to clear
+    :return: None
+    """
+    object_ids = [{'objid': info[0], 'wsid': workspace_id} for info in
+                  ws_client.list_objects({'ids': [workspace_id]}) if not info[2].startswith('KBaseNarrative')]
+    if len(object_ids) > 0:
+        ws_client.delete_objects(object_ids)
+
+
+def delete_objects(object_tuples):
+    """
+    delete objects
+    :param object_tuples: list of tuples representing objects to delete of the form (obj_id, ws_id)
+    :return: None
+    """
+    object_ids = [{'objid': info[0], 'wsid': info[1]} for info in object_tuples]
+    if len(object_ids) > 0:
+        ws_client.delete_objects(object_ids)

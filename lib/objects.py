@@ -2,20 +2,25 @@ import service
 import copy
 
 
-class StoredObject:
+class StoredObject(object):
     """
     A class representing any object stored in our environment (D.o.E. KBase), having an object_id and a workspace_id
     """
+    # Class Variables
+    storedType = None
+    mutable = {'data', 'name'}
 
     # The current environment is KBase, where all calls to the API refer to their objects by ids and workspace_ids
+
     def __init__(self, object_id, workspace_id):
         self.object_id = object_id
         self.workspace_id = workspace_id
-        self.initialized = True
+        self.name = None
+        self.data = None
 
     def __setattr__(self, key, value):
-        if self.initialized:
-            raise NotImplementedError
+        if key not in StoredObject.mutable and key in self.__dict__:
+            raise MutationError(key)
         self.__dict__[key] = value
 
     def get_object(self):
@@ -27,14 +32,40 @@ class StoredObject:
         the interior elements of this dictionary are NOT the same as the classes representing them. If you want data
         from the interior of the object, it is best to use the abstractions provided by it's more specific type.
         """
-        return service.get_object(self.object_id, self.workspace_id)['data']
+        self.data = service.get_object(self.object_id, self.workspace_id)['data']
+        return self.data
         # TODO: Implement clone or copy
+
+    @classmethod
+    def save(cls, stored_data, stored_type, workspace_id, objid=None, name=None):
+        """
+        Saves data into the service and returns a StoredObject representing that data
+
+        :param stored_data: the data representing the object to be saved
+        :param stored_type: the string type of the object to be saved
+        :param workspace_id: the destination workspace
+        :param objid: (optional) the destination object_id. See service.save_object for troubleshooting
+        :param name: (optional) the destination name for the object
+        :return: a StoredObject for the data provided
+        """
+
+        if not cls.typecheck(stored_type):
+            raise StoredTypeError((stored_type, cls.storedType))
+        info = service.save_object(stored_data, stored_type, workspace_id, objid=objid, name=name)
+        return cls(info[0], info[6])
+
+    @classmethod
+    def typecheck(cls, typestring):
+        if cls != StoredObject:
+            return typestring.startswith(cls.storedType)
+        return True
 
 
 class Biochemistry(StoredObject):
     """
     a class representing a Biochemistry Object
     """
+    storedType = service.types()['FBAModel']
     pass
 
 
@@ -44,6 +75,7 @@ class FBAModel(StoredObject):
 
     Parent Classes: StoredObject -> FBAModel
     """
+    storedType = service.types()['FBAModel']
 
     DEFAULT_BIOCHEM = Biochemistry(6, 489)
 
@@ -79,6 +111,12 @@ class ModelReaction:
         if rxn_id.startswith('rxn00000'):
             return self.data['id']
         return rxn_id
+
+    def __str__(self):
+        return str(self.rxn_id()) + ': ' + str(self.get_equation())
+
+    def __repr__(self):
+        return str(self.rxn_id()) + ': ' + repr(self.data)
 
     def get_equation(self):
         """
@@ -156,6 +194,14 @@ class Compound(object):
         returns a str readable format of compound, e.g: -3*(cpd01111)
         :return:
         """
+        # TODO: Should this give the formula instead?
+        return str(self.coeff) + '*(' + str(self.compound_id) + ')'
+
+    def __repr__(self):
+        """
+        returns a str readable format of compound, e.g: -3*(cpd01111)
+        :return:
+        """
         return str(self.coeff) + '*(' + str(self.compound_id) + ')'
 
     def formula(self):
@@ -171,6 +217,7 @@ class Gpr:
     """
     a class representing the Gene -> Protein -> Reaction relationship for a ModelReaction in a model
     """
+
     def __init__(self, reaction=None):
         """
         creates a GPR object that represent the gene-protein-reaction relationship for a ModelReaction
@@ -327,7 +374,7 @@ class Gpr:
                     # if they share a subunit or any feature (catches homolog and subunit cases)
                     # AND they are equal in number of subunits
                     if len(protein) == len(g2_protein) and len(self._unnest_sets(protein) &
-                                                               self._unnest_sets(g2_protein)) != 0:
+                                                                       self._unnest_sets(g2_protein)) != 0:
                         proteins_to_remove.add(g2_protein)
                         prot = set(g2_protein)
                         matched_protein = True
@@ -458,6 +505,8 @@ class Genome(StoredObject):
     """
     a class representing a genome in the stored environment
     """
+    storedType = service.types()['Genome']
+
     pass
 
 
@@ -465,6 +514,7 @@ class Media(StoredObject):
     """
     a class representing a media in the stored environment
     """
+    storedType = service.types()['Media']
     pass
 
 
@@ -472,6 +522,7 @@ class FBA(StoredObject):
     """
     a class representing an FBA result in the stored environment
     """
+    storedType = service.types()['FBA']
     pass
 
 
@@ -479,6 +530,7 @@ class ProteomeComparison(StoredObject):
     """
     a class representing a Porteome Comparison in the stored environment
     """
+    storedType = service.types()['ProteomeComparison']
     pass
 
 
@@ -486,6 +538,7 @@ class ReactionProbabilities(StoredObject):
     """
     a class representing a ReactionProbabilities in the stored environment
     """
+    storedType = service.types()['ReactionProbabilities']
     pass
 
 
@@ -504,3 +557,18 @@ class RepresentationError(Exception):
 
     def __str__(self):
         return str(type(self.value)) + repr(self.value.gpr) + '\n' + repr(self.value.ftrs)
+
+
+class StoredTypeError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value[0]) + ' is not a valid typestring for ' + str(self.value[1])
+
+class MutationError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value) + " can not be changed after initialization"
