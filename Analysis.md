@@ -17,8 +17,8 @@
  | Jannaschii Morph            | 567     | 841           | 631         | 
  | Jannaschii Reconstruction   | 285     | 708           | 665         | 
 
-| First Header  | Second Header |
-| ------------- | ------------- |
+| Model  | Genes | Metabolites  | Reactions |
+| ------------- | ------------- | ------------- | ------------- |
 | Content Cell  | Content Cell  |
 | Content Cell  | Content Cell  |
 
