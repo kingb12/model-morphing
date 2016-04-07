@@ -19,10 +19,10 @@
 | M. jannaschii Reconstruction   | 285     | 708           | 665         | 
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "marijannarxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marijannarxnsvenn.png "marijannarxnsvenn.png")
 
 #### Gene Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "marijannagenesvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marijannagenesvenn.png "marijannagenesvenn.png")
 
 ### M. maripaludis to M. stadtmanae Data
 
@@ -33,10 +33,10 @@
 | M. stadtmanae Reconstruction   | 296 | 766 | 691 |
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maristadtrxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtgenesvenn.png "maristadtrxnsvenn.png")
 
 #### Gene Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maristadtgenesvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtgenesvenn.png "maristadtgenesvenn.png")
 
 ### M. maripaludis to M. barkeri Data
 
@@ -46,6 +46,12 @@
 | M. barkeri Morph            | 701 | 892 | 741 |
 | M. barkeri Reconstruction   | 452 | 797 | 728 |
 
+#### Reaction Overlap Analysis
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkrxnsvenn.png")
+
+#### Gene Overlap Analysis
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkgenesvenn.png")
+
 ### M. maripaludis to M. maripaludis Data
 
 | Model  | Genes | Metabolites  | Reactions |
@@ -53,4 +59,10 @@
 | M. maripaludis Source       | 528 | 710 | 636 |
 | M. maripaludis Morph            | 767 | 742 | 597 |
 | M. maripaludis Reconstruction   | 322 | 707 | 530 |
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkgenesvenn.png")
+
+#### Reaction Overlap Analysis
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarirxnsvenn.png")
+
+#### Gene Overlap Analysis
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarigenesvenn.png")
+
