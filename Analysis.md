@@ -136,4 +136,4 @@ What we found is that Hdr-formate_c0 was carried over to the morphs erronerously
 The ProteomeComparison informs us that each of the methanogens should be able to produce the enzymes for HdrABC and Hdr-formate despite it not belonging in the
 target model. To detect this, we would have to distrust the ProteomeComparison. Is this normal or an edge case? 
 
-Looking at our reaction venn comparisons, we see that on average ~ 185 reactions are brought to the morphed model that are not found in an automatic reconstruction. DEpending on phylogeny 50-80% of these had a gene match in our target organism. Hdr-formate would be one of these, but we could go through these lists and see how much information was correctly vs. erronerously gained.
+Looking at our reaction venn comparisons, we see that on average ~185 reactions are brought to the morphed model that are not found in an automatic reconstruction. DEpending on phylogeny 50-80% of these had a gene match in our target organism. Hdr-formate would be one of these, but we could go through these lists and see how much information was correctly vs. erronerously gained.
