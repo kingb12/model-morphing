@@ -139,4 +139,4 @@ target model. To detect this, we would have to distrust the ProteomeComparison. 
 Looking at our reaction venn comparisons, we see that on average ~185 reactions are brought to the morphed model that are not found in an automatic reconstruction. DEpending on phylogeny 50-80% of these had a gene match in our target organism. Hdr-formate would be one of these, but we could go through these lists and see how much information was correctly vs. erronerously gained.
 
 
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtgenesvenn.png "maristadtgenesvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/commonreactions.png "maristadtgenesvenn.png")
