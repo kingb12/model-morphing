@@ -42,4 +42,4 @@
 | M. maripaludis Morph            | 767 | 742 | 597 |
 | M. maripaludis Reconstruction   | 322 | 707 | 530 |
 322 707 530
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkgenesvenn.png")
