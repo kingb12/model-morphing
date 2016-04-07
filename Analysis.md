@@ -7,15 +7,15 @@
 * M. maripaludis to M. maripaludis
 
 ### Analyses for All Morphs:
-* 3-way Venn comparison of Reaction Sources
+3-way Venn comparison of Reaction Sources
 
 
 ### M. maripaludis to M. jannschii Data
- | *Model* | *Genes* | *Metabolites* | *Reactions* | 
- | ---------- | ---------- | ---------- | ---------- | 
- | Maripaludis (Source) | 340 | 710 | 636 | 
- | Jannaschii (Morph) | 567 | 841 | 631 | 
- | Jannaschii (Reconstruction) | 285 | 708 | 665 | 
+ | *Model*                     | *Genes* | *Metabolites* | *Reactions* | 
+ | --------------------------- | --------| ------------- | ----------- | 
+ | Maripaludis (Source)        | 340     | 710           |         636 | 
+ | Jannaschii (Morph)          | 567     | 841           | 631         | 
+ | Jannaschii (Reconstruction) | 285     | 708           | 665         | 
 
 
 
