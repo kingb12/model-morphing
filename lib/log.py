@@ -10,6 +10,7 @@ class Log:
     stores the initial state of the object as encoded by the object. Default behavior for this might be to just perform
     a deepcopy on the object and store a reference to it, etc. This is at the discretion of the composing object.
     """
+    # TODO: A LOG SHOULD BE ABLE TO WRITE ITSELF IN MARKDOWN
     def __init__(self, object):
         """
 

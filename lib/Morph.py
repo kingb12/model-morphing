@@ -53,11 +53,37 @@ class Morph:
     # from one species to a close relative genome. It has information related to
     # the source model, the target genome, the reactions in the model as it is
     # morphed from source import to target, and the set of
-    properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'objects', 'info',
-                  'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model', 'media',
-                  'probhash', 'log'}
+    properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'ws_id', 'ws_name', 'trans_model',
+                  'recon_model', 'media', 'probhash', 'log'}
 
     def __init__(self, *arg_hash, **kwargs):
+        """
+        Initiializes a Morph! A reasonable Morph needs each of the following set:
+            src_model: (FBAModel) the model of the source organism
+            genome: (Genome) the genome of the target organism
+            probanno: (ReactionProbabilities) the likelihoods for KBase reactions in the target organism
+            protcomp: (ProteomeComparison) the proteome comparison between source and target genomes
+            media: (Media) the media for the source model and subsequent models
+        :param arg_hash: a dictionary with the attributes desired as keys
+        :param kwargs: keyword arguments
+        :return:
+        """
+        # TODO: EDIT THIS DOC LINE WITH THE TRUTH
+        self.src_model = None
+        self.model = None
+        self.genome = None
+        self.probanno = None
+        self.protcomp = None
+        self.model = None
+        self.rxn_labels = None
+        self.media = None
+        self.recon_model = None
+        self.trans_model = None
+        self.probhash = None
+        self.log = None
+        self.ws_id = None
+        self.ws_name = None
+
         for dictionary in arg_hash:
             for key in dictionary:
                 if key in Morph.properties:
@@ -72,13 +98,25 @@ class Morph:
             self.log = Log(self)
         if self.ws_id is None:
             self.ws_id, self.ws_name = _init_workspace()
-        self.check_rep()
+        self._check_rep()
 
-    def check_rep(self):
+    def _check_rep(self):
         if self.model is not None:
             assert isinstance(self.model, FBAModel)
+        if self.src_model is not None:
+            assert isinstance(self.src_model, FBAModel)
         if self.genome is not None:
-            assert isinstance(self.model, FBAModel)
+            assert isinstance(self.genome, Genome)
+        if self.media is not None:
+            assert isinstance(self.media, Media)
+        if self.probanno is not None:
+            assert isinstance(self.probanno, ReactionProbabilities)
+        if self.protcomp is not None:
+            assert isinstance(self.protcomp, ProteomeComparison)
+        if self.trans_model is not None:
+            assert isinstance(self.trans_model, FBAModel)
+        if self.recon_model is not None:
+            assert isinstance(self.recon_model, FBAModel)
 
 
     def to_json(self):

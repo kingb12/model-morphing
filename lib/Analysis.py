@@ -102,4 +102,3 @@ def pairwise_venn_analysis(model_indentities, comparison_tup):
     for m in model_indentities:
         result[(comparison_tup[2], m[2])] = reaction_analysis([comparison_tup, m])
     return result
-        

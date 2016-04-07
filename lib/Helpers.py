@@ -8,6 +8,9 @@ import Client
 from firebase import firebase
 import os
 
+from lib.objects import *
+
+
 def modelargs(morph):
     args = dict()
     args['model'] = morph.model
@@ -398,17 +401,13 @@ def print_dict(dic, f=None, g=None):
 
 def ace_to_bark(ws_id=None):
     args = dict()
-    args['genome'] = '3'
-    args['src_model'] = '5'
-    args['probanno'] = '15'
-    args['protcomp'] = '6'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
+    args['genome'] = Genome(3, 9145)
+    args['src_model'] = FBAModel(5, 9145)
+    args['probanno'] = ReactionProbabilities(15, 9145)
+    args['protcomp'] = ProteomeComparison(6, 9145)
+    args['media'] = Media(24, 9145)
     args['ws_id'] = ws_id
+
     return Morph(args)
 def mari_to_janna(ws_id=None):
     args = dict()

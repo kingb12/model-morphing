@@ -8,21 +8,31 @@ class StoredObject(object):
     """
     # Class Variables
     storedType = None
-    mutable = {'data', 'name'}
 
     # The current environment is KBase, where all calls to the API refer to their objects by ids and workspace_ids
 
     def __init__(self, object_id, workspace_id):
-        self.object_id = object_id
-        self.workspace_id = workspace_id
+        self.identity = (object_id, workspace_id)
         self.name = None
-        self.data = None
         self._check_rep()
 
+    def __getattr__(self, item):
+        # Overriding __getattr__ to  get special objects
+        if item is 'object_id':
+            return self.identity[0]
+        if item is 'workspace_id':
+            return self.identity[1]
+        if item is 'data':
+            return self.get_object()
+        else:
+            raise AttributeError("%r HERE object has no attribute %r" % (self.__class__, item))
+
     def __setattr__(self, key, value):
-        if key not in StoredObject.mutable and key in self.__dict__:
+        # Overriding __getattr__ to  get special objects
+        if key in ['object_id', 'workspace_id', 'data', 'object']:
             raise MutationError(key)
-        self.__dict__[key] = value
+        else:
+            self.__dict__[key] = value
 
     def get_object(self):
         """
@@ -34,9 +44,8 @@ class StoredObject(object):
         from the interior of the object, it is best to use the abstractions provided by it's more specific type.
         """
         self._check_rep()
-        self.data = service.get_object(self.object_id, self.workspace_id)['data']
-        return self.data
-        # TODO: Implement clone or copy
+        return service.get_object(self.object_id, self.workspace_id)['data']
+        # TODO: Clone/Copy
 
     @classmethod
     def save(cls, stored_data, stored_type, workspace_id, objid=None, name=None):
@@ -50,7 +59,6 @@ class StoredObject(object):
         :param name: (optional) the destination name for the object
         :return: a StoredObject for the data provided
         """
-
         if not cls.typecheck(stored_type):
             raise StoredTypeError((stored_type, cls.storedType))
         info = service.save_object(stored_data, stored_type, workspace_id, objid=objid, name=name)
@@ -74,7 +82,7 @@ class Biochemistry(StoredObject):
     """
     a class representing a Biochemistry Object
     """
-    storedType = service.types()['FBAModel']
+    storedType = service.types()['Biochemistry']
     pass
 
 
