@@ -7,15 +7,17 @@ import copy
 from lib.objects import *
 import lib.service as service
 
+
 def refresh_variables(narrative_wsid):
-    morph = Helpers.make_morph(ws_id=narrative_wsid)
-    supermorph = Client.prepare_supermodel(morph)
-    src_filled = copy.deepcopy(morph)
-    src_filled.src_modelws = supermorph.src_modelws
-    src_filled.src_model = supermorph.src_model
-    Helpers.dump(src_filled, '../test/src_filled.pkl')
-    Helpers.dump(morph, '../test/morph.pkl')
-    Helpers.dump(supermorph, '../test/supermorph.pkl')
+    # morph = Helpers.make_morph(ws_id=narrative_wsid)
+    # supermorph = Client.prepare_supermodel(morph)
+    # src_filled = copy.deepcopy(morph)
+    # src_filled.src_modelws = supermorph.src_modelws
+    # src_filled.src_model = supermorph.src_model
+    # Helpers.dump(src_filled, '../test/src_filled.pkl')
+    # Helpers.dump(morph, '../test/morph.pkl')
+    # Helpers.dump(supermorph, '../test/supermorph.pkl')
+    pass
 
 test_bank = 12055  # Workspace ID of the test bank
 test_space = 12056  # Workspace ID of the test space
@@ -31,7 +33,7 @@ class GprTest(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(GprTest, self).__init__(*args, **kwargs)
-        morph = Helpers.make_morph(12056)
+        morph = Helpers.mari_to_janna(12056)
         morph = Client.translate_features(morph)
         morph = Client.reconstruct_genome(morph)
         morph = Client.label_reactions(morph)
@@ -145,7 +147,8 @@ class StoredObjectTest(unittest.TestCase):
         _clear_testspace()
 
     def test_overwrite(self):
-        obj = StoredObject(self.test_objects[0])
+        t = self.test_objects[0]
+        obj = StoredObject(t[0], t[1])
         try:
             obj.object_id = "This should fail"
             self.fail(msg="StoredObject permitted a mutation")
@@ -154,7 +157,7 @@ class StoredObjectTest(unittest.TestCase):
 
     def test_get_object(self):
         for info in self.test_objects:
-            obj = StoredObject(info)
+            obj = StoredObject(info[0], info[1])
             object = obj.get_object()
             self.assertTrue(object is not None, msg="getting object " + str(info) + " failed")
 

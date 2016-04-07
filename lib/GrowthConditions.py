@@ -19,11 +19,11 @@ class SimpleCondition(AbstractGrowthCondition):
         - model
         - fba_name
     """
-    def evaluate(self, args):
-        morph = args['morph']
+    def evaluate(self, arguments):
+        morph = arguments['morph']
         ws = morph.ws_id
         fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
-        fba_params = {'fba': args['fba_name'], 'workspace': ws, 'model' : args['model'], 'model_workspace':ws, 'formulation': fba_formulation}
+        fba_params = {'fba': arguments['fba_name'], 'workspace': ws, 'model' : arguments['model'], 'model_workspace': ws, 'formulation': fba_formulation}
         fbaMeta = Client.fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
         print "Flux is " + str(flux)
@@ -34,11 +34,11 @@ class BarkeriCondition(AbstractGrowthCondition):
     """
     a growth condition for barkeri (3 media)
     """
-    def evaluate(self, args):
-        morph = args['morph']
+    def evaluate(self, arguments):
+        morph = arguments['morph']
         ws = morph.ws_id
         fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
-        fba_params = {'fba': args['fba_name'], 'workspace': ws, 'model' : args['model'], 'model_workspace':ws, 'formulation': fba_formulation}
+        fba_params = {'fba': arguments['fba_name'], 'workspace': ws, 'model' : arguments['model'], 'model_workspace':ws, 'formulation': fba_formulation}
         fbaMeta = Client.fba_client.runfba(fba_params)
         flux = fbaMeta[-1]['Objective']
         print "Flux is " + str(flux)
@@ -49,7 +49,7 @@ class AllMedia(AbstractGrowthCondition):
 
     def __init__(self, media):
         self.media = media
-        #TODO: Non-pragmatic, AbstractGrowthCondition has no __init__ but if one is added it is not called here
+        # TODO: Non-pragmatic, AbstractGrowthCondition has no __init__ but if one is added it is not called here
 
     def evaluate(self, args):
         morph = args['morph']
