@@ -33,7 +33,7 @@
 | M. stadtmanae Reconstruction   | 296 | 766 | 691 |
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtgenesvenn.png "maristadtrxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtrxnsvenn.png "maristadtrxnsvenn.png")
 
 #### Gene Overlap Analysis
 ![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maristadtgenesvenn.png "maristadtgenesvenn.png")
@@ -47,7 +47,7 @@
 | M. barkeri Reconstruction   | 452 | 797 | 728 |
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkrxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkrxnsvenn.png "maribarkrxnsvenn.png")
 
 #### Gene Overlap Analysis
 ![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/maribarkgenesvenn.png "maribarkgenesvenn.png")
@@ -61,7 +61,7 @@
 | M. maripaludis Reconstruction   | 322 | 707 | 530 |
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarirxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarirxnsvenn.png "marimarirxnsvenn.png")
 
 #### Gene Overlap Analysis
 ![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarigenesvenn.png")
