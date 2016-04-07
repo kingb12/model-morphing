@@ -12,7 +12,7 @@
 
 ### M. maripaludis to M. jannschii Data
  |  | Genes | Metabolites | Reactions | 
- | -- | -- | -- | -- | 
+ | ---------- | ---------- | ---------- | ---------- | 
  | Maripaludis | (Source) | 340 | 710 | 636 | 
  | Jannaschii | (Morph) | 567 | 841 | 631 | 
  | Jannaschii | (Reconstruction) | 285 | 708 | 665 | 
