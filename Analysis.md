@@ -98,3 +98,42 @@
 | JannashciiReconstruction | 258 | 376 | 59.3059936909% |
 | MaripaludisModel | 636 | 636 | 50.0% |
 | BarkeriReconstruction | 346 | 377 | 52.1438450899% |
+
+
+## Qualitative Analyses
+
+#### HdrABC_c0 and Hdr-formate_c0
+HdrABC and Hdr-formate are *M. maripaludis* specific reactions, must other organisms use a veryt similar alternative pathway with rxn03126_c0 
+
+```python
+In [12]: for m in models:
+    model = get_object(m[0], m[1])['data']
+    print Model.has_reaction(model, 'Hdr-formate_c0')
+   ....:     print m[2]
+   ....:
+False
+JannashciiReconstruction
+True
+Mari_to_Janna_Morph
+True
+MaripaludisModel
+True
+Mari_to_Stadt_Morph
+False
+StadtmanaeReconstruction
+True
+mari_to_bark_morph_3media
+False
+BarkeriReconstruction
+True
+mari_to_mari_morph
+False
+MaripaludisReconstruction
+```
+rxn03126_c0 was found in all of the morphs as well, as it was introduced in each reconstruction (M. mariapludis included). Our source model was the only model to exclude this reaction.
+
+What we found is that Hdr-formate_c0 was carried over to the morphs erronerously. In the course of our algorithm, this is unavoidable without drastic change
+The ProteomeComparison informs us that each of the methanogens should be able to produce the enzymes for HdrABC and Hdr-formate despite it not belonging in the
+target model. To detect this, we would have to distrust the ProteomeComparison. Is this normal or an edge case? 
+
+Looking at our reaction venn comparisons, we see that on average ~ 185 reactions are brought to the morphed model that are not found in an automatic reconstruction. DEpending on phylogeny 50-80% of these had a gene match in our target organism. Hdr-formate would be one of these, but we could go through these lists and see how much information was correctly vs. erronerously gained.
