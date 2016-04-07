@@ -91,6 +91,13 @@ def get_object(objid, wsid, name=None):
         return ws_client.get_objects([{'name': name, 'wsid': wsid}])[0]
 
 
+def get_info(objid, wsid, name=None):
+    if name is None:
+        return ws_client.get_object_info_new({'objects': [{'objid': objid, 'wsid': wsid}]})[0]
+    else:
+        return ws_client.get_objects_info_new({'objects': [{'name': name, 'wsid': wsid}]})[0]
+
+
 def save_object(data, type, wsid, objid=None, name=None):
     """
     Saves an object in KBase

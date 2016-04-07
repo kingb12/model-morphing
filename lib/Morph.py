@@ -7,28 +7,33 @@ import copy
 import json
 from operator import itemgetter
 
+from lib.log import Log
+from lib.objects import *
+
+
 def _init_clients():
     global ws_client, args
     global fba_client
     global ws_id
     # Get workspace service URL parameter
-    with open ("./urls/.kbase_workspaceURL", "r") as myfile:
-        url = myfile.read().replace('\n','')
+    with open("./urls/.kbase_workspaceURL", "r") as myfile:
+        url = myfile.read().replace('\n', '')
     ws_client = Workspace(url)
     # Get FBA Model Services URL parameter
-    with open ("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
-        url = myfile.read().replace('\n','')
+    with open("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
+        url = myfile.read().replace('\n', '')
     fba_client = fbaModelServices(url)
     return ws_client, fba_client
 
-def _init_workspace(ws = None):
+
+def _init_workspace(ws=None):
     ws_id = ws
     ws_name = 'MMws'
-    if (ws is None):
+    if ws is None:
         ws_conflict = True
-        while (ws_conflict):
+        while ws_conflict:
             create_ws_params = {'workspace': ws_name, 'globalread': 'r', 'description':
-                                "A workspace for storing the FBA's and meta data of the algorithm"}
+                "A workspace for storing the FBA's and meta data of the algorithm"}
             # Try to create a workspace, catch an error if the name is already in use
             try:
                 new_ws = ws_client.create_workspace(create_ws_params)
@@ -37,43 +42,54 @@ def _init_workspace(ws = None):
                 ws_name = new_ws[1]
                 ws_conflict = False
             except ServerError:
-                 ws_name += str(random.randint(1,9))
+                ws_name += str(random.randint(1, 9))
     return ws_id, ws_name
 
-class Morph():
 
-    # These are the allowed properties of a morph object. VAlues not specified
+class Morph:
+    # These are the allowed properties of a morph object. Values not specified
     # by user are set to None
     # This is an Abstract Object representing the Morph of a metabolic model
     # from one species to a close relative genome. It has information related to
     # the source model, the target genome, the reactions in the model as it is
     # morphed from source import to target, and the set of
-    properties = set(['src_model', 'src_modelws', 'genome', 'genomews', 'probanno', 'probannows', 'protcomp', 'protcompws',
-                      'model', 'rxn_labels', 'objects', 'info', 'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model', 'media', 'mediaws', 'probhash'])
-
+    properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'objects', 'info',
+                  'essential_ids', 'removed_ids', 'ws_id', 'ws_name', 'trans_model', 'recon_model', 'media',
+                  'probhash', 'log'}
 
     def __init__(self, *arg_hash, **kwargs):
-          for dictionary in arg_hash:
-              for key in dictionary:
-                  if (key in Morph.properties):
-                      setattr(self, key, dictionary[key])
-          for key in kwargs:
-              if (key in Morph.properties):
-                  setattr(self, key, kwargs[key])
-          for prop in Morph.properties:
-              if (not hasattr(self, prop)):
-                  setattr(self, prop, None)
-          if (self.ws_id is None):
-              self.ws_id, self.ws_name = _init_workspace()
+        for dictionary in arg_hash:
+            for key in dictionary:
+                if key in Morph.properties:
+                    setattr(self, key, dictionary[key])
+        for key in kwargs:
+            if key in Morph.properties:
+                setattr(self, key, kwargs[key])
+        for prop in Morph.properties:
+            if not hasattr(self, prop):
+                setattr(self, prop, None)
+        if self.log is None:
+            self.log = Log(self)
+        if self.ws_id is None:
+            self.ws_id, self.ws_name = _init_workspace()
+        self.check_rep()
 
-    def to_JSON(self):
+    def check_rep(self):
+        if self.model is not None:
+            assert isinstance(self.model, FBAModel)
+        if self.genome is not None:
+            assert isinstance(self.model, FBAModel)
+
+
+    def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
+
     # Overridden Functions to produce unique output
     def __str__(self):
         output = ''
         for key in vars(self):
             attr = getattr(self, key)
-            if (isinstance(attr, dict)):
+            if isinstance(attr, dict):
                 attr = attr.keys()
                 if len(attr) < 100:
                     output += str(key) + ': ' + str(attr) + '\n'
@@ -82,12 +98,15 @@ class Morph():
             else:
                 output += str(key) + ': ' + str(attr) + '\n'
         return output
+
     def __repr__(self):
         return str(self)
+
     def __unicode__(self):
         return unicode(str(self))
 
-class Gpr():
+
+class Gpr:
     def __init__(self, reaction=None):
         '''
         creates a GPR object t represent the gene-protein-reaction relationship for a rxn/model
@@ -132,17 +151,22 @@ class Gpr():
             proteins_str += protein
         gpr = "(" + proteins_str + ")"
         return gpr
+
     def __repr__(self):
         return repr(self.gpr)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.gpr == other.gpr
         else:
             return False
+
     def __ne__(self, other):
         return not self.__eq__(other)
+
     def __unicode__(self):
         return unicode(str(self))
+
     def _gpr_set(self, rxn_object):
         '''
         creates the gpr set for the self.gpr field. Intended to only be called once
@@ -182,6 +206,7 @@ class Gpr():
                 for f in sub:
                     features.add(f)
         return frozenset(features)
+
     def features(self):
         '''
         returns a set of the features in this gpr
@@ -195,11 +220,13 @@ class Gpr():
         returns true if the feature is somewhere in the gpr (features of the string form 'kb|g.587.peg.1234')
         '''
         return feature in self.ftrs
+
     def contains_protein(self, protein):
         '''
         returns true if the protein is in the gpr (proteins are frozen sets of subunits, which in turn are frozen sets of features)
         '''
         return protein in self.gpr
+
     def contains_subunit(self, subunit):
         '''
         returns true if the subunit is in a protein in the gpr (subunits are frozensets of features)
@@ -228,9 +255,10 @@ class Gpr():
                 proteinsToAdd = set()
                 # Look for a nearly matching protein
                 for g2_protein in g2:
-                    #if they share a subunit or any feature (catches homolog and subunit cases)
+                    # if they share a subunit or any feature (catches homolog and subunit cases)
                     # AND they are equal in number of subunits
-                    if  len(protein) == len(g2_protein) and len(self._unnest_sets(protein) & (self._unnest_sets(g2_protein))) != 0:
+                    if len(protein) == len(g2_protein) and len(
+                                    self._unnest_sets(protein) & (self._unnest_sets(g2_protein))) != 0:
                         proteinsToRemove.add(g2_protein)
                         prot = set(g2_protein)
                         matchedProtein = True
@@ -254,14 +282,14 @@ class Gpr():
 
                             # do nothing, but better other solutions should be
                             # implememted
-                                # recon  - do nothing
-                                # trans - always push
-                                # stronger/weaker
+                            # recon  - do nothing
+                            # trans - always push
+                            # stronger/weaker
 
                 assert (len(proteinsToRemove) > 0 or not matchedProtein or (matchedProtein and not matchedSub))
                 g2 = g2 - set(proteinsToRemove)
                 g2 |= set(proteinsToAdd)
-                #Simple Case, proteins don't conflict
+                # Simple Case, proteins don't conflict
                 if not matchedProtein or not matchedSub:
                     g2.add(protein)
         return_gpr = self.new_gpr(frozenset(g2))
@@ -273,6 +301,7 @@ class Gpr():
         return_gpr.parents = (self, other_gpr)
         return_gpr._check_rep()
         return return_gpr
+
     def remove_redundancy(self):
         '''
         finds proteins that are subsets of each other and removes the smaller one
@@ -286,7 +315,7 @@ class Gpr():
                 if protein != protein2 and self._unnest_sets(protein).issubset(self._unnest_sets(protein2)):
                     matches[protein] = protein2
         for protein in matches:
-            #we know that all features in prot are in protein2
+            # we know that all features in prot are in protein2
             protein2 = copy.deepcopy(matches[protein])
             matched_subs = set()
             for sub in protein:
@@ -303,8 +332,7 @@ class Gpr():
 
     def isEmpty(self):
         self.check_rep()
-        return  len(self.ftrs) == 0
-
+        return len(self.ftrs) == 0
 
     def new_gpr(self, gpr_set):
         '''
@@ -342,7 +370,6 @@ class Gpr():
                     for ftr in sub:
                         assert type(ftr) is str or type(ftr) is unicode
 
-
     def _unnest_sets(self, nested_set):
         '''
         Takes anything in a nested set form and returns a single set of it's non-set elements
@@ -358,8 +385,8 @@ class Gpr():
         return single_set
 
 
-class AbstractGrowthCondition():
-    '''
+class AbstractGrowthCondition:
+    """
     an interface for processing reactions according to some condition
 
     Subclases must implement evaluate(args) and return true or false. The primary use
@@ -372,21 +399,21 @@ class AbstractGrowthCondition():
                 fba = runfba(args['model'])
                 return fba['Objective'] > 0
     This SimpleCondition keeps all reactions that are absolutely necessary for the models growth
-    '''
-    def evaluate(self, args):
+    """
+
+    def __init__(self):
+        pass
+
+    def evaluate(self, arguments):
         raise NotImplementedError()
-
-
-
-
 
 
 class RepresentationError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return str(type(self.value)) + repr(self.value.gpr) + '\n' + repr(self.value.ftrs)
-
 
 
 ws_client, fba_client = _init_clients()

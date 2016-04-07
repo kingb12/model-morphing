@@ -155,7 +155,7 @@ def put(url, key, value):
     call put('/BestCats', "Morty")
     """
     try:
-        fb.put(url, key, value.to_JSON())
+        fb.put(url, key, value.to_json())
     except AttributeError:
         fb.put(url, key, value)
 

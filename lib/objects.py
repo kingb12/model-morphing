@@ -17,6 +17,7 @@ class StoredObject(object):
         self.workspace_id = workspace_id
         self.name = None
         self.data = None
+        self._check_rep()
 
     def __setattr__(self, key, value):
         if key not in StoredObject.mutable and key in self.__dict__:
@@ -32,6 +33,7 @@ class StoredObject(object):
         the interior elements of this dictionary are NOT the same as the classes representing them. If you want data
         from the interior of the object, it is best to use the abstractions provided by it's more specific type.
         """
+        self._check_rep()
         self.data = service.get_object(self.object_id, self.workspace_id)['data']
         return self.data
         # TODO: Implement clone or copy
@@ -59,6 +61,13 @@ class StoredObject(object):
         if cls != StoredObject:
             return typestring.startswith(cls.storedType)
         return True
+
+    def _check_rep(self):
+        a = int(self.object_id)
+        b = int(self.workspace_id)
+        c = service.get_info(self.object_id, self.workspace_id)
+        if not (a is not None and b is not None and c is not None):
+            raise RepresentationError(self)
 
 
 class Biochemistry(StoredObject):
