@@ -89,3 +89,17 @@ def three_model_venn(model_identities, filename, genes=False, morphed_model=None
 
 
     Plotter.venn3(rxn_sets, title, 'Reaction', filename, set_labels=[m[2] for m in model_identities], annotation=gene_dict)
+
+def reaction_sets(list_of_tuples):
+    result = dict()
+    for m in list_of_tuples:
+        model = FBAModel(m[0], m[1])
+        result[m[2]] = set([r.rxn_id() for r in model.get_reactions()])
+
+
+def pairwise_venn_analysis(model_indentities, comparison_tup):
+    result = dict()
+    for m in model_indentities:
+        result[(comparison_tup[2], m[2])] = reaction_analysis([comparison_tup, m])
+    return result
+        

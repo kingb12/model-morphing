@@ -56,5 +56,39 @@ def venn2(subsets, title, unit_title, filename, set_labels=None, normalize=1.0, 
     plt.savefig(filename)
     plt.close()
 
+class SimpleTable:
+    def __init__(self, header_tuple):
+        """
+        initializes table as a list of tuples with a header. add rows as tuples to self.rows. sort them as you please
+        :return: SimpleTable
+        """
+        self.header = header_tuple
+        self.col = len(header_tuple)
+        self.rows = []
+
+    def add(self, row_tuple):
+        if len(row_tuple) != self.col:
+            raise ValueError
+        self.rows.append(row_tuple)
+
+    def markdown(self):
+        result = "\n"
+        result += SimpleTable._markdown_row(self.header) + "\n"
+        separator = "| "
+        for i in range(self.col):
+            separator += "--- | "
+        result += separator + "\n"
+        for r in self.rows:
+            result += SimpleTable._markdown_row(r) + "\n"
+        return result
+
+    @staticmethod
+    def _markdown_row(tuple):
+        result = "| "
+        for r in tuple:
+            result += str(r) + " | "
+        return result
+
+
 
 

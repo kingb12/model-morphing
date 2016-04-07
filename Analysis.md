@@ -66,3 +66,21 @@
 #### Gene Overlap Analysis
 ![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarigenesvenn.png")
 
+
+
+###Pairwise Comparisons
+
+####*E. coli* vs. Our Models
+
+####*M. maripaludis* Source vs. The Morphs and Reconstructions
+
+| Model | Model Only | Shared With MaripaludisModel |
+| --- | --- | --- |
+| Mari_to_Stadt_Morph | 156 | 539 |
+| Mari_to_Janna_Morph | 85 | 546 |
+| mari_to_mari_morph | 37 | 559 |
+| mari_to_bark_morph_3media | 209 | 540 |
+| StadtmanaeReconstruction | 312 | 374 |
+| MaripaludisReconstruction | 217 | 413 |
+| JannashciiReconstruction | 258 | 376 |
+| MaripaludisModel | 636 | 636 |

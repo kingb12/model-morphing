@@ -127,9 +127,9 @@ def list_objects(workspace_id, typestr=None):
     :return: a list of tuples of objects
     """
     objects = ws_client.list_objects({'ids': [workspace_id]})
+    result = list()
     for obj in objects:
         object_type = obj[2]
-        result = list()
         if typestr is None or typestr in object_type:  # type filtering of our list
             result.append((obj[0], obj[6], obj[1]))
     return result
