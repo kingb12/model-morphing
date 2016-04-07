@@ -61,7 +61,7 @@
 | M. maripaludis Reconstruction   | 322 | 707 | 530 |
 
 #### Reaction Overlap Analysis
-![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarirxnsvenn.png =250x "marimarirxnsvenn.png")
+![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarirxnsvenn.png =250x)
 
 #### Gene Overlap Analysis
 ![alt text](https://raw.githubusercontent.com/kingb12/model-morphing/master/analysisimages/marimarigenesvenn.png "marimarigenesvenn.png")
