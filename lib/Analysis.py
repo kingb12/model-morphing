@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 import Plotter
 import Helpers
 import Model, Reaction
@@ -106,7 +108,8 @@ def pairwise_venn_analysis(model_indentities, comparison_tup):
 
 def reaction_analysis(reactions, model, media, rxn_labels):
     # reaction, genes?, label?, subsystem?
-    header = ('Reaction', 'genes in morph?', '# of genes', 'morph labels', 'class', 'sublclass', 'subsystem')
+    # header = ('Reaction', 'genes in morph?', '# of genes', 'morph labels', 'class', 'sublclass', 'subsystem')
+    header = ('Reaction', 'genes in morph?', '# of genes', 'morph labels', 'formula')
     data = Plotter.SimpleTable(header)
     model_rxns = dict([(r.rxn_id(), r) for r in model.get_reactions()])
     model_info, reaction_info = service.model_info(model)
@@ -143,7 +146,16 @@ def reaction_analysis(reactions, model, media, rxn_labels):
                 subsystem_str += str(r1) + ', '
         except KeyError:
             pass
-        data.add((r, genes, num_genes, label_str, rxn_class_str, subclass_str, subsystem_str))
+        formula = reaction.get_equation()
+        formula.sort(key=attrgetter('coeff'))
+        print formula
+        formula_str = ''
+        for c in formula:
+            formula_str += str(c.coeff) + '*' + str(c.formula()) + ', '
+
+       # data.add((r, genes, num_genes, label_str, rxn_class_str, subclass_str, subsystem_str))
+        data.add((r, genes, num_genes, label_str, formula))
+
     return data
 
 def fva_change_analysis(models, media, workspace=None):

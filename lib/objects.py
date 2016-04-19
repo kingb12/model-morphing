@@ -263,7 +263,7 @@ class Compound(object):
             u'defaultCharge',
             u'unchargedFormula']
         """
-        biochem = self.biochem.get_object()
+        biochem = self.biochem.data
         for cpd in biochem['compounds']:
             if cpd['id'] == self.compound_ref:
                 return cpd
