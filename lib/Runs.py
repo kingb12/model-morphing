@@ -975,7 +975,7 @@ def fva_analysis():
     data = Analysis.reaction_analysis(info_reactions, model, None, rxn_labels)
     meta_data = Plotter.SimpleTable(('Number of Reactions', 'Percent Gene Based', 'Percent Gene-Match'))
     percent_gene = format((float(sum([r[1] for r in data.rows]))) / len(data.rows) * 100, '0.2f')
-    percent_gm= format((float(sum([r[3] == 'gene-match' for r in data.rows]))) / len(data.rows) * 100, '0.2f')
+    percent_gm= format((float(sum([r[3].find('gene-match') >= 0 for r in data.rows]))) / len(data.rows) * 100, '0.2f')
     meta_data.add((len(data.rows), percent_gene, percent_gm))
 
     with open('../data/fva_analysis.md', 'w') as f:

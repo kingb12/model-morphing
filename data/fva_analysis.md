@@ -17,7 +17,7 @@ the sets that inform these reactions are available, e.g. what are the qualities 
 ##### Blocked Only in Morphed Model
 | Number of Reactions | Percent Gene Based | Percent Gene-Match | 
 | --- | --- | --- | 
-| 78 | 87.18 | 32.05 | 
+| 78 | 87.18 | 69.23 | 
 
  Full Table: 
 
