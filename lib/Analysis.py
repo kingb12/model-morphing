@@ -154,7 +154,7 @@ def reaction_analysis(reactions, model, media, rxn_labels):
             formula_str += str(c.coeff) + '*' + str(c.formula()) + ', '
 
        # data.add((r, genes, num_genes, label_str, rxn_class_str, subclass_str, subsystem_str))
-        data.add((r, genes, num_genes, label_str, formula))
+        data.add((r, genes, num_genes, label_str, formula_str))
 
     return data
 
