@@ -926,6 +926,64 @@ def value_added_analysis():
         f.write('\n\n### Source Code\n')
         f.write('`>>>Runs.value_added_analysis()`')
 
+def fva_analysis():
+    """
+    Evaluating how many of the reactions are dead ends and where they came from
+    :return:
+    """
+    model = FBAModel(7, 14089) # Mari_to_Janna_Morph
+    supermodel = FBAModel(9, 12781) # mari_to_janna supermodel
+    media = Media(25, 9145) # Jannaschii Media
+    info = service.runfva(supermodel, media, workspace=12056)
+    assert FBA(info[0], info[1]).objective > 0
+    super_fva = FBA(info[0], info[1])
+    info = service.runfva(model, media, workspace=12056)
+    morph_fva = FBA(info[0], info[1])
+    venn = Analysis.fva_change_analysis([model, supermodel], media, workspace=12056)
+    change = Plotter.SimpleTable(('Blocked In: ', 'Morph Only', 'Both', 'Supermodel Only'))
+    change.add(('M. jannschii',
+                venn[frozenset([model.name])],
+                venn[frozenset([supermodel.name, model.name])],
+                venn[frozenset([supermodel.name])]
+                ))
+
+    blocked_data = Plotter.SimpleTable(('Model', 'Blocked Reactions', 'Total Reactions', '% Blocked',
+                                        '% blocked with genes'))
+    blocked = super_fva.blocked_reactions()
+    super_reactions = dict([(r.get_removal_id(), r) for r in supermodel.get_reactions()])
+    num_genes = 0
+    for r in blocked:
+        if super_reactions[r].gpr.gpr_type != 'no-gene':
+            num_genes += 1
+    percent_gene = format((float(num_genes)) / len(blocked) * 100, '0.2f')
+    percent_block = format((float(len(blocked))) / len(super_reactions) * 100, '0.2f')
+    blocked_data.add(('Super Model', len(blocked), len(super_reactions), percent_block, percent_gene))
+    # for morph
+    blocked = morph_fva.blocked_reactions()
+    model_reactions = dict([(r.get_removal_id(), r) for r in model.get_reactions()])
+    num_genes = 0
+    for r in blocked:
+        if model_reactions[r].gpr.gpr_type != 'no-gene':
+            num_genes += 1
+    percent_gene = format((float(num_genes)) / len(blocked) * 100, '0.2f')
+    percent_block = format((float(len(blocked))) / len(model_reactions) * 100, '0.2f')
+    blocked_data.add(('Morphed Model', len(blocked), len(model_reactions), percent_block, percent_gene))
+
+
+    with open('../data/fva_analysis.md', 'w') as f:
+        f.write('# FVA Analysis\n automated analysis of the sparsity of our network, comparing our morph to the super' +
+                'model. Further analysis will included the Source Model, other morphs, etc.\n')
+        # TODO: Update description as you go
+
+        f.write('### Change in reaction blocking\n')
+        f.write(change.markdown() + '\n')
+        f.write('\n\n')
+        f.write('### Blockage Data for each model\n')
+        f.write(blocked_data.markdown())
+
+
+
+
 
 
 

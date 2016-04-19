@@ -17,7 +17,8 @@ def venn_analysis(list_of_set_pairs):
     Imagine this as a venn diagram, but any dimensions are possible. Returns a dictionary with the elements belonging
     to each section of the supposed diagram and a label identifying which sets contribute to this area.
 
-    :param list_of_set_pairs: A list of tuples, where each tuple has a set object at tup[1] and a name for the set at tup[0]
+    :param list_of_set_pairs: A list of tuples, where each tuple has a set object at tup[1] and a name for the frozenset
+     at tup[0]
     :return: a dictionary with a frozen set of names as a key to the elements from the sets in these keys and not others
     """
     all_sets = set(list_of_set_pairs)
@@ -140,6 +141,21 @@ def reaction_analysis(reactions, model, media, rxn_labels):
             pass
         data.add((r, genes, num_genes, labels, rxn_class_str, subclass_str, subsystem_str))
     return data
+
+def fva_change_analysis(models, media, workspace=None):
+    """
+    runs fva on all models and returns a dictionary od reactions which are blocked in one, the other, or both
+    :param models:
+    :return:
+    """
+    if workspace is None:
+        workspace = models[0].workspace_id
+    blocked_sets = []
+    for m in models:
+        info = service.runfva(m, media, workspace=workspace)
+        fva = FBA(info[0], info[1])
+        blocked_sets.append((m.name, frozenset(fva.blocked_reactions())))
+    return venn_analysis(blocked_sets)
 
 
 

@@ -641,6 +641,18 @@ class FBA(StoredObject):
         info = self.data['media_ref'].split('/')
         return Media(info[0], info[1])
 
+    def blocked_reactions(self):
+        """
+        returns a list of rxn_ids of reactions that were incapable of carrying flux in FBA
+        WARNING: MAKE SURE THIS LINKS TO AN FBA OBJECT WHERE FVA WAS RUN OR ERRONEROUS RESULTS WILL BE FOUND
+        :return:
+        """
+        result = list()
+        for r in self.data['FBAReactionVariables']:
+            if r['max'] == 0 and r['min'] == 0:
+                assert r['class'] == 'Blocked'
+                result.append(r['modelreaction_ref'].split('/')[-1])
+        return result
 
 class ProteomeComparison(StoredObject):
     """

@@ -225,6 +225,23 @@ def runfba(model, media, workspace=None):
     return info[0], info[6]
 
 
+def runfva(model, media, workspace=None):
+    """
+    Runs Flux Balance Analysis on an FBAModel in the fba modeling service
+
+    :param model: FBAModel to run flux balance analysis on
+    :param media: Media to run FBA with
+    :param workspace: (optional) workspace for the FBA object to be left in, default is model workspace
+    :return: tuple identity of the FBA stored in the service
+    """
+    if workspace is None:
+        workspace = model.workspace_id
+    fba_params = {u'workspace': workspace, u'model': model.object_id, u'model_workspace': model.workspace_id,
+                  u'formulation': fba_formulation(media), u'fva': True}
+    info = fba_client.runfba(fba_params)
+    return info[0], info[6]
+
+
 def translate_model(src_model, protcomp, workspace=None):
     """
     Uses the service to translate an FBAModel to a close genome relative
