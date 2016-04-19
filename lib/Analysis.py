@@ -3,11 +3,11 @@ import Helpers
 import Model, Reaction
 import math
 from Morph import *
-def reaction_analysis(model_identities):
+def common_reaction_analysis(model_identities):
     models = list()
     for m in model_identities:
-        model = Helpers.get_object(m[0], m[1])
-        models.append((m[2], frozenset([Helpers.get_rxn_id(r) for r in Model.get_reactions(model['data'])])))
+        model = FBAModel(m[0], m[1])
+        models.append((m[2], frozenset([r.rxn_id() for r in model.get_reactions()])))
     return venn_analysis(models)
 
 def venn_analysis(list_of_set_pairs):
@@ -102,3 +102,33 @@ def pairwise_venn_analysis(model_indentities, comparison_tup):
     for m in model_indentities:
         result[(comparison_tup[2], m[2])] = reaction_analysis([comparison_tup, m])
     return result
+
+def reaction_analysis(reactions, model, media, rxn_labels):
+    # reaction, genes?, label?, subsystem?
+    header = ('Reaction', 'genes in morph?', '# of genes', 'morph labels', 'class', 'sublclass', 'subsystem')
+    data = Plotter.SimpleTable(header)
+    model_rxns = dict([(r.rxn_id(), r) for r in model.get_reactions()])
+    model_info, reaction_info = service.model_info(model)
+    for r in reactions:
+        reaction = model_rxns[r]
+        genes = len(reaction.gpr.features()) > 0
+        num_genes = len(reaction.gpr.features())
+        labels = set()
+        for key in rxn_labels:
+            if r in rxn_labels[key]:
+                labels.add(key)
+        try:
+            info = reaction_info[r.split('_')[0]]
+            rxn_class = info['primclass']
+            subclass = info['subclass']
+            subsystem = info['subsytem'] # MISSPELLED ON PURPOSE, KBase's key is spelled this way
+        except KeyError:
+            rxn_class = None
+            subclass = None
+            subsystem = None # MISSPELLED ON PURPOSE, KBase's key is spelled this way
+        data.add((r, genes, num_genes, labels, rxn_class, subclass, subsystem))
+    return data
+
+
+
+

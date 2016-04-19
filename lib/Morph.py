@@ -391,26 +391,25 @@ class Morph:
                 specials.append(reaction)
             else:
                 super_rxns[rxn_id] = (reaction.get_rxn_ref(), reaction.get_comp_ref(), reaction.get_direction())
+        adjustments = []
         # Add the RECON reactions:
-        i = 0
         for rxn_id in self.rxn_labels['recon']:
             reaction = self.rxn_labels['recon'][rxn_id]
             if rxn_id in src_rxns:
                 direction = _general_direction(reaction, src_rxns[rxn_id])
-                i += 1
             else:
                 direction = reaction.get_direction()
             if reaction.is_special_ref():
-                raise Exception
                 specials.append(reaction)
             else:
                 if rxn_id not in super_rxns:
                     super_rxns[rxn_id] = (reaction.get_rxn_ref(), reaction.get_comp_ref(), direction, str(reaction.gpr))
-        raise Exception(str(i))
+                    adjustments.append((reaction.get_removal_id(), reaction.gpr))
         # ---->
         super_rxns = super_rxns.values()
         result = service.add_reactions(self.model, super_rxns, name='super_model')
         self.model = FBAModel(result[0], result[1])
+        service.adjust_gprs(self.model, adjustments)
         result = service.add_reactions_manually(self.model, specials, name='super_modelspc')
         self.model = FBAModel(result[0], result[1])
 

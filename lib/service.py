@@ -320,3 +320,17 @@ def add_reactions_manually(model, specials, workspace=None, name=None):
     if name is not None:
         return save_object(obj, types()['FBAModel'], workspace, name=name)
     return save_object(obj, types()['FBAModel'], workspace, objid=model.object_id)
+
+
+def adjust_gprs(model, adjustments):
+    adjust_args = {'model': model.object_id,
+                    'workspace': model.workspace_id,
+                    'reaction': [r[0] for r in adjustments],
+                    'gpr': [str(r[1])[1:-1] for r in adjustments]
+                    }
+    fba_client.adjust_model_reaction(adjust_args)
+
+
+def model_info(model):
+    comp = fba_client.compare_models({'models': [model.object_id], 'workspaces': [model.workspace_id]})
+    return (comp['model_comparisons'], dict([(r['reaction'], r) for r in comp['reaction_comparisons']]))

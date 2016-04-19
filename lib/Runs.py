@@ -5,6 +5,9 @@ import GrowthConditions
 import itertools
 from Helpers import *
 import Client
+import Plotter
+import Analysis
+
 from biokbase.fbaModelServices.Client import ServerError
 # This is a module of functions that perform an unorganized collection of runs
 # and routines, not for production usage
@@ -245,7 +248,6 @@ def all_removal(media, mediaws, source_biomass=None, src_morph=None):
     dump(m4, '../data/morph-' + media_name + '-all1-parse.pkl')
     dump(m5, '../data/morph-' + media_name + '-all2-parse.pkl')
 
-
 def find_kbaliases(filename, genome_id, ws_id):
     """
     given a list of genes, finds their KBase ID aliases and return them as a list
@@ -403,7 +405,7 @@ def get_comp_info(reactions, comparison):
 
 def find_gene_relationships(ws_id=None):
     # Make a morph, a translation, and a reconstruction
-    m = make_morph(ws_id)
+    m = ace_to_bark(ws_id)
     m = Client.translate_features(m)
     m = Client.reconstruct_genome(m)
     # get the model objects
@@ -466,7 +468,7 @@ def genes_to_reactions(model_object, list_of_genejs):
 
 def feature_hash(model_object):
     '''
-    returns a dictionary of all gene features to their associated reactions
+    RETURNS A DICTIONARY OF ALL GENE FEATURES TO THEIR ASSOCIATED REACTIONS
     '''
     result = dict()
     for rxn in model_object['modelreactions']:
@@ -862,4 +864,22 @@ def find_missing_genes(model, filename):
         file = set([g.split('\'')[1] for g in lines])
     return file - genes
 
+def value_added_analysis():
+    """
+    Runs an analysis in the value added by the morphing process
+    - Runs a venn analysis on source, morph(s), target_recon
+    - compiles information on this in the source and morph and not in recon (value added)
+    :return: A SimpleTable of information as well as result in dict form
+    """
+    models = _allmodelsinws(13638)
+    my_models = []
+    for m in models:
+        if m[2] in {'MaripaludisModel', 'Mari_to_Janna_Morph', 'JannashciiReconstruction'}:
+            my_models.append(m)
+        if m[2] == 'Mari_to_Janna_Morph':
+            model = FBAModel(m[0], m[1])
+    assert len(my_models) == 3, str(models) + '\n\n' + str(my_models)
+    reactions = Analysis.common_reaction_analysis(my_models)[frozenset({'MaripaludisModel', 'Mari_to_Janna_Morph'})]
+    rxn_labels = Helpers.load('../data/mari_to_janna_morph.pkl').rxn_labels
+    return Analysis.reaction_analysis(reactions, model, None, rxn_labels)
 
