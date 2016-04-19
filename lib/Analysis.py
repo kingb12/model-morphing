@@ -119,16 +119,26 @@ def reaction_analysis(reactions, model, media, rxn_labels):
                 labels.add(key)
         assert len(labels) == 1, str(labels)
         labels = list(labels)[0]
+        rxn_class_str = None
+        subclass_str = None
+        subsystem_str = None
         try:
             info = reaction_info[r.split('_')[0]]
-            rxn_class = info['primclass']
-            subclass = info['subclass']
-            subsystem = info['subsytem'] # MISSPELLED ON PURPOSE, KBase's key is spelled this way
+            rxn_class = set(info['primclass'].split(';'))
+            rxn_class_str = ''
+            for r in rxn_class:
+                rxn_class_str += str(r) + '\n'
+            subclass = set(info['subclass'].split(';'))
+            subclass_str = ''
+            for r in subclass:
+                subclass_str += str(r) + '\n'
+            subsystem = set(info['subsytem'].split(';'))  # MISSPELLED ON PURPOSE, KBase's key is spelled this way
+            subsystem_str = ''
+            for r in subsystem:
+                subsystem_str += str(r) + '\n'
         except KeyError:
-            rxn_class = None
-            subclass = None
-            subsystem = None # MISSPELLED ON PURPOSE, KBase's key is spelled this way
-        data.add((r, genes, num_genes, labels, rxn_class, subclass, subsystem))
+            pass
+        data.add((r, genes, num_genes, labels, rxn_class_str, subclass_str, subsystem_str))
     return data
 
 
