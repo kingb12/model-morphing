@@ -920,7 +920,7 @@ def value_added_analysis():
         for d in sub_data:
             my_data = sub_data[d]
             f.write('\n### ' + d + ' (' + str(len(my_data.rows)) + ')\n')
-            percent_genes = format((float(sum([r[1] for r in my_data.rows])) / len(data.rows)) * 100, '0.2f')
+            percent_genes = format((float(sum([r[1] for r in my_data.rows])) / len(my_data.rows)) * 100, '0.2f')
             f.write('##### Percent with genetic basis: ' + str(percent_genes))
             f.write('\n\n' + my_data.markdown())
         f.write('\n\n### Source Code\n')
