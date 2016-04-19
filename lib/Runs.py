@@ -942,9 +942,9 @@ def fva_analysis():
     venn = Analysis.fva_change_analysis([model, supermodel], media, workspace=12056)
     change = Plotter.SimpleTable(('Blocked In: ', 'Morph Only', 'Both', 'Supermodel Only'))
     change.add(('M. jannschii',
-                venn[frozenset([model.name])],
-                venn[frozenset([supermodel.name, model.name])],
-                venn[frozenset([supermodel.name])]
+                len(venn[frozenset([model.name])]),
+                len(venn[frozenset([supermodel.name, model.name])]),
+                len(venn[frozenset([supermodel.name])])
                 ))
 
     blocked_data = Plotter.SimpleTable(('Model', 'Blocked Reactions', 'Total Reactions', '% Blocked',
@@ -958,6 +958,7 @@ def fva_analysis():
     percent_gene = format((float(num_genes)) / len(blocked) * 100, '0.2f')
     percent_block = format((float(len(blocked))) / len(super_reactions) * 100, '0.2f')
     blocked_data.add(('Super Model', len(blocked), len(super_reactions), percent_block, percent_gene))
+
     # for morph
     blocked = morph_fva.blocked_reactions()
     model_reactions = dict([(r.get_removal_id(), r) for r in model.get_reactions()])
@@ -969,14 +970,22 @@ def fva_analysis():
     percent_block = format((float(len(blocked))) / len(model_reactions) * 100, '0.2f')
     blocked_data.add(('Morphed Model', len(blocked), len(model_reactions), percent_block, percent_gene))
 
+    rxn_labels = Helpers.load('../data/mari_to_janna_morph.pkl').rxn_labels
+    info_reactions = [model_reactions[r].rxn_id() for r in venn[frozenset([model.name])]]
+    data = Analysis.reaction_analysis(info_reactions, model, None, rxn_labels)
+
 
     with open('../data/fva_analysis.md', 'w') as f:
         f.write('# FVA Analysis\n automated analysis of the sparsity of our network, comparing our morph to the super' +
                 'model. Further analysis will included the Source Model, other morphs, etc.\n')
         # TODO: Update description as you go
-
+        f.write('### Blockage Data for each model\n')
+        f.write(blocked_data.markdown() + '\n')
         f.write('### Change in reaction blocking\n')
         f.write(change.markdown() + '\n')
+        f.write('the sets that inform these reactions are available, e.g. what are the qualities of the reactions' +
+                ' blocked in only the Morphed Model?\n')
+        f.write(data.markdown())
         f.write('\n\n')
         f.write('### Blockage Data for each model\n')
         f.write(blocked_data.markdown())

@@ -118,8 +118,12 @@ def reaction_analysis(reactions, model, media, rxn_labels):
         for key in rxn_labels:
             if r in rxn_labels[key]:
                 labels.add(key)
-        assert len(labels) == 1, str(labels)
-        labels = list(labels)[0]
+        label_str = ''
+        if len(labels) > 1:
+            for l in labels:
+                label_str += l + ', '
+        else:
+            label_str = list(labels)[0]
         rxn_class_str = None
         subclass_str = None
         subsystem_str = None
@@ -139,7 +143,7 @@ def reaction_analysis(reactions, model, media, rxn_labels):
                 subsystem_str += str(r1) + ', '
         except KeyError:
             pass
-        data.add((r, genes, num_genes, labels, rxn_class_str, subclass_str, subsystem_str))
+        data.add((r, genes, num_genes, label_str, rxn_class_str, subclass_str, subsystem_str))
     return data
 
 def fva_change_analysis(models, media, workspace=None):
