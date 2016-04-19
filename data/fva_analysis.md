@@ -14,6 +14,12 @@
 | M. jannschii | 78 | 262 | 67 | 
 
 the sets that inform these reactions are available, e.g. what are the qualities of the reactions blocked in only the Morphed Model?
+##### Blocked Only in Morphed Model
+| Number of Reactions | Percent Gene Based | Percent Gene-Match | 
+| --- | --- | --- | 
+| 78 | 87.18 | 32.05 | 
+
+ Full Table: 
 
 | Reaction | genes in morph? | # of genes | morph labels | class | sublclass | subsystem | 
 | --- | --- | --- | --- | --- | --- | --- | 

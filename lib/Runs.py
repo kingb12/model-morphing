@@ -973,7 +973,10 @@ def fva_analysis():
     rxn_labels = Helpers.load('../data/mari_to_janna_morph.pkl').rxn_labels
     info_reactions = [model_reactions[r].rxn_id() for r in venn[frozenset([model.name])]]
     data = Analysis.reaction_analysis(info_reactions, model, None, rxn_labels)
-
+    meta_data = Plotter.SimpleTable(('Number of Reactions', 'Percent Gene Based', 'Percent Gene-Match'))
+    percent_gene = format((float(sum([r[1] for r in data.rows]))) / len(data.rows) * 100, '0.2f')
+    percent_gm= format((float(sum([r[3] == 'gene-match' for r in data.rows]))) / len(data.rows) * 100, '0.2f')
+    meta_data.add((len(data.rows), percent_gene, percent_gm))
 
     with open('../data/fva_analysis.md', 'w') as f:
         f.write('# FVA Analysis\n automated analysis of the sparsity of our network, comparing our morph to the super' +
@@ -984,7 +987,8 @@ def fva_analysis():
         f.write('### Change in reaction blocking\n')
         f.write(change.markdown() + '\n')
         f.write('the sets that inform these reactions are available, e.g. what are the qualities of the reactions' +
-                ' blocked in only the Morphed Model?\n')
+                ' blocked in only the Morphed Model?\n##### Blocked Only in Morphed Model')
+        f.write(meta_data.markdown() + '\n Full Table: \n')
         f.write(data.markdown())
         f.write('\n\n')
         f.write('### Blockage Data for each model\n')
