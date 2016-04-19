@@ -293,7 +293,13 @@ class Compound(object):
         """
         return self.get_info()['formula']
 
+    def name(self):
+        """
+        returns the formula for the compound
 
+        :return: the formula for the compound
+        """
+        return self.get_info()['name']
 class Gpr:
     """
     a class representing the Gene -> Protein -> Reaction relationship for a ModelReaction in a model
