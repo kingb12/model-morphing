@@ -24,6 +24,10 @@ class Log:
         self.actions = []
         self.actions.append(Action('initialize', [a], context=str(Log.__init__)))
 
+    def add(self, action_type, inputs, outputs, context=None, notes=None):
+        a = Action(action_type, {'in': inputs, 'out': outputs}, context=context, notes=notes)
+        self.actions.append(a)
+
 
 class Action:
     """
@@ -36,7 +40,7 @@ class Action:
         """
 
         :param action_type: String describing the broad class/type of action. e.g. log uses 'initialize' for __init__
-        :param members: the involved parties, in a list or set
+        :param members: the involved parties, in a dict 'in', 'out' as keys
         :param context: (optional) at object discretion. context in which action was performed
         :param notes: (optional) at object discretion. You can put ANYTHING here
         :return: Action as initialized with parameters

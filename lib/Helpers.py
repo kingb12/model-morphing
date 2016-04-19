@@ -280,7 +280,7 @@ def gpr_set(reaction):
             prots.add(frozenset(prot))
     if len(prots) > 0:
         return frozenset(prots)
-    return none
+    return None
 
 def ftr_set(reaction):
     features = set()
@@ -409,20 +409,19 @@ def ace_to_bark(ws_id=None):
     args['ws_id'] = ws_id
 
     return Morph(args)
+
+
 def mari_to_janna(ws_id=None):
     args = dict()
-    args['genome'] = '36'
-    args['src_model'] = '37'
-    args['probanno'] = '31'
-    args['protcomp'] = '27'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
+    args['genome'] = Genome(36, 9145)
+    args['src_model'] = FBAModel(37, 9145)
+    args['probanno'] = ReactionProbabilities(31, 9145)
+    args['protcomp'] = ProteomeComparison(27, 9145)
+    args['media'] = Media(24, 9145)
     args['ws_id'] = ws_id
     return Morph(args)
+
+
 def mari_to_bark(ws_id=None):
     args = dict()
     args['genome'] = '3'
@@ -437,6 +436,8 @@ def mari_to_bark(ws_id=None):
     args['media'] = '24'
     args['ws_id'] = ws_id
     return Morph(args)
+
+
 def mari_to_stadt(ws_id=None):
     args = dict()
     args['genome'] = '35'

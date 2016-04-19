@@ -53,7 +53,8 @@ class Morph:
     # from one species to a close relative genome. It has information related to
     # the source model, the target genome, the reactions in the model as it is
     # morphed from source import to target, and the set of
-    properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'ws_id', 'ws_name', 'trans_model',
+    properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'ws_id', 'ws_name',
+                  'trans_model',
                   'recon_model', 'media', 'probhash', 'log'}
 
     def __init__(self, *arg_hash, **kwargs):
@@ -118,7 +119,6 @@ class Morph:
         if self.recon_model is not None:
             assert isinstance(self.recon_model, FBAModel)
 
-
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
 
@@ -143,284 +143,290 @@ class Morph:
     def __unicode__(self):
         return unicode(str(self))
 
+    def fill_src_to_media(self):
+        """
+        Gap-fills the Morphs source model to the provided media
+        :return: None
+        """
+        prev = FBAModel(self.src_model.object_id, self.src_model.workspace_id)
+        self.src_model = self.src_model.copy(workspace_id=self.ws_id)
+        result = service.gapfill_model(self.src_model, self.media,
+                                       workspace=self.ws_id, rxn_probs=self.probanno)
+        self.src_model = FBAModel(result[0], result[1])
+        self.log.add('gapfill', prev, self.src_model, context='fill_src_to_media')
 
-class Gpr:
-    def __init__(self, reaction=None):
-        '''
-        creates a GPR object t represent the gene-protein-reaction relationship for a rxn/model
-        '''
-        if reaction is not None:
-            self.gpr, self.gpr_type = self._gpr_set(reaction)
-            self.ftrs = self._feature_set()
-            if self.gpr_type is None:
-                if len(self.ftrs) > 0:
-                    self.gpr_type = 'genes'
+    def runfba(self, model=None, media=None):
+        """
+        Run FBA on the model in the Morph
+        :param model: (optional) FBAModel, default is morph.model
+        :param media: (optional) Media, default is morph.media
+        :return: FBA
+        """
+        if model is None:
+            model = self.model
+        if media is None:
+            media = self.media
+        objid, wsid = service.runfba(model, media, self.ws_id)
+        return FBA(objid, wsid)
+
+    def translate_features(self):
+        """
+        Translate morph.model using ProteomeComparison (morph.procomp) to a translated model
+        :return: None (sets morph.trans_model)
+        """
+        prev = copy.deepcopy(self.trans_model)
+        result = service.translate_model(self.src_model, self.protcomp, workspace=self.ws_id)
+        self.trans_model = FBAModel(result[0], result[1])
+        self.log.add('model_translation', prev, self.trans_model, context='translate_features')
+
+    def reconstruct_genome(self):
+        """
+        Reconstruct the genome using automated reconstruction in the service form morph.genome
+        :return: None (sets morph.recon_model)
+        """
+        prev = copy.deepcopy(self.recon_model)
+        result = service.reconstruct_genome(self.genome, workspace=self.ws_id)
+        self.recon_model = FBAModel(result[0], result[1])
+        self.log.add('genome_reconstruction', prev, self.recon_model, context='reconstruct_genome')
+
+    def label_reactions(self):
+        """
+    Labels morph's reactions from translated model, reconstruction, and source
+
+    Populates the rxn_labels attribute in the Morph object with a Dictionary of four dictionaries of
+    reaction_id -> value tuples.
+    The first level dicts are named with the keys:
+        - gene-match
+        - gene-no-match
+        - no-gene
+        - recon
+    Populates morph.probhash with a dictionary of compartment-truncated reaction_ids to their probability relative to
+    genome in question (derived from morph.probanno).
+    Also populates morph.objects, morph.info with data from KBase objects (advanced use)
+
+    Technical Details (Consult if you are encountering issues):
+    For simplicity, an end user can treat the interiors of each dictionary like a set of reaction ids, but it is
+    important to note the this is actually a nested dictionary with entries of the form:
+    reaction_id -> (model_index, probability)
+    Thus, some set behavior works, but some doesn't, the user must account for the fact that these are dictionaries:
+
+        >>>'rxn09073_c0' in morph.rxn_labels['gene-no-match']
+
+            works and returns True or False, indicating whether or not rxn09073_c0 is a gene-no-match reaction
+
+        >>>morph.rxn_labels['gene-match'].add('rxn00456_c0')
+
+        fails and throws an exception. add() is a set method and can't be used on dictionaries. (You could set an
+        entry with real or arbitrary value to get around this if you really wished)
+
+    Each inner dictionary is keyed with reaction_ids, hashed to tuples as such: (model_index, probability)
+    Where reaction_id is a kbase reaction id with the compartment info appended to the end (e.g. rxn01316_c0),
+    model_index is the index of the reaction in the objects['x_model'][modelreactions] list, and the probability
+    is the reaction probability associated with each reaction from the probanno object. Reactions not in ProbAnno
+    are given an arbitrary probability of -1.0
+
+    Example evaluations:
+    >>>rxn_labels['gene-no-match']['rxn01316_c0'][0]
+    evaluates to the index of rxn01316_c0 in morph.objects['trans_model']['modelreactions']
+    >>>rxn_labels['gene-no-match']['rxn01316_c0'][1]
+    evaluates to the reaction probability of rxn01316_c0
+    >>>'rxn01316_c0' in rxn_labels['gene-no-match']
+    will evaluate True if the reaction is a gene-no-match reaction (an inner dict key)
+
+    Note
+    ----
+    Function Requirements:
+        - morph.probanno is a ReactionProbabilities
+        - morph.src_model, morph.recon_model, morph.trans_model are FBAModels
+        - morph.ws_id is the ID of a readable/writeable service workspace
+
+
+    Post-Condition
+    -------
+    Morph
+        a morph in which morph.rxn_labels holds a dictionary with the keys 'gene-match', gene-no-match', 'recon'
+        and 'no-gene'. The value of each key holds a dictionary with 0 or more entries of the form:
+            reaction_id -> (model_index, probability)
+        morph.probhash contains a dictionary of reaction_ids (COMPARTMENT TRUNCATED) mapped to their probabilities
+            e.g. rxn09876 -> 0.04545339
+
+    Examples
+    --------
+    Given a morph of the form (only relevant attributes shown):
+
+    >>>morph = Client.label_reactions(morph)
+
+    would produce something like:
+
+        probannows: 9145
+        ws_name: MMws235
+        src_modelws: 9145
+        src_model: 19
+        trans_model: 3
+        probhash: ['rxn05653', 'rxn12345', rxn59595', 'rxn45644' ... (more)]
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        recon_model: 4
+        probanno: 15
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.info = ['source_model', 'recon_model', 'trans_model', 'probanno']
+
+    These could be examined like so:
+
+    >>>morph.rxn_labels['no-gene'].keys()[1]
+    u'rxn10316_c0'
+
+    >>>morph.rxn_labels['no-gene']['rxn10316_c0'][1]
+    0.444456666959
+
+    >>>'rxn10316_c0' in morph.rxn_labels['no-gene']
+    True
+    """
+        # get reaction sets
+        recon_dict = dict([(r.rxn_id(), r) for r in self.recon_model.get_reactions()])
+        trans_dict = dict([(r.rxn_id(), r) for r in self.trans_model.get_reactions()])
+        model_dict = dict([(r.rxn_id(), r) for r in self.src_model.get_reactions()])
+        # create the rxn_labels dictionary
+        self.rxn_labels = {'gene-no-match': dict(),
+                           'gene-match': dict(),
+                           'no-gene': dict(),
+                           'recon': dict(),
+                           'common': dict()}
+        # Some reference sets
+        all_reactions = set(model_dict.keys()).union(recon_dict.keys())  # TODO: runtime will make you cry
+        for rxn in all_reactions:
+            if rxn in trans_dict and rxn in recon_dict:
+                self.rxn_labels['common'][rxn] = (trans_dict[rxn], recon_dict[rxn])
+            if rxn in model_dict and rxn not in trans_dict:
+                if rxn not in recon_dict:
+                    self.rxn_labels['gene-no-match'][rxn] = model_dict[rxn]
                 else:
-                    self.gpr_type = 'no-gene'
-        else:
-            self.gpr = None
-        self._check_rep()
+                    self.rxn_labels['recon'][rxn] = recon_dict[rxn]
+            if rxn in trans_dict:
+                gpr = trans_dict[rxn].gpr
+                if gpr.gpr_type == 'no-gene' and rxn not in recon_dict:
+                    self.rxn_labels['no-gene'][rxn] = trans_dict[rxn]
+                else:
+                    if rxn in recon_dict:
+                        self.rxn_labels['gene-match'][rxn] = recon_dict[rxn]
+                    else:
+                        self.rxn_labels['gene-match'][rxn] = trans_dict[rxn]
+            if rxn in recon_dict and rxn not in trans_dict and rxn not in model_dict:
+                self.rxn_labels['recon'][rxn] = recon_dict[rxn]
 
-    def __str__(self):
-        '''
-        returns the gpr represented as a string, both Human and KBase readable
-        '''
-        gpr_set = self.gpr
-        proteins = list(gpr_set)
-        proteins_str = ""
-        for i in range(0, len(proteins)):
-            units_str = ""
-            subunits = list(proteins[i])
-            for j in range(0, len(subunits)):
-                unit = list(subunits[j])
-                features = ""
-                for k in range(0, len(unit)):
-                    feature = unit[k]
-                    if (k > 0):
-                        feature = " or " + feature
-                    features += feature
-                unit_str = "(" + features + ")"
-                if j > 0:
-                    unit_str = " and " + unit_str
-                units_str += unit_str
-            protein = "(" + units_str + ")"
-            if (i > 0):
-                protein = " or " + protein
-            proteins_str += protein
-        gpr = "(" + proteins_str + ")"
-        return gpr
+    def build_supermodel(self):
+        """
+    Sets morph.model to a superset of all reactions in morph.rxn_labels
 
-    def __repr__(self):
-        return repr(self.gpr)
+    Note
+    ----
+    Function Requirements:
+        - morph.rxn_labels is a dictionary with the four keys ['gene-match', 'gene-no-match', 'recon', 'no-gene'],
+        and it's values are dictionaries with entries of the form: reaction_id -> (model_index, probability)
+        - morph.objects contains entries for the 'source_model' and 'recon_model' with data for the models in KBase (this
+        is the output of the label_reactions(morph) function)
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.gpr == other.gpr
-        else:
-            return False
+    Parameters
+    ----------
+    morph: Morph
+        The morph for which you want to build a super_model (initializing morph.model)
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    Returns
+    -------
+    Morph
+        a morph object where morph.model, morph.ws_id forms a valid ObjectIdentity for a
+        readable/writable KBase model object (the super-model)
 
-    def __unicode__(self):
-        return unicode(str(self))
+    Examples
+    --------
+    Given a morph like so (only relevant attributes shown):
 
-    def _gpr_set(self, rxn_object):
-        '''
-        creates the gpr set for the self.gpr field. Intended to only be called once
+        ws_name: MMws235
+        trans_model: 3
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.model = None
 
-        A gpr with no features is a frozenset(frozenset(frozenset()))
-        '''
-        reaction = rxn_object
-        rxn_proteins = reaction['modelReactionProteins']
-        prots = set()
-        for i in range(0, len(rxn_proteins)):
-            prot = set()
-            if rxn_proteins[i]['note'] == u'spontaneous' or rxn_proteins[i]['note'] == u'universal':
-                return frozenset([frozenset([frozenset([])])]), rxn_proteins[i]['note']
-            subunits = rxn_proteins[i]['modelReactionProteinSubunits']
-            for j in range(0, len(subunits)):
-                unit = subunits[j]
-                ftrs = [f.split('/')[-1] for f in unit['feature_refs']]
-                if len(ftrs) > 0:
-                    prot.add(frozenset(ftrs))
-            if len(prot) > 0:
-                prots.add(frozenset(prot))
-        if len(prots) > 0:
-            return frozenset(prots), None
-        return frozenset([frozenset([frozenset([])])]), None
+    >>>morph = Client.build_supermodel(morph)
 
-    def __iter__(self):
-        '''
-        returns an interator over the gpr attribute
-        '''
-        if self.gpr is not None:
-            return self.gpr.__iter__()
+    would produce something like this:
 
-    def _feature_set(self):
-        features = set()
-        for protein in self.gpr:
-            for sub in protein:
-                for f in sub:
-                    features.add(f)
-        return frozenset(features)
+        ws_name: MMws235
+        trans_model: 3
+        rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+        ws_id: 11444
+        morph.objects = ['source_model', 'recon_model', 'trans_model', 'probanno']
+        morph.model = 5
 
-    def features(self):
-        '''
-        returns a set of the features in this gpr
-        '''
-        # ok to return attibute, it's a frozen set
-        self._check_rep()
-        return self.ftrs
-
-    def contains_feature(self, feature):
-        '''
-        returns true if the feature is somewhere in the gpr (features of the string form 'kb|g.587.peg.1234')
-        '''
-        return feature in self.ftrs
-
-    def contains_protein(self, protein):
-        '''
-        returns true if the protein is in the gpr (proteins are frozen sets of subunits, which in turn are frozen sets of features)
-        '''
-        return protein in self.gpr
-
-    def contains_subunit(self, subunit):
-        '''
-        returns true if the subunit is in a protein in the gpr (subunits are frozensets of features)
-        '''
-        for protein in self.gpr:
-            if subunit in protein:
-                return True
-        return False
-
-    def merge(self, other_gpr):
-        # if at least one is None, attempt to return a possibly non-None one
-        gpr_set1 = self.gpr
-        gpr_set2 = other_gpr.gpr
-        if gpr_set1 is None or gpr_set2 is None:
-            if gpr_set1 is None:
-                return gpr_set2
-            return gpr_set1
-        g1 = gpr_set1
-        g2 = set(gpr_set2)
-        examineGPR = False
-        # enclosing set is the set of proteins
-        for protein in g1:
-            if protein not in g2:
-                matchedProtein = False
-                proteinsToRemove = set()
-                proteinsToAdd = set()
-                # Look for a nearly matching protein
-                for g2_protein in g2:
-                    # if they share a subunit or any feature (catches homolog and subunit cases)
-                    # AND they are equal in number of subunits
-                    if len(protein) == len(g2_protein) and len(
-                                    self._unnest_sets(protein) & (self._unnest_sets(g2_protein))) != 0:
-                        proteinsToRemove.add(g2_protein)
-                        prot = set(g2_protein)
-                        matchedProtein = True
-                        # Look for a matching subunit
-                        matchedSub = False
-                        for subunit in protein:
-                            if subunit not in g2_protein:
-                                for other in g2_protein:
-                                    if len(subunit & other) != 0:
-                                        matchedSub = True
-                                        prot.remove(other)
-                                        new_sub = subunit.union(other)
-                                        if new_sub in prot:
-                                            examineGPR = True
-                                        else:
-                                            prot.add(frozenset(subunit.union(other)))
-                                        if frozenset(prot) not in proteinsToAdd:
-                                            proteinsToAdd.add(frozenset(prot))
-                        if not matchedSub:
-                            proteinsToRemove.remove(g2_protein)
-
-                            # do nothing, but better other solutions should be
-                            # implememted
-                            # recon  - do nothing
-                            # trans - always push
-                            # stronger/weaker
-
-                assert (len(proteinsToRemove) > 0 or not matchedProtein or (matchedProtein and not matchedSub))
-                g2 = g2 - set(proteinsToRemove)
-                g2 |= set(proteinsToAdd)
-                # Simple Case, proteins don't conflict
-                if not matchedProtein or not matchedSub:
-                    g2.add(protein)
-        return_gpr = self.new_gpr(frozenset(g2))
-        return_gpr.remove_redundancy()
-        if examineGPR:
-            return_gpr.gpr_type = u'potential merge conflict'
-        else:
-            return_gpr.gpr_type = u'merge'
-        return_gpr.parents = (self, other_gpr)
-        return_gpr._check_rep()
-        return return_gpr
-
-    def remove_redundancy(self):
-        '''
-        finds proteins that are subsets of each other and removes the smaller one
-
-        e.g. ((a or b)) or ((a or b or c or d)) ==> ((a or b or c or d))
-        performing this check prevents redundancy and helps ensure symmetry in T.merge(R) == R.merge(T)
-        '''
-        matches = dict()
-        for protein in self.gpr:
-            for protein2 in self.gpr:
-                if protein != protein2 and self._unnest_sets(protein).issubset(self._unnest_sets(protein2)):
-                    matches[protein] = protein2
-        for protein in matches:
-            # we know that all features in prot are in protein2
-            protein2 = copy.deepcopy(matches[protein])
-            matched_subs = set()
-            for sub in protein:
-                # sub should be a subset of a sub in p2
-                for sub2 in protein2:
-                    if sub.issubset(sub2):
-                        matched_subs.add(sub2)
-                        protein2 = protein2 - sub2
-            if len(matched_subs) == len(matches[protein]):
-                assert matched_subs == matches[protein]
-                i = len(self.gpr)
-                self.gpr = self.gpr - frozenset([protein])
-                assert len(self.gpr) == i - 1
-
-    def isEmpty(self):
-        self.check_rep()
-        return len(self.ftrs) == 0
-
-    def new_gpr(self, gpr_set):
-        '''
-        returns a new gpr with the given gpr_set
-        '''
-        newgpr = Gpr()
-        newgpr.gpr = gpr_set
-        newgpr.ftrs = newgpr._feature_set()
-        newgpr._check_rep()
-        return newgpr
-
-    def _check_rep(self):
-        '''
-        check rep invariant
-        '''
-        if self.gpr is not None and self.ftrs is None:
-            raise RepresentationError(self)
-        if hasattr(self, 'ftrs'):
-            feature_set = self._unnest_sets(self.gpr)
-            if len(self.ftrs) == 0 and self.gpr != frozenset([frozenset([frozenset([])])]):
-                raise RepresentationError(self)
-            for f in self.ftrs:
-                if f not in feature_set:
-                    raise RepresentationError(self)
-            for f in feature_set:
-                if not self.contains_feature(f):
-                    raise RepresentationError(self)
-        # verify structure
-        if hasattr(self, 'gpr') and self.gpr is not None:
-            assert type(self.gpr) is frozenset
-            for protein in self.gpr:
-                assert type(protein) is frozenset
-                for sub in protein:
-                    assert type(sub) is frozenset
-                    for ftr in sub:
-                        assert type(ftr) is str or type(ftr) is unicode
-
-    def _unnest_sets(self, nested_set):
-        '''
-        Takes anything in a nested set form and returns a single set of it's non-set elements
-
-        i.e. {{{a}}{{b, c}}{{d}{e}}} -->  {a, b, c, d, e,}
-        '''
-        single_set = set()
-        for item in nested_set:
-            if type(item) is set or type(item) is frozenset:
-                single_set |= self._unnest_sets(item)
+    Where morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase (the super model)
+    """
+        src_rxns = dict([(r.rxn_id(), r) for r in self.src_model.get_reactions()])
+        super_rxns = dict()
+        specials = list()
+        # copy the trans model
+        self.model = self.trans_model.copy()
+        #  ---->
+        # Adding reactions into the translation.
+        # First, go through every reaction they have in common and adjust if
+        # necessary:
+        reactions_to_remove = []
+        for rxn_id in self.rxn_labels['common']:
+            trans_rxn = self.rxn_labels['common'][rxn_id][0]  # MR
+            recon_rxn = self.rxn_labels['common'][rxn_id][1]  # MR
+            merge_gpr = trans_rxn.gpr.merge(recon_rxn.gpr)
+            direction = _general_direction(trans_rxn, recon_rxn)
+            if trans_rxn.gpr != merge_gpr or trans_rxn.get_direction() != direction:
+                super_rxns[rxn_id] = (recon_rxn.get_rxn_ref(), recon_rxn.get_comp_ref(), direction, str(merge_gpr))
+                removal_id = trans_rxn.get_removal_id()
+                reactions_to_remove.append(removal_id)
+        # ---->
+        # removes the rxns we need to remove in place vs. making a new copy
+        service.remove_reactions_in_place(self.model, reactions_to_remove)
+        # Next, add all the reactions that aren't already in the translation:
+        # Add the GENE_NO_MATCH reactions:
+        for rxn_id in self.rxn_labels['gene-no-match']:
+            reaction = self.rxn_labels['gene-no-match'][rxn_id]
+            if reaction.is_special_ref():
+                specials.append(reaction)
             else:
-                single_set.add(item)
-        return single_set
+                super_rxns[rxn_id] = (reaction.get_rxn_ref(), reaction.get_comp_ref(), reaction.get_direction())
+        # Add the RECON reactions:
+        i = 0
+        for rxn_id in self.rxn_labels['recon']:
+            reaction = self.rxn_labels['recon'][rxn_id]
+            if rxn_id in src_rxns:
+                direction = _general_direction(reaction, src_rxns[rxn_id])
+                i += 1
+            else:
+                direction = reaction.get_direction()
+            if reaction.is_special_ref():
+                raise Exception
+                specials.append(reaction)
+            else:
+                if rxn_id not in super_rxns:
+                    super_rxns[rxn_id] = (reaction.get_rxn_ref(), reaction.get_comp_ref(), direction, str(reaction.gpr))
+        raise Exception(str(i))
+        # ---->
+        super_rxns = super_rxns.values()
+        result = service.add_reactions(self.model, super_rxns, name='super_model')
+        self.model = FBAModel(result[0], result[1])
+        result = service.add_reactions_manually(self.model, specials, name='super_modelspc')
+        self.model = FBAModel(result[0], result[1])
+
+
+def _general_direction(model_rxn1, model_rxn2):
+    """
+    picks the more general of the two directions from reactions passed in
+    """
+    r1d = model_rxn1.get_direction()
+    r2d = model_rxn2.get_direction()
+    if r1d == r2d:
+        return r1d
+    elif r1d == '=' or r2d == '=':
+        return '='
+    else:
+        raise Exception('directions are incompatible')
 
 
 class AbstractGrowthCondition:

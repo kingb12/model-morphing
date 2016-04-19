@@ -12,27 +12,50 @@ class StoredObject(object):
     # The current environment is KBase, where all calls to the API refer to their objects by ids and workspace_ids
 
     def __init__(self, object_id, workspace_id):
-        self.identity = (object_id, workspace_id)
-        self.name = None
+        self.identity = (int(object_id), int(workspace_id))
+        self._name = None
+        self._data = None # BE MINDFUL OF THIS. IF YOU FIND A BUG CAUSED BY THIS NAMING, CHANGE IT
         self._check_rep()
 
     def __getattr__(self, item):
         # Overriding __getattr__ to  get special objects
         if item is 'object_id':
             return self.identity[0]
-        if item is 'workspace_id':
+        elif item is 'workspace_id':
             return self.identity[1]
-        if item is 'data':
-            return self.get_object()
+        elif item is 'data':
+            if self.__dict__['_data'] is None:
+                return self.get_object()
+            else:
+                return self.__dict__['_data']
+        elif item is 'name':
+            if self.__dict__['_name'] is None:
+                self.get_object()
+                return self.__dict__['_name']
+            else:
+                return self.__dict__['_name']
         else:
             raise AttributeError("%r HERE object has no attribute %r" % (self.__class__, item))
 
     def __setattr__(self, key, value):
         # Overriding __getattr__ to  get special objects
-        if key in ['object_id', 'workspace_id', 'data', 'object']:
+        if key in ['object_id', 'workspace_id']:
             raise MutationError(key)
         else:
             self.__dict__[key] = value
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.identity == other.identity
+        # TODO: THIS ILLUSTRATES WHY YOU SHOULD USE AN INTERNING DESIGN PATTERN
+
+    def __hash__(self):
+        return hash(self.identity)
+
+    def __str__(self):
+        return 'Type: ' + str(type(self)) + ', Stored Identity: ' + str((self.object_id, self.workspace_id))
+
+    def __repr__(self):
+        return 'Type: ' + str(type(self)) + ', Stored Identity: ' + str((self.object_id, self.workspace_id))
 
     def get_object(self):
         """
@@ -44,11 +67,15 @@ class StoredObject(object):
         from the interior of the object, it is best to use the abstractions provided by it's more specific type.
         """
         self._check_rep()
-        return service.get_object(self.object_id, self.workspace_id)['data']
+        meta_data = service.get_object(self.object_id, self.workspace_id)
+        self._data = meta_data[0]
+        self._name = meta_data[1][1]
+
+        return self.data
         # TODO: Clone/Copy
 
     @classmethod
-    def save(cls, stored_data, stored_type, workspace_id, objid=None, name=None):
+    def save(cls, stored_data, workspace_id, objid=None, name=None, typestr=None):
         """
         Saves data into the service and returns a StoredObject representing that data
 
@@ -59,22 +86,28 @@ class StoredObject(object):
         :param name: (optional) the destination name for the object
         :return: a StoredObject for the data provided
         """
-        if not cls.typecheck(stored_type):
-            raise StoredTypeError((stored_type, cls.storedType))
-        info = service.save_object(stored_data, stored_type, workspace_id, objid=objid, name=name)
-        return cls(info[0], info[6])
+        if cls.storedType is None and typestr is None:
+            raise StoredTypeError(str(cls) + " can't be saved. A more specific type must be used.")
+        argtype = cls.storedType
+        if typestr is not None:
+            argtype = typestr
+        info = service.save_object(stored_data, argtype, workspace_id, objid=objid, name=name)
+        return cls(info[0], info[1])
 
-    @classmethod
-    def typecheck(cls, typestring):
-        if cls != StoredObject:
-            return typestring.startswith(cls.storedType)
-        return True
+
+    def copy(self, workspace_id=None, name=None):
+        if name is None and workspace_id is None:
+            name = str(self.name) + '_copy'
+            workspace_id = self.workspace_id
+        if name is None:
+            name = str(self.name)
+        object_id, workspace_id = service.copy_object(self.identity, (name, workspace_id))
+        return self.__class__(object_id, workspace_id)  # TODO: more pragmatic way than unpacking the KBase info_list?
 
     def _check_rep(self):
         a = int(self.object_id)
         b = int(self.workspace_id)
-        c = service.get_info(self.object_id, self.workspace_id)
-        if not (a is not None and b is not None and c is not None):
+        if not (a is not None and b is not None):
             raise RepresentationError(self)
 
 
@@ -157,12 +190,41 @@ class ModelReaction:
 
     def get_biochem_ref(self):
         """
-        returns a tuple with the reference to a
+        returns a Biochemistry object in which this Reaction can be found in detail
         """
         ref = self.data['reaction_ref'].split('/')
         return Biochemistry(ref[1], ref[0])
 
+    def get_direction(self):
+        return self.data['direction']
 
+    def has_compound(self, compound):
+        """
+        returns true if a compound is used as a reagent in this reaction, false otherwise
+
+        Can pass a string compound_id OR Compound object as an argument, we'll assume you know what you're doing
+        :param compound: str compound_id or Compound object
+        """
+        compounds = self.get_equation()
+        if not isinstance(compound, Compound):
+            for cpd in compounds:
+                if cpd.compound_id == compound:
+                    return True
+            return False
+        return compound in compounds
+
+    def get_comp_ref(self):
+        """
+        gets the compartment of this reaction
+        :return: str model_compartment_ref
+        """
+        return str(self.data['modelcompartment_ref'].split('/')[-1][0])
+
+    def is_special_ref(self):
+        return self.get_rxn_ref() == 'rxn00000'
+
+    def set_direction(self, direction):
+        self.data['direction'] = direction
 class Compound(object):
     """
     small wrapper class for compound coefficient and ID.
@@ -179,11 +241,12 @@ class Compound(object):
         """
         self.coeff = compound_obj['coefficient']
         self.compound_id = compound_obj['modelcompound_ref'].split('/')[-1]
+        self.compound_ref = self.compound_id.split('_')[0]
         self.biochem = biochem
 
     def get_info(self):
         """
-        returns the information about this compound frmo its referenced biochemistry
+        returns the information about this compound from its referenced biochemistry
 
         :return: (type=dict) the information on the biochemistry for this compound, with the following keys:
             [u'cues',
@@ -202,9 +265,10 @@ class Compound(object):
         """
         biochem = self.biochem.get_object()
         for cpd in biochem['compounds']:
-            if cpd['id'] == self.compound_id:
+            if cpd['id'] == self.compound_ref:
                 return cpd
-        raise BiochemistryError("Information not found in provided biochemistry")
+        raise BiochemistryError(str(self) + ': ' + str(self.biochem.identity) +
+                                " Information not found in provided biochemistry")
 
     def __str__(self):
         """
@@ -524,7 +588,9 @@ class Genome(StoredObject):
     """
     storedType = service.types()['Genome']
 
-    pass
+    def get_genome_id(self):
+        return self.data['id']
+
 
 
 class Media(StoredObject):
@@ -532,7 +598,14 @@ class Media(StoredObject):
     a class representing a media in the stored environment
     """
     storedType = service.types()['Media']
-    pass
+
+    def fba_formulation(self, arguments=None):
+        """
+        Generates an FBA formulation used to create an FBA object.
+        :param arguments: (optional) additional arguments to FBA formulation
+        :return: dictionary of arguments to FBA (fba_formulation)
+        """
+        return service.fba_formulation(self)
 
 
 class FBA(StoredObject):
@@ -540,7 +613,33 @@ class FBA(StoredObject):
     a class representing an FBA result in the stored environment
     """
     storedType = service.types()['FBA']
-    pass
+
+    def __init__(self, object_id, workspace_id):
+        super(FBA, self).__init__(object_id, workspace_id)
+        self.objective = self.get_objective()
+
+    def get_objective(self):
+        """
+        returns the objective value from the FBA Run
+        :return:
+        """
+        return self.data['objectiveValue']
+
+    def get_model(self):
+        """
+        returns the FBAModel associated with this FBA
+        :return: FBAModel
+        """
+        info = self.data['fbamodel_ref'].split('/')
+        return FBAModel(info[0], info[1])
+
+    def get_media(self):
+        """
+        returns the Media associated with this FBA
+        :return: Media
+        """
+        info = self.data['media_ref'].split('/')
+        return Media(info[0], info[1])
 
 
 class ProteomeComparison(StoredObject):
@@ -548,7 +647,17 @@ class ProteomeComparison(StoredObject):
     a class representing a Porteome Comparison in the stored environment
     """
     storedType = service.types()['ProteomeComparison']
-    pass
+
+    def get_genomes(self):
+        """
+        returns the genomes of the compared genomes
+        :return: tuple (Genome, Genome)
+        """
+        g1ws, g1obj, _version = self.data['genome1ref'].split('/')
+        g12ws, g2obj, _version = self.data['genome2ref'].split('/')
+        return Genome(g1obj, g1ws), Genome(g2obj, g12ws)
+
+
 
 
 class ReactionProbabilities(StoredObject):
@@ -581,7 +690,8 @@ class StoredTypeError(Exception):
         self.value = value
 
     def __str__(self):
-        return str(self.value[0]) + ' is not a valid typestring for ' + str(self.value[1])
+        return str(self.value)
+
 
 class MutationError(Exception):
     def __init__(self, value):

@@ -479,7 +479,7 @@ def label_reactions(morph):
     rxn_labels = {'gene-no-match': dict(), 'gene-match': dict(), 'no-gene': dict(), 'recon': dict(), 'common': dict()}
     # Build a hash of rxn_ids to probability to save look up time
     # Some reference sets
-    all_reactions = set(model_dict.keys()).union(recon_dict.keys())  # TODO: runtime will make you cry
+    all_reactions = set(model_dict.keys()).union(recon_dict.keys())  # runtime class will make you cry
     for rxn in all_reactions:
         #get gpr
         if rxn in trans_dict and rxn in recon_dict:
