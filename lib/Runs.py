@@ -881,5 +881,29 @@ def value_added_analysis():
     assert len(my_models) == 3, str(models) + '\n\n' + str(my_models)
     reactions = Analysis.common_reaction_analysis(my_models)[frozenset({'MaripaludisModel', 'Mari_to_Janna_Morph'})]
     rxn_labels = Helpers.load('../data/mari_to_janna_morph.pkl').rxn_labels
-    return Analysis.reaction_analysis(reactions, model, None, rxn_labels)
+    data = Analysis.reaction_analysis(reactions, model, None, rxn_labels)
+    percent_genes = Plotter.SimpleTable(('', ''))
+    total_genes = sum([r[2] for r in data.rows])
+    percent_gene_based = format((float(sum([r[1] for r in data.rows])) / len(data.rows)) * 100, '0.2f')
+    percent_genes.add(('reactions with a genetic basis', percent_gene_based))
+
+    labels = Plotter.SimpleTable(('label', 'percentage'))
+    label_keys = dict()
+    for r in data.rows:
+        if r[3] not in label_keys:
+            label_keys[r[3]] = 1
+        else:
+            label_keys[r[3]] += 1
+    for l in label_keys:
+        percentage = format((float(label_keys[l]) / len(data.rows)) * 100, '0.2f')
+        labels.add((l, percentage))
+
+    with open('../data/value_added.md', 'w') as f:
+        f. write(percent_genes.markdown())
+        f.write('\n\n')
+        f. write(labels.markdown())
+        f.write('\n\n')
+        f.write(data.markdown())
+
+
 

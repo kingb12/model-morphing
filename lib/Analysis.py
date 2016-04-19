@@ -117,6 +117,8 @@ def reaction_analysis(reactions, model, media, rxn_labels):
         for key in rxn_labels:
             if r in rxn_labels[key]:
                 labels.add(key)
+        assert len(labels) == 1, str(labels)
+        labels = list(labels)[0]
         try:
             info = reaction_info[r.split('_')[0]]
             rxn_class = info['primclass']
