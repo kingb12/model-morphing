@@ -312,7 +312,8 @@ def add_reactions_manually(model, specials, workspace=None, name=None):
                             'aliases': [u'mdlid:' + c.split('_')[0]],
                             'charge': 0,
                             'compound_ref': '489/6/6/compounds/id/cpd00000',
-                            'modelcompartment_ref': '~/modelcompartments/id/' + c.split('_')[-1]
+                            'modelcompartment_ref': '~/modelcompartments/id/' + c.split('_')[-1],
+                            'formula': ''
                             }
                 obj['modelcompounds'].append(compound)
                 cpds = dict([(c['id'], c) for c in obj['modelcompounds']])
