@@ -127,15 +127,15 @@ def reaction_analysis(reactions, model, media, rxn_labels):
             rxn_class = set(info['primclass'].split(';'))
             rxn_class_str = ''
             for r in rxn_class:
-                rxn_class_str += str(r) + '\n'
+                rxn_class_str += str(r) + ', '
             subclass = set(info['subclass'].split(';'))
             subclass_str = ''
             for r in subclass:
-                subclass_str += str(r) + '\n'
+                subclass_str += str(r) + ', '
             subsystem = set(info['subsytem'].split(';'))  # MISSPELLED ON PURPOSE, KBase's key is spelled this way
             subsystem_str = ''
             for r in subsystem:
-                subsystem_str += str(r) + '\n'
+                subsystem_str += str(r) + ', '
         except KeyError:
             pass
         data.add((r, genes, num_genes, labels, rxn_class_str, subclass_str, subsystem_str))
