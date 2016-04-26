@@ -1,8 +1,5 @@
 import unittest
-import lib.Client as Client
 import lib.Helpers as Helpers
-import lib.Morph as Morph
-import copy
 from lib.objects import *
 import lib.service as service
 

@@ -2,11 +2,10 @@ import service
 from Morph import Morph
 import json
 import pickle
+import service
 import random
-import Client
 from firebase import firebase
 import os
-
 from lib.objects import *
 
 
@@ -16,17 +15,6 @@ def modelargs(morph):
     args['model_workspace'] = morph.ws_id
     return args
 
-def essential_test(morph, rxn_list):
-    results = dict()
-    for rxn in rxn_list:
-        print rxn
-        a,b,c = Client.find_alternative(rxn, morph=morph)
-        analysis = Client.analyze_alternative(morph, rxn, c)
-        results[rxn] = (a, b, c, analysis)
-        filename = "essential_results/" + str(rxn) + ".pkl"
-        pickle.dump(results, open(filename, "wb"))
-        print "saved"
-# CURRENT USE SPECIFIC INITIALIZATION CODE
 
 def unpack_essen_results():
     path = str(os.getcwd()) + '/../data/essential_results'
@@ -52,26 +40,6 @@ def _count_essential(reactions):
                 reactions[r].append(rxn)
     return reactions
 
-def pp_eval_rxns(reactions):
-    '''
-    prints the essential reactions added  fro an essential reaction test (essential_test)
-
-    Requires: The input to the function should be the results of the unpack_essen_results() function. These are separated to save computational time in some circumstances
-    '''
-    count_rxns = _count_essential(reactions)
-    added_rxns = Client.fba_client.get_reactions({'reactions': [r.split('_')[0] for r in count_rxns.keys()]})
-    with open('../analysis/fill_frequency.txt', 'w') as f:
-        for r in added_rxns:
-            f.write(str(r['name']) + '\n')
-            f.write(str(r['definition']) + '\n')
-            try:
-                f.write('Frequency in which it was added in gapfilling: ' + str(float(len(count_rxns[str(r['id'] + '_c0')])) / float(len(count_rxns.keys()))) + '\n' + '\n' + '\n')
-            except KeyError:
-                f.write('Frequency in which it was added in gapfilling: ' + str(float(len(count_rxns[str(r['id'] + '_e0')])) / float(len(count_rxns.keys()))) + '\n' + '\n' + '\n')
-    with open('../analysis/essen_rxn_info.txt', 'w') as f:
-         for rxn in reactions:
-             print type(rxn)
-    return reactions
 
 def get_object(objid, wsid, name=None):
     '''
@@ -117,15 +85,7 @@ def get_object(objid, wsid, name=None):
 	} ObjectData;
 
     '''
-    if (name is None):
-        return Client.ws_client.get_objects([{'objid':objid, 'wsid':wsid}])[0]
-    else:
-        return Client.ws_client.get_objects([{'name':name, 'wsid':wsid}])[0]
-def get_info(objid, wsid, name=None):
-    if (name is None):
-        return Client.ws_client.get_object_info_new({'objects': [{'objid':objid, 'wsid':wsid}]})[0]
-    else:
-        return Client.ws_client.get_objects_info_new({'objects': [{'name':name, 'wsid':wsid}]})[0]
+    service.get_object(objid, wsid, name=name)
 
 def dump(object, filepath):
     with open(filepath, 'w') as f:
@@ -135,12 +95,7 @@ def load(filepath):
     with open(filepath, 'rb') as f:
         return pickle.load(f)
 def save_object(data, type, wsid, objid=None, name=None):
-    sv = {u'data':data, u'type':type, u'name':name}
-    if objid is not None:
-        sv[u'objid'] = objid
-    if name is not None:
-        sv[u'name'] = name
-    return Client.ws_client.save_objects({u'id':wsid, u'objects':[sv]})
+    service.save_object(data,type, wsid, objid=objid, name=name)
 def load_morph():
     """
     Loads a morph that has completed

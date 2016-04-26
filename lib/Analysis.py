@@ -2,8 +2,8 @@ from operator import attrgetter
 
 import Plotter
 import Helpers
-import Model, Reaction
 import math
+from objects import *
 from Morph import *
 def common_reaction_analysis(model_identities):
     models = list()
@@ -45,7 +45,7 @@ def gene_percents(model, rxn_analysis):
     result = dict()
     gprs = dict()
     for r in model['modelreactions']:
-        gprs[Reaction.get_rxn_id(r)] = Gpr(r)
+        gprs[ModelReaction(r).rxn_id()] = Gpr(r)
     for group in rxn_analysis:
         i = 0
         for r in rxn_analysis[group]:
@@ -72,7 +72,7 @@ def powerset(lst):
 def three_model_venn(model_identities, filename, genes=False, morphed_model=None, title=None):
     rxn_sets = []
     for m in model_identities:
-        rxn_sets.append(set([Reaction.get_rxn_id(r) for r in Model.get_reactions(Helpers.get_object(m[0], m[1])['data'])]))
+        rxn_sets.append(set([r.rxn_id() for r in FBAModel(m[0], m[1]).get_reactions()]))
     gene_dict = None
     if genes:
         rxn_analysis = reaction_analysis(model_identities)
