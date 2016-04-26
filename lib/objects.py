@@ -660,6 +660,7 @@ class FBA(StoredObject):
                 result.append(r['modelreaction_ref'].split('/')[-1])
         return result
 
+
 class ProteomeComparison(StoredObject):
     """
     a class representing a Porteome Comparison in the stored environment
@@ -676,14 +677,39 @@ class ProteomeComparison(StoredObject):
         return Genome(g1obj, g1ws), Genome(g2obj, g12ws)
 
 
-
-
 class ReactionProbabilities(StoredObject):
     """
     a class representing a ReactionProbabilities in the stored environment
     """
     storedType = service.types()['ReactionProbabilities']
-    pass
+
+    def __init__(self, object_id, workspace_id):
+        super(ReactionProbabilities, self).__init__(object_id, workspace_id)
+        self._prob_hash = None
+
+    def probability_hash(self):
+        """
+
+        :return: a dictionary of the reactions in this object to their probabilities
+        """
+        if self._prob_hash is not None:
+            return self._prob_hash
+        prob_hash = dict()
+        for rxn in self.data['reaction_probabilities']:
+            prob_hash[rxn[0]] = rxn[1]
+        self._prob_hash = prob_hash
+        return prob_hash
+
+    def get_likelihood(self, reaction_id):
+        """
+        returns the likelihood a reaction is represented in the genome, raises ValueError if not found
+        :param reaction_id:
+        :return:
+        """
+        try:
+            return self.probability_hash()[reaction_id]
+        except KeyError:
+            return -1
 
 
 class BiochemistryError(Exception):

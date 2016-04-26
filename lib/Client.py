@@ -16,17 +16,18 @@ from operator import itemgetter
 from Morph import Morph
 from Morph import Gpr
 
+# DEPRECATED CLASS, STILL IN REPO FOR REFERENCE #
+
 # This module is the Client for the model morphing service. It performs
 # operations necessary to morphing models. It is a module, performing
 # functions on models to morph them from a source model to a target genome
-# according to the (TODO: Name Algorithm) Algorithm designed by members of
+# according to the Algorithm designed by members of
 # the Price lab at the Institute for Systems Biology
 #
 # Abstraction Function: a Client module for using the Morphing service,
 # providing a user with functions for morphing models and analyzing the
 # results.
 
-# A global value for running requirement and representation checks with each method
 debug = True
 
 def _init_clients():

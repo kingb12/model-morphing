@@ -7,7 +7,8 @@ import copy
 import json
 from operator import itemgetter
 
-from lib.log import Log
+import GrowthConditions
+from log import Log
 from lib.objects import *
 
 
@@ -84,6 +85,8 @@ class Morph:
         self.log = None
         self.ws_id = None
         self.ws_name = None
+        self.essential_ids = None
+        self.removed_ids = None
 
         for dictionary in arg_hash:
             for key in dictionary:
@@ -103,21 +106,21 @@ class Morph:
 
     def _check_rep(self):
         if self.model is not None:
-            assert isinstance(self.model, FBAModel)
+            assert isinstance(self.model, FBAModel), str(type(self.model))
         if self.src_model is not None:
-            assert isinstance(self.src_model, FBAModel)
+            assert isinstance(self.src_model, FBAModel), str(type(self.src_model))
         if self.genome is not None:
-            assert isinstance(self.genome, Genome)
+            assert isinstance(self.genome, Genome), str(type(self.genome))
         if self.media is not None:
-            assert isinstance(self.media, Media)
+            assert isinstance(self.media, Media), str(type(self.media))
         if self.probanno is not None:
-            assert isinstance(self.probanno, ReactionProbabilities)
+            assert isinstance(self.probanno, ReactionProbabilities), str(type(self.probanno))
         if self.protcomp is not None:
-            assert isinstance(self.protcomp, ProteomeComparison)
+            assert isinstance(self.protcomp, ProteomeComparison), str(type(self.protcomp))
         if self.trans_model is not None:
-            assert isinstance(self.trans_model, FBAModel)
+            assert isinstance(self.trans_model, FBAModel), str(type(self.trans_model))
         if self.recon_model is not None:
-            assert isinstance(self.recon_model, FBAModel)
+            assert isinstance(self.recon_model, FBAModel), str(type(self.recon_model))
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
@@ -413,6 +416,263 @@ class Morph:
         result = service.add_reactions_manually(self.model, specials, name='super_modelspc')
         self.model = FBAModel(result[0], result[1])
 
+    def prepare_supermodel(self, fill_src=True):
+        """
+        Composition of the first several steps in the algorithm
+
+        1) Fill the source model to media using probabilistic gapfilling (can be skipped if fill_src keyword arg is set to False)
+        2) Translate the src_model to a pouplate morph.trans_model
+        3) Draft reconstruction of target genome fills morph.recon_model field
+        4) label reactions in the morph (populates morph.rxn_labels)
+        5) Builds a super_model and puts it in the morph.model field. The model is now ready for the process_reactions function
+
+        Note
+        ----
+        Function Requirements:
+            - morph.probanno, morph.probannows form a valid ObjectIdentity for a readable RxnProbs object in KBase
+            - morph.src_model, morph.src_modelws form a valid ObjectIdentity for a readable model object in KBase
+            - morph.media, morph.mediaws form a valid ObjectIdentity for a readable media object in KBase
+            - morph.genome, morph.genomews form a valid ObjectIdentity for a readable genome object in KBase
+            - morph.protcomp, morph.protcompws form a valid ObjectIdentity for a readable protein comparison object in KBase
+            - morph.ws_id is the ID of a writeable KBase workspace
+
+        Parameters
+        ----------
+        morph: Morph
+            An initialized Morph with the following Requirements:
+                - morph.ws_id is a valid KBase workspace_id that user has permission
+                to write to
+                - morph has valid object identities for src_model, genome, probanno,
+                protcomp (These 4 are object_ids, their ___ws counterparts are workspace_ids
+                of user readable workspaces)
+        fill_src: boolean,optional
+            a boolean indicating that the src_model should first be filled using probabilistic gapfilling
+            Optional, default is true.
+
+        Returns
+        -------
+        Morph
+            A Morph with the following state changes:
+                - morph.model has the object_id of the super_model in KBase
+                - morph.rxn_labels has the labels for the reactions in the super
+                model
+                - morph.probhash has the probability hash for reactions related to
+                Target genome
+                - morph.trans_model has the object_id of the translated model
+                - morph.recon model has the object_id of the reconstruction of
+                Target Genome
+
+        Examples
+        --------
+        Suppose you have a morph initialized like so: (this is the output of Helpers.make_morph() )
+
+        >>> morph = make_morph()
+
+            probannows: 9145
+            ws_name: MMws235
+            src_modelws: 9145
+            protcompws: 9145
+            src_model: 19
+            media: 18
+            removed_ids: None
+            mediaws: 9145
+            trans_model: None
+            probhash: None
+            genomews: 9145
+            essential_ids: None
+            genome: 3
+            rxn_labels: None
+            model: None
+            ws_id: 11444
+            recon_model: None
+            probanno: 15
+            protcomp: 6
+
+        A call to Client.prepare_supermodel(morph) will return a morph of this sort of form:
+
+        >>> morph = Client.prepare_supermodel(morph)
+
+            probannows: 9145
+            ws_name: MMws235
+            src_modelws: 9145
+            protcompws: 9145
+            src_model: 19
+            media: 18
+            removed_ids: None
+            mediaws: 9145
+            trans_model: 3
+            probhash: [u'rxn00001' ... u'rxn97854']
+            genomews: 9145
+            essential_ids: None
+            genome: 3
+            rxn_labels: ['gene-no-much', 'gene-match', 'recon', 'no-gene']
+            model: 5
+            ws_id: 11444
+            recon_model: 4
+            probanno: 15
+            protcomp: 6
+
+        See Also
+        --------
+        fill_src_to_media
+        translate_features
+        reconstruct_genome
+        label_reactions
+        build_supermodel
+
+        This functions post condition preps the morph for the Client.process_reactions(morph) function
+        """
+        if fill_src:
+            self.fill_src_to_media()
+        self.translate_features()
+        self.reconstruct_genome()
+        self.label_reactions()
+        self.build_supermodel()
+
+    def process_reactions(self, rxn_list=None, name='', process_count=0, get_count=False, iterative_models=True,
+                          growth_condition=GrowthConditions.SimpleCondition()):
+        """
+        Attempts removal of rxn_list reactions from morph (i.e. morph.rxn_labels[label])
+
+        Attempts removal of each reaction , keeping it only if it is essential to the objective function.
+        Populates morph.essential_ids with the reaction_ids that could not be removed without breaking the model.
+        morph.removed_ids is populated with the ids of the reactions that were removed. Both are populated as a dictionary of
+        reaction_ids to their model_index and probability (like the entries in rxn_labels).
+            e.g. reaction_id -> (model_index, probability)
+
+        if rxn_list is None, the function removes (in low to high probability order) gene-no-match reactions followed by no-gene reactions
+
+        Controlling name and process_count parameters allows the user tocontrol the number of models created in the morph.ws_id
+
+        Note
+        ----
+        Function Requirements:
+            - if rxn_list is None, rxn_labels['gene-no-match'] and rxn_labels['no-gene'] must be dictionaries
+            with 0 or more entries of the form reaction_id -> (model_index, probability)
+            - morph.model, morph.ws_id form a valid ObjectIdentity for a readable model object in KBase
+            - morph.ws_id is the ID of a writeable KBase workspace
+
+        Parameters
+        ----------
+        morph: Morph
+            The morph containing the model (morph.model) from which reactions will be removed
+        rxn_list: list, optional
+            A sorted list of tuples of the form (reaction_id, (model_index, probability)) which will be processed from morph,model
+            (form is the output of removal_list() function)
+            (if left out, all gene-no-match follwed by all no-gene reactions will be processed in low to high likelihood order)
+        name: String, optional
+            Setting name will begin all output model names with name. Default is MM
+            output models are named as follows: str(name) + '-' + str(process_count)
+        process_count: int, optional
+            A number indicating how many reactions have been processed so far, used in nameing output models. Default is 0.
+            output models are named as follows: str(name) + '-' + str(process_count)
+        get_count: Boolean, optional
+            A Boolean flag indicating whether the process_count should be returned with the morph (as a tuple). Used when not processing all
+            reactions at once. Deafault is False
+
+        Returns
+        -------
+        Morph
+            A morph with a new model, and essential_ids/removed)ids used to keep track of changes
+        int (Only if get_count=True)
+            process_count (number of models created, used for name managing)
+
+        Examples
+        --------
+        Given a morph of the form (only relevant attributes shown):
+            ws_name: MMws235
+            rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+            ws_id: 11444
+            morph.model = 5
+            morph.essential_ids = None
+            morph.removed_ids = None
+
+        >>>morph = Client.process_reactions(morph, rxn_list=Client.removal_list(morph.rxn_labels['gene-no-match'], list_range=(0, 10)))
+
+        would process the 10 least likely gene-no-match reactions, which might produce a morph like this:
+
+            ws_name: MMws235
+            rxn_labels: ['gene-match', 'gene-no-match', 'no-gene', 'recon']
+            ws_id: 11444
+            morph.model = 5
+            morph.essential_ids = ['rxn10316_c0', 'rxn23434_c0', 'rxn78687_c0']
+            morph.removed_ids = ['rxn11123_c0', 'rxn34534_c0', 'rxn90565_c0', 'rxn78987_c0', 'rxn12321_c0', 'rxn89034_c0', 'rxn88888_c0']
+
+        where removal of one of the reactions given by a key in morph.essential_ids would result in a model that has an objective value of 0.000 in FBA simulation
+
+        :param get_count:
+        :param process_count:
+        :param name:
+        :param rxn_list:
+        :param iterative_models:
+        :param growth_condition:
+        """
+        ws = self.ws_id
+        # Sort by probanno. items() returns (K, V=(model_index, prob))
+
+        def get_key(item):
+            return self.get_prob(item[0])
+
+        # label argument behavior
+        if rxn_list is None:
+            rxn_dict = self.rxn_labels['gene-no-match']
+            removal_list = sorted(rxn_dict.items(), key=get_key)
+            rxn_dict = self.rxn_labels['no-gene']
+            removal_list += sorted(rxn_dict.items(), key=get_key)
+            # print "pre-filter: " + str(len(removal_list))
+            removal_list = [r for r in removal_list if r[0] not in self.rxn_labels['common']]
+            # print "post-filter: " + str(len(removal_list))
+        else:
+            removal_list = rxn_list
+        # instantiate lists only if needed
+        if self.essential_ids is None:
+            self.essential_ids = dict()
+        if self.removed_ids is None:
+            self.removed_ids = dict()
+        # Give objs a general name if none is provided
+        if name == '':
+            name = 'MM'
+        for i in range(len(removal_list)):
+            removal_id = removal_list[i][1].get_removal_id()
+            rxn = removal_list[i][0]
+            if removal_id.startswith('rxn00000'):
+                self.log.add('skip', [self.model, removal_list[i][1]], [None], context='process_reactions',
+                             notes=str([process_count]))
+                continue
+            print '\nReaction to remove: ' + str(removal_id) + " / " + str(rxn)
+            # TODO Find someway to fix the behavior bug if model_id is not in ws, etc.
+            info = service.remove_reaction(self.model, removal_id, output_id=name + '-' + str(process_count))
+            new_model = FBAModel(info[0], info[1])
+            if iterative_models:
+                process_count += 1
+            if growth_condition.evaluate({'morph': self, 'model': new_model}):
+                # removed successfully
+                self.log.add('Removed Reaction', [self.model, growth_condition.fba], [new_model],
+                             context='process reactions')
+                self.model = new_model
+                self.removed_ids[removal_id] = removal_list[i][1]
+            else:
+                # essential
+                self.log.add('Kept Reaction', [self.model, growth_condition.fba], [new_model],
+                             context='process reactions')
+                self.essential_ids[removal_id] = removal_list[i][1]
+            print self.log.actions[-1].type + ' ' + str(removal_id) + ', FBA was ' + str(growth_condition.fba.objective)
+        if get_count:
+            return self, process_count
+        return self
+
+    def get_prob(self, rxn_id):
+        '''
+        returns the probanno likelihood for a reaction in a morph
+        '''
+        #TODO: Will Users ever have their own probannos? YES
+        if self.probhash is None:
+            self.probhash = self.probanno.probability_hash()
+        try:
+            result = self.probhash[rxn_id.split('_')[0]]
+        except KeyError:
+            result = -1.0
+        return result
 
 def _general_direction(model_rxn1, model_rxn2):
     """
@@ -426,30 +686,6 @@ def _general_direction(model_rxn1, model_rxn2):
         return '='
     else:
         raise Exception('directions are incompatible')
-
-
-class AbstractGrowthCondition:
-    """
-    an interface for processing reactions according to some condition
-
-    Subclases must implement evaluate(args) and return true or false. The primary use
-    for this class is in the process_reactions method of the Client module, which removes
-    reactions iteratiely, and decides to keep or remove a reaction based on the outcome of
-    a GrowthCondition.  Here is an example:
-        class SimpleCondition(AbstractGrowthCondition):
-            def evaluate(args):
-                # args must have attribute model
-                fba = runfba(args['model'])
-                return fba['Objective'] > 0
-    This SimpleCondition keeps all reactions that are absolutely necessary for the models growth
-    """
-
-    def __init__(self):
-        pass
-
-    def evaluate(self, arguments):
-        raise NotImplementedError()
-
 
 class RepresentationError(Exception):
     def __init__(self, value):

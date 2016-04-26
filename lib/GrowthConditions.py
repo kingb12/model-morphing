@@ -1,14 +1,29 @@
-from biokbase.workspace.client import Workspace
-from biokbase.workspace.client import ServerError
-from biokbase.fbaModelServices.Client import fbaModelServices
-import Model
-import Reaction
-import random
-import Helpers
-from Morph import AbstractGrowthCondition
-import Client
-from operator import itemgetter
+import service
 
+from lib import objects
+
+
+class AbstractGrowthCondition:
+    """
+    an interface for processing reactions according to some condition
+
+    Subclases must implement evaluate(args) and return true or false. The primary use
+    for this class is in the process_reactions method of the Client module, which removes
+    reactions iteratiely, and decides to keep or remove a reaction based on the outcome of
+    a GrowthCondition.  Here is an example:
+        class SimpleCondition(AbstractGrowthCondition):
+            def evaluate(args):
+                # args must have attribute model
+                fba = runfba(args['model'])
+                return fba['Objective'] > 0
+    This SimpleCondition keeps all reactions that are absolutely necessary for the models growth
+    """
+
+    def __init__(self):
+        self.fba = None
+
+    def evaluate(self, arguments):
+        raise NotImplementedError()
 
 class SimpleCondition(AbstractGrowthCondition):
     """
@@ -19,15 +34,13 @@ class SimpleCondition(AbstractGrowthCondition):
         - model
         - fba_name
     """
+
     def evaluate(self, arguments):
         morph = arguments['morph']
-        ws = morph.ws_id
-        fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
-        fba_params = {'fba': arguments['fba_name'], 'workspace': ws, 'model' : arguments['model'], 'model_workspace': ws, 'formulation': fba_formulation}
-        fbaMeta = Client.fba_client.runfba(fba_params)
-        flux = fbaMeta[-1]['Objective']
-        print "Flux is " + str(flux)
-        return flux > 0.0
+        model = arguments['model'] if 'model' in arguments else morph.model
+        info = service.runfba(model, morph.media, workspace=morph.ws_id)
+        self.fba = objects.FBA(info[0], info[1])
+        return self.fba.objective > 0.0
 
 
 class BarkeriCondition(AbstractGrowthCondition):
@@ -35,34 +48,31 @@ class BarkeriCondition(AbstractGrowthCondition):
     a growth condition for barkeri (3 media)
     """
     def evaluate(self, arguments):
-        morph = arguments['morph']
-        ws = morph.ws_id
-        fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
-        fba_params = {'fba': arguments['fba_name'], 'workspace': ws, 'model' : arguments['model'], 'model_workspace':ws, 'formulation': fba_formulation}
-        fbaMeta = Client.fba_client.runfba(fba_params)
-        flux = fbaMeta[-1]['Objective']
-        print "Flux is " + str(flux)
         raise NotImplementedError()
+        morph = arguments['morph']
+        model = arguments['model'] if 'model' in arguments else morph.model
+        info = service.runfba(model, morph.media, workspace=morph.ws_id)
+        fba = objects.FBA(info[0], info[1])
 
 
 class AllMedia(AbstractGrowthCondition):
 
     def __init__(self, media):
+        AbstractGrowthCondition.__init__(self)
         self.media = media
-        # TODO: Non-pragmatic, AbstractGrowthCondition has no __init__ but if one is added it is not called here
 
     def evaluate(self, args):
         morph = args['morph']
         ws = morph.ws_id
         for med in self.media:
-            fba_formulation = {'media': med[0], 'media_workspace': med[1]}
-            fba_params = {'fba': args['fba_name'], 'workspace': ws, 'model' : args['model'], 'model_workspace':ws, 'formulation': fba_formulation}
-            fbaMeta = Client.fba_client.runfba(fba_params)
-            flux = fbaMeta[-1]['Objective']
-            print "Flux is " + str(flux)
-            if flux <= 0.0:
+            morph = args['morph']
+            model = args['model'] if 'model' in args else morph.model
+            info = service.runfba(model, med, workspace=morph.ws_id)
+            fba = objects.FBA(info[0], info[1])
+            if not fba.objective > 0.0:
                 return False
         return True
+
 
 
 

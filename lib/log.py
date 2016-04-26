@@ -1,5 +1,5 @@
 import copy
-
+import Plotter
 
 class Log:
     """
@@ -28,6 +28,13 @@ class Log:
         a = Action(action_type, {'in': inputs, 'out': outputs}, context=context, notes=notes)
         self.actions.append(a)
 
+    def markdown(self):
+        header = ('Action', 'Members', 'Context', 'Notes')
+        actions = Plotter.SimpleTable(header)
+        for a in self.actions:
+            actions.add((a.md_tuple()))
+        return actions.markdown()
+
 
 class Action:
     """
@@ -49,3 +56,13 @@ class Action:
         self.members = members
         self.context = context
         self.notes = notes
+
+    def __str__(self):
+        result = 'Action: ' + str(self.type) + '\nMembers: \n'
+        for i in self.members:
+            result += str(i) + ': \n' + str(self.members[i])
+        result += '\nContext: ' + str(self.context)
+        return result
+
+    def md_tuple(self):
+        return str(self.type), str(self.members), str(self.context), str(self.notes)

@@ -2,7 +2,6 @@ from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
 import sys
-import objects
 
 
 def _init_clients():
@@ -93,6 +92,7 @@ def get_object(objid, wsid, name=None):
         result = ws_client.get_objects([{'name': name, 'wsid': wsid}])[0]
     return result['data'], result['info']
 
+
 def get_info(objid, wsid, name=None):
     if name is None:
         return ws_client.get_object_info_new({'objects': [{'objid': objid, 'wsid': wsid}]})[0]
@@ -126,7 +126,7 @@ def list_objects(workspace_id, typestr=None):
     returns a list of all the objects within a workspace in tuples (obj_id, ws_id, object_name)
 
     :rtype: list
-    :param type: (optional) the type of object to return (a filter of default case)
+    :param typestr: (optional) if set, lists only objects of this type (filter over default case)
     :param workspace_id: the workspace to list the objects from
     :return: a list of tuples of objects
     """
@@ -200,8 +200,8 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None):
     for key in params:
         print str(key) + u': ' + str(params[key])
     print u'\n\n\n'
-    model_info = fba_client.gapfill_model(params)
-    return model_info[0], model_info[6]
+    info = fba_client.gapfill_model(params)
+    return info[0], info[6]
 
 
 def fba_formulation(media):
@@ -290,6 +290,37 @@ def remove_reactions_in_place(model, reactions_to_remove):
     fba_client.adjust_model_reaction(removal_args)
 
 
+def remove_reaction(model, reaction, workspace=None, output_id=None, in_place=False):
+    """
+
+    :param workspace: (optional) (str) the workspace to put the new model in, disregarded if in_place=True, default is
+        model.workspace_id
+    :param model: FBAModel to remove the reaction from
+    :param reaction: removal_id (str) of the reaction to remove
+    :param output_id: (optional) (str) of the new name for the output model
+    :param in_place: (optional) set to true if you want to remove the reaction from the model in place instead of making
+        a new model. Will disregard output_id argument if set to true
+    :return: info tuple for the new FBAModel in the stored environment
+    """
+
+    if in_place:
+        remove_reactions_in_place(model, [reaction])
+    if output_id is None:
+        i = 0
+        output_id = model.name + '-' + str(i)
+        names = set([info[3] for info in list_objects(model.workspace_id)])
+        while output_id in names:
+            i += 1
+            output_id = model.name + '-' + str(i)
+
+    info = fba_client.remove_reactions({'model': model.object_id,
+                                        'model_workspace':model.workspace_id,
+                                        'output_id': output_id,
+                                        'workspace': model.workspace_id,
+                                        'reactions': [reaction]})
+    return info[0], info[6]
+
+
 def add_reactions(model, new_reactions, workspace=None, name=None):
     """
     adds reactions to an FBAModel, in place or with a copy (set name to a new name)
@@ -310,16 +341,21 @@ def add_reactions(model, new_reactions, workspace=None, name=None):
     info = fba_client.add_reactions(args)
     return info[0], info[6]
 
-def add_reactions_manually(model, specials, workspace=None, name=None):
+
+def add_reactions_manually(model, reactions, workspace=None, name=None):
     """
-    Manually fix special reactions within the the object itself
+    Manually fix special reactions within the the object itself (use with caution)
+    :param name: what to name the model when it is saved
+    :param workspace: workspace to save the new FBAModel in
+    :param reactions: (list<ModelReaction>) list of reactions to add manually
+    :param model: FBAModel to add the reactions to
     """
     model.get_object()
     if workspace is None:
         workspace = model.workspace_id
     obj = model.data
     cpds = dict([(c['id'], c) for c in obj['modelcompounds']])
-    for r in specials:
+    for r in reactions:
         obj['modelreactions'].append(r.data)
         for cpd in r.data['modelReactionReagents']:
             c = cpd['modelcompound_ref'].split('/')[-1]
