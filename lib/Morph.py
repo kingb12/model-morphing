@@ -12,39 +12,6 @@ from log import Log
 from lib.objects import *
 
 
-def _init_clients():
-    global ws_client, args
-    global fba_client
-    global ws_id
-    # Get workspace service URL parameter
-    with open("./urls/.kbase_workspaceURL", "r") as myfile:
-        url = myfile.read().replace('\n', '')
-    ws_client = Workspace(url)
-    # Get FBA Model Services URL parameter
-    with open("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
-        url = myfile.read().replace('\n', '')
-    fba_client = fbaModelServices(url)
-    return ws_client, fba_client
-
-
-def _init_workspace(ws=None):
-    ws_id = ws
-    ws_name = 'MMws'
-    if ws is None:
-        ws_conflict = True
-        while ws_conflict:
-            create_ws_params = {'workspace': ws_name, 'globalread': 'r', 'description':
-                "A workspace for storing the FBA's and meta data of the algorithm"}
-            # Try to create a workspace, catch an error if the name is already in use
-            try:
-                new_ws = ws_client.create_workspace(create_ws_params)
-                # new_ws is type workspace_info, a tuple where 0, 1 are id, name
-                ws_id = new_ws[0]
-                ws_name = new_ws[1]
-                ws_conflict = False
-            except ServerError:
-                ws_name += str(random.randint(1, 9))
-    return ws_id, ws_name
 
 
 class Morph:
@@ -101,7 +68,7 @@ class Morph:
         if self.log is None:
             self.log = Log(self)
         if self.ws_id is None:
-            self.ws_id, self.ws_name = _init_workspace()
+            self.ws_id, self.ws_name = service.init_workspace()
         self._check_rep()
 
     def _check_rep(self):
@@ -674,6 +641,25 @@ class Morph:
             result = -1.0
         return result
 
+    def translate_media(self, new_media):
+        """
+        transfers a growing model to a new media and ensures growth in this media, gpafilling if necessary
+        """
+        self.media = new_media
+        if not self.runfba().objective > 0:
+            prev_rxns = set(([r.rxn_id() for r in self.model.get_reactions()]))
+            info = service.gapfill_model(self.model, self.media, workspace=self.ws_id, rxn_probs=self.probanno,
+                                         name='filled')
+            filled_model = FBAModel(info[0], info[1])
+            filled_rxns = dict([(r.rxn_id(), r) for r in filled_model.get_reactions()])
+            new_reactions = set(filled_rxns.keys()) - prev_rxns
+            for r in new_reactions:
+                self.rxn_labels['no-gene'][r] = filled_rxns[r]
+            # KBASE QUIRKS MAKE THIS LINE THE OPPOSITE OF WHAT WE WANT:
+            self.model = filled_model
+            assert self.runfba().objective > 0
+
+
 def _general_direction(model_rxn1, model_rxn2):
     """
     picks the more general of the two directions from reactions passed in
@@ -695,4 +681,3 @@ class RepresentationError(Exception):
         return str(type(self.value)) + repr(self.value.gpr) + '\n' + repr(self.value.ftrs)
 
 
-ws_client, fba_client = _init_clients()

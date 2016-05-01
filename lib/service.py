@@ -1,7 +1,7 @@
 from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
-import sys
+import random
 
 
 def _init_clients():
@@ -196,10 +196,11 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None):
         name = model.name
     params = {u'model': str(model.object_id), u'model_workspace': str(model.workspace_id), u'out_model': name,
               u'workspace': workspace, u'formulation': gap_formulation,
+              u'integrate_solution': True,
               u'gapFill': name + u'-gf'}
-    for key in params:
-        print str(key) + u': ' + str(params[key])
-    print u'\n\n\n'
+    # for key in params:
+    #     print str(key) + u': ' + str(params[key])
+    # print u'\n\n\n'
     info = fba_client.gapfill_model(params)
     return info[0], info[6]
 
@@ -210,7 +211,7 @@ def fba_formulation(media):
 
 def runfba(model, media, workspace=None):
     """
-    Runs Flux Balance Analysis on an FBAModel in the fba modeling service
+    runs Flux Balance Analysis on an FBAModel in the fba modeling service
 
     :param model: FBAModel to run flux balance analysis on
     :param media: Media to run FBA with
@@ -227,7 +228,7 @@ def runfba(model, media, workspace=None):
 
 def runfva(model, media, workspace=None):
     """
-    Runs Flux Balance Analysis on an FBAModel in the fba modeling service
+    runs Flux Balance Analysis on an FBAModel in the fba modeling service
 
     :param model: FBAModel to run flux balance analysis on
     :param media: Media to run FBA with
@@ -387,3 +388,24 @@ def adjust_gprs(model, adjustments):
 def model_info(model):
     comp = fba_client.compare_models({'models': [model.object_id], 'workspaces': [model.workspace_id]})
     return (comp['model_comparisons'], dict([(r['reaction'], r) for r in comp['reaction_comparisons']]))
+
+def init_workspace(ws=None, name=None):
+    ws_id = ws
+    ws_name = name
+    if ws_name is None:
+        ws_name = 'MMws'
+    if ws is None:
+        ws_conflict = True
+        while ws_conflict:
+            create_ws_params = {'workspace': ws_name, 'globalread': 'r', 'description':
+                "A workspace for storing the FBA's and meta data of the algorithm"}
+            # Try to create a workspace, catch an error if the name is already in use
+            try:
+                new_ws = ws_client.create_workspace(create_ws_params)
+                # new_ws is type workspace_info, a tuple where 0, 1 are id, name
+                ws_id = new_ws[0]
+                ws_name = new_ws[1]
+                ws_conflict = False
+            except ServerError:
+                ws_name += str(random.randint(1, 9))
+    return ws_id, ws_name
