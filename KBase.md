@@ -14,7 +14,7 @@ and other code required for working with their infrastructure.
 - **ProbabilisticAnnotation**: The service for assigning likelihoods to reactions in a database for inclusion in a model
 
 ##### Process Graphic:
-<img src="https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png" alt="Dependencies" style="width: 350px;"/>
+<img src="https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png" alt="Dependencies" style="width: 200px;"/>
 
 ## Probabilistic Annotation and KBase
 Probabalistic Annotation (or ProbAnno) is a tool written by Matt Benedict and Mike Mundy that uses
