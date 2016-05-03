@@ -25,6 +25,9 @@ the reactions and genomes. The only problem is that it isn't available on the Na
 is incompatible with updates to KBase: It crashes when run using the KBase CLI.
 
 
+[Probabilistic Annotation Repo](https://github.com/kbase/probabilistic_annotation)
+[Paper describing Algorithm and its Applications](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003882)
+
 
 
 
