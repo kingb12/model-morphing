@@ -22,6 +22,8 @@ ProbAnno is currently dependent on KBase as the service that runs the algorithm 
 the reactions and genomes. The only problem is that it isn't available on the Narrative service and 
 is incompatible with updates to KBase: It crashes when run using the KBase CLI.
 
+![KBase Dependencies](https://github.com/kingb12/model-morphing/blob/master/KBaseDependencies.png)
+
 
 
 
