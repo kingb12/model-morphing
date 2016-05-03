@@ -16,6 +16,25 @@ and other code required for working with their infrastructure.
 ##### Process Graphic:
 <img src="https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png" alt="Dependencies" style="width: 200px;"/>
 
+
+
+#### Using a KBase Service
+KBase services can be accessed in a number of ways:
+- **Narrative Interface** The web interface for the services. [Narrative Log-in](https://narrative.kbase.us/#login)
+- **Command Line Interface** We have the KBase CLI Installed on our AWS Instance
+- **Language Clients** Programming API's are supported for Python, Java, and Perl for most services. Our code is written as a client to the Python API's for each service we use
+
+The Python API's are used with instances of clients for each service, initialized with a URL for the service in question. Here's an example for initializing a client for
+the *KBaseFBAModeling* service
+
+Here's an example: 
+
+```python
+from biokbase.fbaModelServices.Client import fbaModelServices
+
+fba_client = fbaModelServices('https://kbase.us/services/KBaseFBAModeling/')
+```
+
 ## Probabilistic Annotation and KBase
 Probabalistic Annotation (or ProbAnno) is a tool written by Matt Benedict and Mike Mundy that uses
 genome annotations to assign likelihoods for metabolic reactions in a database. For this reason, 
@@ -25,7 +44,11 @@ is incompatible with updates to KBase: It crashes when run using the KBase CLI.
 
 
 [Probabilistic Annotation Repo](https://github.com/kbase/probabilistic_annotation)
+
+
 [Paper describing Algorithm and its Applications](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003882)
+
+
 
 
 
