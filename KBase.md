@@ -14,7 +14,7 @@ and other code required for working with their infrastructure.
 - **ProbabilisticAnnotation**: The service for assigning likelihoods to reactions in a database for inclusion in a model
 
 ##### Process Graphic:
-![KBase Dependencies](https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png)
+![KBase Dependencies](https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png =400x)
 
 
 ## Probabilistic Annotation and KBase
