@@ -14,6 +14,8 @@ and other code required for working with their infrastructure.
 - **ProbabilisticAnnotation**: The service for assigning likelihoods to reactions in a database for inclusion in a model
 
 ##### Process Graphic:
+![KBase Dependencies](https://github.com/kingb12/model-morphing/blob/master/KBaseDep.png)
+
 
 ## Probabilistic Annotation and KBase
 Probabalistic Annotation (or ProbAnno) is a tool written by Matt Benedict and Mike Mundy that uses
@@ -22,7 +24,8 @@ ProbAnno is currently dependent on KBase as the service that runs the algorithm 
 the reactions and genomes. The only problem is that it isn't available on the Narrative service and 
 is incompatible with updates to KBase: It crashes when run using the KBase CLI.
 
-![KBase Dependencies](https://github.com/kingb12/model-morphing/blob/master/KBaseDependencies.png)
+
+
 
 
 
