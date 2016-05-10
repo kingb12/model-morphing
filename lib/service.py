@@ -176,7 +176,7 @@ def copy_object(from_tuple, to_tuple):
     return info[0], info[6]
 
 
-def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None):
+def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None, integrateSol=True):
     """
 
     :param model: FBAModel to gapfill
@@ -195,23 +195,19 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None):
                                 u'probabilisticAnnotation_workspace': rxn_probs.workspace_id})
 
     if name is None:
-        name = model.name + 'fill'
+        name = model.name
     params = {u'model': str(model.object_id), u'model_workspace': str(model.workspace_id), u'out_model': str(name),
               u'workspace': workspace, u'formulation': gap_formulation,
-              u'integrate_solution': False, u'completeGapfill': False,
+              u'integrate_solution': integrateSol, u'completeGapfill': False,
               u'gapFill': u'gf'}
     # for key in params:
     #     print str(key) + u': ' + str(params[key])
     # print u'\n\n\n'
-    try:
-        info = fba_client.gapfill_model(params)
-    except:
-        print params, '\n'
-        for r in model.get_reactions():
-            print r.rxn_id()
+    info = fba_client.gapfill_model(params)
     # have to do this funky to avoid importing objects
-    fba = get_object(-1, workspace, name=name + '.gffba')[0]
-    info = _integrate_gapfill(model, fba, workspace=workspace)
+    if not integrateSol:
+        fba = get_object(-1, workspace, name=name + '.gffba')[0]
+        info = _integrate_gapfill(model, fba, workspace=workspace)
     return info[0], info[6]
 
 def _gapfill_solution(fba):
@@ -427,12 +423,12 @@ def adjust_directions(model, adjustments):
 
 def _integrate_gapfill(model, solution_fba, workspace=None):
     changes = _gapfill_solution(solution_fba)
-    reactions = set([r.rxn_id() for r in model.get_reactions()])
+    reactions = dict([(r.rxn_id(), r) for r in model.get_reactions()])
     dirs = []
     additions = []
     for r in changes:
         if r[0] in reactions:
-            dirs.append(r)
+            dirs.append((reactions[r[0]].get_removal_id(), r[1]))
         else:
             temp = r[0].split('_')
             rxn_id = temp[0]

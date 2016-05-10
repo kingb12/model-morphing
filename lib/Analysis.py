@@ -75,7 +75,7 @@ def three_model_venn(model_identities, filename, genes=False, morphed_model=None
         rxn_sets.append(set([r.rxn_id() for r in FBAModel(m[0], m[1]).get_reactions()]))
     gene_dict = None
     if genes:
-        rxn_analysis = reaction_analysis(model_identities)
+        rxn_analysis = common_reaction_analysis(model_identities)
         genes = gene_percents(morphed_model, rxn_analysis)
         gene_dict = dict()
         for model_set in genes:

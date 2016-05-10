@@ -648,8 +648,7 @@ class Morph:
         self.media = new_media
         if not self.runfba().objective > 0:
             prev_rxns = set(([r.rxn_id() for r in self.model.get_reactions()]))
-            info = service.gapfill_model(self.model, self.media, workspace=self.ws_id, rxn_probs=self.probanno,
-                                         name='filled')
+            info = service.gapfill_model(self.model, self.media, workspace=self.ws_id, rxn_probs=self.probanno)
             filled_model = FBAModel(info[0], info[1])
             filled_rxns = dict([(r.rxn_id(), r) for r in filled_model.get_reactions()])
             new_reactions = set(filled_rxns.keys()) - prev_rxns
