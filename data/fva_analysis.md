@@ -5,7 +5,7 @@
 | Model | Blocked Reactions | Total Reactions | % Blocked | % blocked with genes | 
 | --- | --- | --- | --- | --- | 
 | Super Model | 443 | 705 | 62.84 | 72.69 | 
-| Morphed Model | 0 | 579 | 0.00 | 100.00 | 
+| Morphed Model | 0 | 599 | 0.00 | 100.00 | 
 
 ### Change in reaction blocking
 
@@ -30,4 +30,4 @@ the sets that inform these reactions are available, e.g. what are the qualities 
 | Model | Blocked Reactions | Total Reactions | % Blocked | % blocked with genes | 
 | --- | --- | --- | --- | --- | 
 | Super Model | 443 | 705 | 62.84 | 72.69 | 
-| Morphed Model | 0 | 579 | 0.00 | 100.00 | 
+| Morphed Model | 0 | 599 | 0.00 | 100.00 | 
