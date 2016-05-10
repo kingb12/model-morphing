@@ -191,23 +191,50 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None):
         workspace = model.workspace_id
     if rxn_probs is not None:
         gap_formulation.update({u'probabilisticAnnotation': rxn_probs.object_id,
+
                                 u'probabilisticAnnotation_workspace': rxn_probs.workspace_id})
+
     if name is None:
-        name = model.name
-    params = {u'model': str(model.object_id), u'model_workspace': str(model.workspace_id), u'out_model': name,
+        name = model.name + 'fill'
+    params = {u'model': str(model.object_id), u'model_workspace': str(model.workspace_id), u'out_model': str(name),
               u'workspace': workspace, u'formulation': gap_formulation,
-              u'integrate_solution': True,
-              u'gapFill': name + u'-gf'}
+              u'integrate_solution': False, u'completeGapfill': False,
+              u'gapFill': u'gf'}
     # for key in params:
     #     print str(key) + u': ' + str(params[key])
     # print u'\n\n\n'
-    info = fba_client.gapfill_model(params)
+    try:
+        info = fba_client.gapfill_model(params)
+    except:
+        print params, '\n'
+        for r in model.get_reactions():
+            print r.rxn_id()
+    # have to do this funky to avoid importing objects
+    fba = get_object(-1, workspace, name=name + '.gffba')[0]
+    info = _integrate_gapfill(model, fba, workspace=workspace)
     return info[0], info[6]
+
+def _gapfill_solution(fba):
+        """
+        If this FBA was created as a gapfilling solution, then this returns a list of reactions to be added/adjusted
+        :return: list(tuple) (rxn_id, direction, etc.)
+        """
+        # For now, naively assume first = best = only gap-filling solution
+        solutions = fba['gapfillingSolutions']
+        if len(solutions) < 1:
+            raise ValueError("This is not a gapfilling solution")
+        gsol = solutions[0]['gapfillingSolutionReactions']
+        result = []
+        for r in gsol:
+            reaction_id = r['reaction_ref'].split('/')[-1] + '_' + \
+                          r['compartment_ref'].split('/')[-1] + str(r['compartmentIndex'])
+            direction = r['direction']
+            result.append((reaction_id, direction))
+        return result
 
 
 def fba_formulation(media):
     return {u'media': str(media.object_id), u'media_workspace': str(media.workspace_id)}
-
 
 def runfba(model, media, workspace=None):
     """
@@ -383,6 +410,37 @@ def adjust_gprs(model, adjustments):
                     'gpr': [str(r[1])[1:-1] for r in adjustments]
                     }
     fba_client.adjust_model_reaction(adjust_args)
+
+def adjust_directions(model, adjustments):
+    """
+    adjusts directions for reactions in an FBAModel
+    :param model: FBAModel to adjust directions for
+    :param adjustments: list<tuple> (rxn_id, direction). if rxn_id is not already in the model, it may be added
+    :return: None
+    """
+    adjust_args = {'model': model.object_id,
+                    'workspace': model.workspace_id,
+                    'reaction': [r[0] for r in adjustments],
+                    'direction': [str(r[1]) for r in adjustments]
+                    }
+    fba_client.adjust_model_reaction(adjust_args)
+
+def _integrate_gapfill(model, solution_fba, workspace=None):
+    changes = _gapfill_solution(solution_fba)
+    reactions = set([r.rxn_id() for r in model.get_reactions()])
+    dirs = []
+    additions = []
+    for r in changes:
+        if r[0] in reactions:
+            dirs.append(r)
+        else:
+            temp = r[0].split('_')
+            rxn_id = temp[0]
+            rxn_comp = temp[1]
+            additions.append((rxn_id, rxn_comp, r[1]))
+    adjust_directions(model, dirs)
+    info = add_reactions(model, additions, workspace=workspace)
+    return info
 
 
 def model_info(model):

@@ -85,7 +85,8 @@ def get_object(objid, wsid, name=None):
 	} ObjectData;
 
     '''
-    service.get_object(objid, wsid, name=name)
+    obj = service.get_object(objid, wsid, name=name)
+    return {'data': obj[0], 'info': obj[1]}
 
 def dump(object, filepath):
     with open(filepath, 'w') as f:
@@ -95,7 +96,7 @@ def load(filepath):
     with open(filepath, 'rb') as f:
         return pickle.load(f)
 def save_object(data, type, wsid, objid=None, name=None):
-    service.save_object(data,type, wsid, objid=objid, name=name)
+    return service.save_object(data,type, wsid, objid=objid, name=name)
 def load_morph():
     """
     Loads a morph that has completed
@@ -352,6 +353,38 @@ def print_dict(dic, f=None, g=None):
             else:
                 print str(key) + ': ' + str(f(dic[key]))
 
+def biomass_additions(model, wsid, source_biomass, media, mediaws):
+    #parse a list of compounds and coeffs from source_model that need to be added
+    # for loop adjust biomass. run fba after every oteration and make sure flux > 0
+    a = service.ws_client.copy_object({'from': {'objid': model, 'wsid': wsid}, 'to':{'name': 'model_copy', 'wsid': wsid}})
+    model = a[0]
+    model_obj = get_object(model, wsid)
+    bio1 = model_obj['data']['biomasses'][0]
+    compounds = list()
+    coeffs = list()
+    for c in source_biomass['biomasscompounds']:
+        cpd = c['modelcompound_ref'].split('/')[-1]
+        coeff = c['coefficient']
+        compounds.append(cpd)
+        coeffs.append(coeff)
+    bio1_cpds = set([c['modelcompound_ref'].split('/')[-1] for c in bio1['biomasscompounds']])
+    curr_model = model
+    assert len(compounds) == len(coeffs)
+    added_cpds = set()
+    non_added = set()
+    for i in range(0, len(compounds)):
+        if compounds[i] not in bio1_cpds:
+            a = service.ws_client.copy_object({'from': {'objid': curr_model, 'wsid': wsid}, 'to':{'name': 'biomass' + str(i), 'wsid': wsid}})
+            info = service.fba_client.adjust_biomass_reaction({'model': a[0], 'workspace': wsid, 'compounds': [compounds[i]], 'coefficients':[coeffs[i]]})
+            new_model = info[0]
+            fba = Helpers.runmodelfba(new_model, wsid, media, mediaws)
+            if(fba[-1]['Objective'] > 0):
+                curr_model = new_model
+                added_cpds.add(compounds[i])
+            else:
+                non_added.add(compounds[i])
+    return curr_model
+
 
 def ace_to_bark(ws_id=None):
     args = dict()
@@ -368,7 +401,7 @@ def ace_to_bark(ws_id=None):
 def mari_to_janna(ws_id=None):
     args = dict()
     args['genome'] = Genome(36, 9145)
-    args['src_model'] = FBAModel(37, 9145)
+    args['src_model'] = FBAModel(58, 9145)
     args['probanno'] = ReactionProbabilities(31, 9145)
     args['protcomp'] = ProteomeComparison(27, 9145)
     args['media'] = Media(24, 9145)
@@ -376,50 +409,38 @@ def mari_to_janna(ws_id=None):
     return Morph(args)
 
 
+def mari_to_mari(ws_id=None):
+    args = dict()
+    args['genome'] = Genome(26, 9145)
+    args['src_model'] = FBAModel(58, 9145)
+    args['probanno'] = ReactionProbabilities(30, 9145)
+    args['protcomp'] = ProteomeComparison(50, 9145)
+    args['media'] = Media(24, 9145)
+    args['ws_id'] = ws_id
+    return Morph(args)
+
+
 def mari_to_bark(ws_id=None):
     args = dict()
-    args['genome'] = '3'
-    args['src_model'] = '37'
-    args['probanno'] = '15'
-    args['protcomp'] = '51'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
+    args['genome'] = Genome(3, 9145)
+    args['src_model'] = FBAModel(58, 9145)
+    args['probanno'] = ReactionProbabilities(15, 9145)
+    args['protcomp'] = ProteomeComparison(51, 9145)
+    args['media'] = Media(24, 9145)
     args['ws_id'] = ws_id
     return Morph(args)
 
 
 def mari_to_stadt(ws_id=None):
     args = dict()
-    args['genome'] = '35'
-    args['src_model'] = '37'
-    args['probanno'] = '33'
-    args['protcomp'] = '28'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
-    args['ws_id'] = ws_id
+    args['genome'] = Genome(35, 9145)
+    args['src_model'] = FBAModel(58, 9145)
+    args['probanno'] = ReactionProbabilities(33, 9145)
+    args['protcomp'] = ProteomeComparison(28, 9145)
+    args['media'] = Media(24, 9145)
     return Morph(args)
-def mari_to_mari(ws_id=None):
-    args = dict()
-    args['genome'] = '26'
-    args['src_model'] = '37'
-    args['probanno'] = '30'
-    args['protcomp'] = '50'
-    args['genomews'] = '9145'
-    args['src_modelws'] = '9145'
-    args['probannows'] = '9145'
-    args['protcompws'] = '9145'
-    args['mediaws'] = '9145'
-    args['media'] = '24'
-    args['ws_id'] = ws_id
-    return Morph(args)
+
+
 def _get_gpr(reaction):
     rxn_proteins = reaction['modelReactionProteins']
     proteins_str = ""

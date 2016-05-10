@@ -14,7 +14,7 @@ class StoredObject(object):
     def __init__(self, object_id, workspace_id):
         self.identity = (int(object_id), int(workspace_id))
         self._name = None
-        self._data = None # BE MINDFUL OF THIS. IF YOU FIND A BUG CAUSED BY THIS NAMING, CHANGE IT
+        self._data = None  # BE MINDFUL OF THIS. IF YOU FIND A BUG CAUSED BY THIS NAMING, CHANGE IT
         self._check_rep()
 
     def __getattr__(self, item):
@@ -93,7 +93,6 @@ class StoredObject(object):
             argtype = typestr
         info = service.save_object(stored_data, argtype, workspace_id, objid=objid, name=name)
         return cls(info[0], info[1])
-
 
     def copy(self, workspace_id=None, name=None):
         if name is None and workspace_id is None:
@@ -225,6 +224,8 @@ class ModelReaction:
 
     def set_direction(self, direction):
         self.data['direction'] = direction
+
+
 class Compound(object):
     """
     small wrapper class for compound coefficient and ID.
@@ -300,6 +301,8 @@ class Compound(object):
         :return: the formula for the compound
         """
         return self.get_info()['name']
+
+
 class Gpr:
     """
     a class representing the Gene -> Protein -> Reaction relationship for a ModelReaction in a model
@@ -597,6 +600,39 @@ class Genome(StoredObject):
     def get_genome_id(self):
         return self.data['id']
 
+    def get_genome_name(self):
+        return self.data['scientific_name']
+
+    def get_features(self):
+        return self.data['features']
+
+    def alias_map(self, key_str, val_str=None):
+        """
+        returns a dictionary of aliases id types for this genome (a key and value reference same gene)
+        :param key_str: A key indicating what kind of alias to use as keys (the standard prefix ('MMP', 'kb|g.575')
+        :param val_str: (optional) str indicating what kind of alias to map to (default is ID (e.g. kb|g.575)
+        :return: dictionary of alias mappings
+        """
+        result = dict()
+        for f in self.get_features():
+            if 'aliases' in f:
+                for alias in f['aliases']:
+                    if alias.startswith(key_str):
+                        if val_str is not None:
+                            values = [a for a in f['aliases'] if a.startswith(val_str)]
+                            assert len(values) <= 1
+                            if len(values) > 0:
+                                result[alias] = values[0]
+                        else:
+                            result[alias] = f['id']
+        for key in result:
+            val = result[key]
+            for f in self.get_features():
+                if 'aliases' in f and val in f['aliases']:
+                    assert f['id'] == key, 'Not a 1:1 mapping ' + str(key) + ', ' + str(val)
+        return result
+
+        return result
 
 
 class Media(StoredObject):
@@ -675,6 +711,40 @@ class ProteomeComparison(StoredObject):
         g1ws, g1obj, _version = self.data['genome1ref'].split('/')
         g12ws, g2obj, _version = self.data['genome2ref'].split('/')
         return Genome(g1obj, g1ws), Genome(g2obj, g12ws)
+
+    def find_matches(self, gene, genome=None):
+        """
+        Finds the matches for a particular gene in the proteome comparison. The genome can be inferred or set manually
+        :param gene: gene to look for matches
+        :param genome: (optional) the genome the gene is located in
+        :return: list of tuples(string, int) (gene, %hit) that were found as matches, often a singleton list
+        """
+        # Set genome to index of the genome in the comparison (have to because of ugly KBase ProtComp Data Structure0
+        if genome is not None:
+            genomes = [g.get_genome_id() for g in self.get_genomes()]
+            if genome.get_genome_id() not in genomes:
+                raise ValueError('gene: ' + str(gene) + ' not in genomes: ' + str(genomes))
+            genome = genomes.index(genome.get_genome_id())
+        else:
+            genomes = [g.get_genome_id() for g in self.get_genomes()]
+            for i in range(len(genomes)):
+                if gene.startswith(genomes[i]):
+                    genome = i
+            if genome is None:
+                raise ValueError('gene: ' + str(gene) + ' not in genomes: ' + str(genomes))
+        # Find map index in proteome comp data structure for gene
+        map_key = 'proteome' + str(genome + 1) + 'map'
+        match_name_key = 'proteome1names' if map_key == 'proteome2map' else 'proteome2names'
+        data_key = 'data' + str(genome + 1)
+        names_map = self.data[map_key]
+        matches = self.data[data_key][names_map[gene]]
+        result = []
+        for m in matches:
+            result.append((self.data[match_name_key][m[0]], m[2]))
+        return result
+
+    def get_genome_names(self):
+        return [g.get_genome_name() for g in self.get_genomes()]
 
 
 class ReactionProbabilities(StoredObject):
