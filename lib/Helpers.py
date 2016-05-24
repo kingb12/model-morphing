@@ -9,38 +9,6 @@ import os
 from lib.objects import *
 
 
-def modelargs(morph):
-    args = dict()
-    args['model'] = morph.model
-    args['model_workspace'] = morph.ws_id
-    return args
-
-
-def unpack_essen_results():
-    path = str(os.getcwd()) + '/../data/essential_results'
-    reactions = dict()
-    for filename in os.listdir(path):
-        filename = path + str('/') + filename
-        with open(filename, "rb") as f:
-            print str(filename)
-            a = pickle.load(f)
-            reactions[filename.split('/')[-1].split('.')[0]] = a
-    filename = str(os.getcwd()) + '/../data/reactions.pkl'
-    return reactions
-
-def _count_essential(reactions):
-    rxns = reactions
-    reactions = dict()
-    for rxn in rxns:
-        data = rxns[rxn]
-        for r in data[rxn][2]:
-            if r not in reactions:
-                reactions[r] = [rxn]
-            else:
-                reactions[r].append(rxn)
-    return reactions
-
-
 def get_object(objid, wsid, name=None):
     '''
     Returns an object and it's associated KBase information
@@ -95,16 +63,12 @@ def dump(object, filepath):
 def load(filepath):
     with open(filepath, 'rb') as f:
         return pickle.load(f)
+
+
 def save_object(data, type, wsid, objid=None, name=None):
     return service.save_object(data,type, wsid, objid=objid, name=name)
-def load_morph():
-    """
-    Loads a morph that has completed
-    """
-    data_unicode = fb.get('standard_morph', 'acebar')
-    data = json.loads(data_unicode, object_hook=Morph)
-    return data
 
+# TODO: MOVE THIS TO BETA
 def put(url, key, value):
     """
     Puts value at the givenkey at url in the Firebase
@@ -117,30 +81,7 @@ def put(url, key, value):
     except AttributeError:
         fb.put(url, key, value)
 
-def check_for_duplicates(model_id, ws_id):
-    object = get_object(model_id, ws_id)
-    model = object['data']
-    cpds = [(c['compound_ref'], c['modelcompartment_ref']) for c in model['modelcompounds']]
-    compound_dict = dict()
-    for cpd in cpds:
-        cpd_id = cpd[0].split('/')[-1]
-        if (cpd_id not in compound_dict):
-            compound_dict[cpd_id] = [cpd]
-        else:
-            compound_dict[cpd_id].append(cpd)
-    dups = list()
-    for i in compound_dict:
-        compartments = [j[1] for j in compound_dict[i]]
-        # Sets can only have unique values, so if there is a duplicate
-        # compartment, it woll cause a change in length from list -> set
-        compset = set(compartments)
-        if(len(compset) != len(compartments)):
-            dups.append(i)
-    duplicates = dict()
-    for i in dups:
-        duplicates[i] = compound_dict[i]
-    mdl = model
-    return duplicates, mdl
+2
 def process_iterated(morph):
     gnm = Client.removal_list(morph.rxn_labels['gene-no-match'])
     for i in gnm:
@@ -152,12 +93,14 @@ def process_iterated(morph):
         dump(morph, '../data/morph-Hsmedia.pkl')
     return morph
 
+
 def runfba(morph):
     fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
     fba_params = {'workspace': morph.ws_id, 'model' : morph.model, 'model_workspace':morph.ws_id,
                   'formulation': fba_formulation, 'fva': True}
     fbaMeta = Client.fba_client.runfba(fba_params)
     return fbaMeta
+
 
 def runmodelfba(model, wsid, media, mediaws):
     fba_formulation = {'media': media, 'media_workspace': mediaws}
@@ -166,15 +109,18 @@ def runmodelfba(model, wsid, media, mediaws):
     fbaMeta = Client.fba_client.runfba(fba_params)
     return fbaMeta
 
+
 def clone_morph(morph):
     morph = copy.deepcopy(morph)
     info = Client.ws_client.clone_workspace({'wsi': {'id': morph.ws_id}, 'workspace':str('morphclone' + str(morph.ws_id) + str(random.randint(0, 1000000)))})
     morph.ws_id = info[0]
     return morph
 
+
 def copy_object(objid, wsid, new_ws, name=None):
     obj = get_object(objid, wsid, name=name)
     return save_object(obj['data'], obj['info'][2], new_ws, name=obj['info'][1])[0]
+
 
 def empty_ws(ws_id):
     # get all object ids in {'id': x} form excluding the narrative object
@@ -183,10 +129,13 @@ def empty_ws(ws_id):
     if len(object_ids) > 0:
         Client.ws_client.delete_objects(object_ids)
 
+
 def rename_object(obj_id, ws_id, new_name):
     Client.ws_client.rename_object({'obj': {'wsid': ws_id, 'objid': obj_id}, 'new_name': new_name})
 
+
 fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)
+
 
 def get_rxn_id(modelreaction_obj):
     '''
@@ -196,6 +145,8 @@ def get_rxn_id(modelreaction_obj):
     if rxn_id.startswith('rxn00000'):
         return modelreaction_obj['id']
     return rxn_id
+
+
 def classify_gprs(gpr_comparison_set):
     gprs = gpr_comparison_set
     for rxn in gprs:
@@ -212,10 +163,12 @@ def classify_gprs(gpr_comparison_set):
                 # if the length of this list is 0, they differ by protein OR by
                 # feature
 
+
 def same_gpr(rxn1, rxn2):
     rxn1_set = gpr_set(rxn1)
     rxn2_set = gpr_set(rxn2)
     return rxn1_set == rxn2_set
+
 
 def gpr_set(reaction):
     '''
@@ -237,6 +190,7 @@ def gpr_set(reaction):
         return frozenset(prots)
     return None
 
+
 def ftr_set(reaction):
     features = set()
     for protein in reaction['modelreactionproteins']:
@@ -244,6 +198,8 @@ def ftr_set(reaction):
             for f in [i.split('/')[-1] for i in sub['feature_refs']]:
                 features.add(f)
     return features
+
+
 def gpr_exclude_features(reaction, features):
     '''
     returns a gpr set like gpr_set but excludes features in features
@@ -263,6 +219,7 @@ def gpr_exclude_features(reaction, features):
     if len(prots) > 0:
         return frozenset(prots)
     return None
+
 
 def get_reaction_dict(modelobj):
     '''takes a model object and returns a set of the reactions in the model
@@ -291,6 +248,7 @@ def _unnest_sets(nested_set):
             single_set.add(item)
     return single_set
 
+
 def gpr_tostring(gpr_set):
     proteins = list(gpr_set)
     proteins_str = ""
@@ -316,6 +274,7 @@ def gpr_tostring(gpr_set):
     gpr = "(" + proteins_str + ")"
     return gpr
 
+
 def get_equation(rxn_object):
     '''
     takes a modelreaction object (type dict) and returns it's equation
@@ -338,6 +297,7 @@ def get_equation(rxn_object):
         eq = eq[:-2]
     return eq
 
+
 def print_dict(dic, f=None, g=None):
     for key in dic:
         if f is None:
@@ -352,6 +312,7 @@ def print_dict(dic, f=None, g=None):
                     print str(key) + ': ' + str(f(dic[key]))
             else:
                 print str(key) + ': ' + str(f(dic[key]))
+
 
 def biomass_additions(model, wsid, source_biomass, media, mediaws):
     #parse a list of compounds and coeffs from source_model that need to be added
@@ -438,6 +399,7 @@ def mari_to_stadt(ws_id=None):
     args['probanno'] = ReactionProbabilities(33, 9145)
     args['protcomp'] = ProteomeComparison(28, 9145)
     args['media'] = Media(24, 9145)
+    args['ws_id'] = ws_id
     return Morph(args)
 
 

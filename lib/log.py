@@ -1,5 +1,6 @@
 import copy
 import Plotter
+import objects
 
 class Log:
     """
@@ -25,6 +26,8 @@ class Log:
         self.actions.append(Action('initialize', [a], context=str(Log.__init__)))
 
     def add(self, action_type, inputs, outputs, context=None, notes=None):
+        self._make_references(inputs)
+        self._make_references(outputs)
         a = Action(action_type, {'in': inputs, 'out': outputs}, context=context, notes=notes)
         self.actions.append(a)
 
@@ -34,6 +37,18 @@ class Log:
         for a in self.actions:
             actions.add((a.md_tuple()))
         return actions.markdown()
+
+    def _make_references(self, item):
+        # Mutates list in place replacing StoredObjects with their references
+        if type(item) == list:
+            for i in range(len(item)):
+                if isinstance(item[i], objects.StoredObject):
+                    item[i] = item[i].reference()
+        else:
+            if isinstance(item, objects.StoredObject):
+                    item = item.reference()
+
+
 
 
 class Action:

@@ -3,16 +3,13 @@ from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
 import random
 
+ws_url = 'https://kbase.us/services/ws'
+fba_url = 'https://kbase.us/services/KBaseFBAModeling/'
+
 
 def _init_clients():
-    # Get workspace service URL parameter
-    with open("./urls/.kbase_workspaceURL", "r") as myfile:
-        url = myfile.read().replace('\n', '')
-    ws_c = Workspace(url)
-    # Get FBA Model Services URL parameter
-    with open("./urls/.kbase_fbaModelServicesURL", "r") as myfile:
-        url = myfile.read().replace('\n', '')
-    fba_c = fbaModelServices(url)
+    ws_c = Workspace(ws_url)
+    fba_c = fbaModelServices(fba_url)
     return ws_c, fba_c
 
 

@@ -383,7 +383,7 @@ class Morph:
         result = service.add_reactions_manually(self.model, specials, name='super_modelspc')
         self.model = FBAModel(result[0], result[1])
 
-    def prepare_supermodel(self, fill_src=True):
+    def prepare_supermodel(self, fill_src=False):
         """
         Composition of the first several steps in the algorithm
 
@@ -657,6 +657,22 @@ class Morph:
             # KBASE QUIRKS MAKE THIS LINE THE OPPOSITE OF WHAT WE WANT:
             self.model = filled_model
             assert self.runfba().objective > 0
+
+    def get_labels(self, reaction_ids):
+        """
+        Given a set of reaction_ids, return the labels for the reactions
+
+        :param reaction_ids: list<str> of reaction ids. e.g. 'rxn12345_c0'
+        :return: dict<str, list<str>> of ids to list of labels
+        """
+
+        result = dict()
+        for r in reaction_ids:
+            result[r] = []
+            for label in self.rxn_labels:
+                if r in self.rxn_labels[label]:
+                    result[r].append(label)
+        return result
 
 
 def _general_direction(model_rxn1, model_rxn2):

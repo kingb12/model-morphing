@@ -173,6 +173,16 @@ def fva_change_analysis(models, media, workspace=None):
         blocked_sets.append((m.name, frozenset(fva.blocked_reactions())))
     return venn_analysis(blocked_sets)
 
+def gene_overlap(model_identities):
+    models = list()
+    for m in model_identities:
+        model = FBAModel(m[0], m[1])
+        models.append((m[2], frozenset(model.get_features())))
+    return venn_analysis(models)
 
-
+def common_genes_venn(model_identities, filename, title=None):
+    gene_sets = []
+    for m in model_identities:
+        gene_sets.append(frozenset(FBAModel(m[0], m[1]).get_features()))
+    Plotter.venn2(gene_sets, title, 'Gene', filename, set_labels=[m[2] for m in model_identities])
 

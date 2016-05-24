@@ -15,6 +15,7 @@ class StoredObject(object):
         self.identity = (int(object_id), int(workspace_id))
         self._name = None
         self._data = None  # BE MINDFUL OF THIS. IF YOU FIND A BUG CAUSED BY THIS NAMING, CHANGE IT
+        self._ver = None
         self._check_rep()
 
     def __getattr__(self, item):
@@ -70,10 +71,18 @@ class StoredObject(object):
         meta_data = service.get_object(self.object_id, self.workspace_id)
         self._data = meta_data[0]
         self._name = meta_data[1][1]
+        self._ver = meta_data[1][4]
 
         return self.data
         # TODO: Clone/Copy
 
+    def reference(self):
+        if self._ver is None:
+            self.get_object()
+        return {'object_id': self.object_id,
+                'workspace_id': self.workspace_id,
+                'version': self._ver,
+                'class': self.__class__}
     @classmethod
     def save(cls, stored_data, workspace_id, objid=None, name=None, typestr=None):
         """
@@ -135,6 +144,17 @@ class FBAModel(StoredObject):
         model_obj = self.get_object()
         return [ModelReaction(r) for r in model_obj['modelreactions']]  # Potentially Wasteful but maintains D.R.Y.
 
+    def get_features(self):
+        """
+        returns a set<str> of all gene features in the model
+        :return: set<str> features
+        """
+        rxns = self.get_reactions()
+        features = set()
+        for r in rxns:
+            features |= r.gpr.ftrs
+        return features
+
 
 class ModelReaction:
     """
@@ -156,7 +176,7 @@ class ModelReaction:
         """
         returns the reaction id of a model reaction object (i.e. rxn34565_c0)
         """
-        rxn_id = str(self.data['reaction_ref'].split('/')[-1]) + '_' + self.data['modelcompartment_ref'].split('/')[-1]
+        rxn_id = str(self.data['reaction_ref'].split('/')[-1][0:8]) + '_' + self.data['modelcompartment_ref'].split('/')[-1]
         if rxn_id.startswith('rxn00000'):
             return self.data['id']
         return rxn_id
@@ -673,7 +693,7 @@ class FBA(StoredObject):
         :return: FBAModel
         """
         info = self.data['fbamodel_ref'].split('/')
-        return FBAModel(info[0], info[1])
+        return FBAModel(info[1], info[0])
 
     def get_media(self):
         """
@@ -681,7 +701,7 @@ class FBA(StoredObject):
         :return: Media
         """
         info = self.data['media_ref'].split('/')
-        return Media(info[0], info[1])
+        return Media(info[1], info[0])
 
     def blocked_reactions(self):
         """
