@@ -1,6 +1,7 @@
 from biokbase.workspace.client import Workspace
 from biokbase.workspace.client import ServerError
 from biokbase.fbaModelServices.Client import fbaModelServices
+import LocalFbaModelServices
 import random
 
 ws_url = 'https://kbase.us/services/ws'
@@ -9,11 +10,14 @@ fba_url = 'https://kbase.us/services/KBaseFBAModeling/'
 
 def _init_clients():
     ws_c = Workspace(ws_url)
+    # The KBase web-client instantiated below is being deprecated and no longer works for all functions.
+    # A local work-around has been added using kb_sdk and fba_tools
     fba_c = fbaModelServices(fba_url)
-    return ws_c, fba_c
+    gap_c = LocalFbaModelServices
+    return ws_c, fba_c, gap_c
 
 
-ws_client, fba_client = _init_clients()
+ws_client, fba_client, gapfill_client = _init_clients()
 
 
 # =====================================================================================================================
@@ -197,15 +201,12 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None, integ
               u'workspace': workspace, u'formulation': gap_formulation,
               u'integrate_solution': integrateSol, u'completeGapfill': False,
               u'gapFill': u'gf'}
-    # for key in params:
-    #     print str(key) + u': ' + str(params[key])
-    # print u'\n\n\n'
-    info = fba_client.gapfill_model(params)
-    # have to do this funky to avoid importing objects
+    info = gapfill_client.gapfill_model(params)
     if not integrateSol:
         fba = get_object(-1, workspace, name=name + '.gffba')[0]
         info = _integrate_gapfill(model, fba, workspace=workspace)
     return info[0], info[6]
+
 
 def _gapfill_solution(fba):
         """
@@ -228,6 +229,7 @@ def _gapfill_solution(fba):
 
 def fba_formulation(media):
     return {u'media': str(media.object_id), u'media_workspace': str(media.workspace_id)}
+
 
 def runfba(model, media, workspace=None):
     """
