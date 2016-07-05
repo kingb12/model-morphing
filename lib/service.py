@@ -197,10 +197,10 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None, integ
 
     if name is None:
         name = model.name
-    params = {u'model': str(model.object_id), u'model_workspace': str(model.workspace_id), u'out_model': str(name),
-              u'workspace': workspace, u'formulation': gap_formulation,
-              u'integrate_solution': integrateSol, u'completeGapfill': False,
-              u'gapFill': u'gf'}
+    params = {u'fbamodel_id': str(model.object_id), u'fbamodel_workspace': str(model.workspace_id), u'fbamodel_output_id': str(name),
+              u'workspace': workspace,
+              u'media_id': media.object_id, u'media_workspace': media.workspace_id,
+              u'comprehensive_gapfill': False}
     info = gapfill_client.gapfill_model(params)
     if not integrateSol:
         fba = get_object(-1, workspace, name=name + '.gffba')[0]
