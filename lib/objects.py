@@ -18,6 +18,7 @@ class StoredObject(object):
         self._ver = None
         self._check_rep()
 
+
     def __getattr__(self, item):
         # Overriding __getattr__ to  get special objects
         if item is 'object_id':
@@ -103,6 +104,14 @@ class StoredObject(object):
         info = service.save_object(stored_data, argtype, workspace_id, objid=objid, name=name)
         return cls(info[0], info[1])
 
+    @classmethod
+    def construct(cls, arguments):
+        """ None
+        """
+        pass
+
+
+
     def copy(self, workspace_id=None, name=None):
         if name is None and workspace_id is None:
             name = str(self.name) + '_copy'
@@ -124,7 +133,17 @@ class Biochemistry(StoredObject):
     a class representing a Biochemistry Object
     """
     storedType = service.types()['Biochemistry']
-    pass
+
+    def get_compound(self, compound_id):
+        """
+        returns dictionary of information on a compound
+        :param compound_id: str e.g. 'cpd00011'
+        :return:
+        """
+        for c in self.data['compounds']:
+            if compound_id == c['id']:
+                return c
+        raise ValueError(str(compound_id) + ' is not in the biochemistry')
 
 
 class FBAModel(StoredObject):
@@ -715,6 +734,27 @@ class FBA(StoredObject):
                 assert r['class'] == 'Blocked'
                 result.append(r['modelreaction_ref'].split('/')[-1])
         return result
+
+    def primary_exchanges(self):
+        """
+        Returns the 10
+        :return:
+        """
+        biochem = FBAModel.DEFAULT_BIOCHEM
+        flux = [[f['value'], f['modelcompound_ref'].split('/')[-1]] for f in self.data['FBACompoundVariables']]
+        for f in flux:
+            try:
+                c = biochem.get_compound(f[1].split('_')[0])
+                f[1] = c['name'] + '(' + c['formula'] + ')'
+            except ValueError:
+                pass
+        flux.sort()
+        return flux[0:10], flux[-10:]
+
+
+
+
+
 
 
 class ProteomeComparison(StoredObject):
