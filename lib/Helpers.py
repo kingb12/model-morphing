@@ -4,7 +4,6 @@ import json
 import pickle
 import service
 import random
-from firebase import firebase
 import os
 from lib.objects import *
 
@@ -68,37 +67,12 @@ def load(filepath):
 def save_object(data, type, wsid, objid=None, name=None):
     return service.save_object(data,type, wsid, objid=objid, name=name)
 
-# TODO: MOVE THIS TO BETA
-def put(url, key, value):
-    """
-    Puts value at the givenkey at url in the Firebase
-
-    (the url is just the subdirectory within firebase, ie. to store "Morty" at 'https://my_base/firebaseio.com/BestCats'
-    call put('/BestCats', "Morty")
-    """
-    try:
-        fb.put(url, key, value.to_json())
-    except AttributeError:
-        fb.put(url, key, value)
-
-2
-def process_iterated(morph):
-    gnm = Client.removal_list(morph.rxn_labels['gene-no-match'])
-    for i in gnm:
-        (morph, a, b) = Client.process_reactions(morph, rxn_list=[i])
-        dump(morph, '../data/morph-Hsmedia.pkl')
-    ng = Client.removal_list(morph.rxn_labels['no-gene'])
-    for i in ng:
-        (morph, a, b) = Client.process_reactions(morph, rxn_list=[i])
-        dump(morph, '../data/morph-Hsmedia.pkl')
-    return morph
-
 
 def runfba(morph):
     fba_formulation = {'media': morph.media, 'media_workspace': morph.mediaws}
     fba_params = {'workspace': morph.ws_id, 'model' : morph.model, 'model_workspace':morph.ws_id,
                   'formulation': fba_formulation, 'fva': True}
-    fbaMeta = Client.fba_client.runfba(fba_params)
+    fbaMeta = service.fba_client.runfba(fba_params)
     return fbaMeta
 
 
@@ -106,35 +80,13 @@ def runmodelfba(model, wsid, media, mediaws):
     fba_formulation = {'media': media, 'media_workspace': mediaws}
     fba_params = {'workspace': wsid, 'model' : model, 'model_workspace':wsid,
                   'formulation': fba_formulation}
-    fbaMeta = Client.fba_client.runfba(fba_params)
+    fbaMeta = service.fba_client.runfba(fba_params)
     return fbaMeta
-
-
-def clone_morph(morph):
-    morph = copy.deepcopy(morph)
-    info = Client.ws_client.clone_workspace({'wsi': {'id': morph.ws_id}, 'workspace':str('morphclone' + str(morph.ws_id) + str(random.randint(0, 1000000)))})
-    morph.ws_id = info[0]
-    return morph
 
 
 def copy_object(objid, wsid, new_ws, name=None):
     obj = get_object(objid, wsid, name=name)
     return save_object(obj['data'], obj['info'][2], new_ws, name=obj['info'][1])[0]
-
-
-def empty_ws(ws_id):
-    # get all object ids in {'id': x} form excluding the narrative object
-    object_ids = [{'objid': info[0], 'wsid': ws_id} for info in
-                 Client.ws_client.list_objects({'ids': [ws_id]}) if not info[2].startswith('KBaseNarrative')]
-    if len(object_ids) > 0:
-        Client.ws_client.delete_objects(object_ids)
-
-
-def rename_object(obj_id, ws_id, new_name):
-    Client.ws_client.rename_object({'obj': {'wsid': ws_id, 'objid': obj_id}, 'new_name': new_name})
-
-
-fb = firebase.FirebaseApplication('https://fiery-fire-3234.firebaseio.com', None)
 
 
 def get_rxn_id(modelreaction_obj):
@@ -338,7 +290,7 @@ def biomass_additions(model, wsid, source_biomass, media, mediaws):
             a = service.ws_client.copy_object({'from': {'objid': curr_model, 'wsid': wsid}, 'to':{'name': 'biomass' + str(i), 'wsid': wsid}})
             info = service.fba_client.adjust_biomass_reaction({'model': a[0], 'workspace': wsid, 'compounds': [compounds[i]], 'coefficients':[coeffs[i]]})
             new_model = info[0]
-            fba = Helpers.runmodelfba(new_model, wsid, media, mediaws)
+            fba = runmodelfba(new_model, wsid, media, mediaws)
             if(fba[-1]['Objective'] > 0):
                 curr_model = new_model
                 added_cpds.add(compounds[i])
