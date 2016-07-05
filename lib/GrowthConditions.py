@@ -69,6 +69,7 @@ class AllMedia(AbstractGrowthCondition):
             model = args['model'] if 'model' in args else morph.model
             info = service.runfba(model, med, workspace=morph.ws_id)
             fba = objects.FBA(info[0], info[1])
+            self.fba = fba
             if not fba.objective > 0.0:
                 return False
         return True

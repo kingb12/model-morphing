@@ -27,8 +27,10 @@ def venn3(subsets, title, unit_title, filename, set_labels=None, normalize=1.0, 
             text = v.get_label_by_id(a)
             xy= text.get_position() - np.array([0, 0.085])
             plt.annotate(annotation[a], xy=xy, xytext=xy, ha='center', textcoords='offset points', color='r', weight='bold')
-
-    plt.title(title)
+    for label in v.subset_labels:
+        label.set_fontname('sans-serif')
+    if title is not None:
+        plt.title(title)
     plt.savefig(filename)
     plt.close()
 
@@ -52,7 +54,10 @@ def venn2(subsets, title, unit_title, filename, set_labels=None, normalize=1.0, 
             xy = text.get_position() - np.array([0, 0.085])
             plt.annotate(annotation[a], xy=xy, xytext=xy, ha='center', textcoords='offset points', color='r', weight='bold')
 
-    plt.title(title)
+    for label in v.subset_labels:
+        label.set_fontname('serif')
+    if title is not None:
+        plt.title(title)
     plt.savefig(filename)
     plt.close()
 

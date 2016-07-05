@@ -74,8 +74,11 @@ class Action:
 
     def __str__(self):
         result = 'Action: ' + str(self.type) + '\nMembers: \n'
-        for i in self.members:
-            result += str(i) + ': \n' + str(self.members[i])
+        if type(self.members) == dict:
+            for i in self.members:
+                result += str(i) + ': \n' + str(self.members[i])
+        else:
+            result += str(self.members)
         result += '\nContext: ' + str(self.context)
         return result
 
