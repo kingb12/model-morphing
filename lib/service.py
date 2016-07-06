@@ -177,7 +177,7 @@ def copy_object(from_tuple, to_tuple):
     return info[0], info[6]
 
 
-def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None, integrateSol=True):
+def gapfill_model(model, media, workspace=None, rxn_probs=None):
     """
 
     :param model: FBAModel to gapfill
@@ -195,17 +195,12 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None, name=None, integ
 
                                 u'probabilisticAnnotation_workspace': rxn_probs.workspace_id})
 
-    if name is None:
-        name = model.name
-    params = {u'fbamodel_id': str(model.object_id), u'fbamodel_workspace': str(model.workspace_id), u'fbamodel_output_id': str(name),
+    params = {u'fbamodel_id': str(model.object_id), u'fbamodel_workspace': str(model.workspace_id), u'fbamodel_output_id': str(model.name),
               u'workspace': workspace,
               u'media_id': media.object_id, u'media_workspace': media.workspace_id,
               u'comprehensive_gapfill': False}
-    info = gapfill_client.gapfill_model(params)
-    if not integrateSol:
-        fba = get_object(-1, workspace, name=name + '.gffba')[0]
-        info = _integrate_gapfill(model, fba, workspace=workspace)
-    return info[0], info[6]
+    gapfill_client.gapfill_model(params)
+    return model.object_id, model.workspace_id
 
 
 def _gapfill_solution(fba):
