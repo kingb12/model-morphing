@@ -9,7 +9,7 @@ from operator import itemgetter
 
 import GrowthConditions
 from log import Log
-from lib.objects import *
+from objects import *
 
 
 

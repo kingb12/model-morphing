@@ -5,7 +5,7 @@ import pickle
 import service
 import random
 import os
-from lib.objects import *
+from objects import *
 
 
 def get_object(objid, wsid, name=None):

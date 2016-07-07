@@ -1,7 +1,5 @@
 import service
-
-from lib import objects
-
+import objects
 
 class AbstractGrowthCondition:
     """
