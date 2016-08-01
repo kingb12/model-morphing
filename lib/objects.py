@@ -655,7 +655,7 @@ class Genome(StoredObject):
         result = dict()
         for f in self.get_features():
             if 'aliases' in f:
-                for alias in f['aliases']:
+                for alias in f['aliases'] + [f['id']]:
                     if alias.startswith(key_str):
                         if val_str is not None:
                             values = [a for a in f['aliases'] if a.startswith(val_str)]
