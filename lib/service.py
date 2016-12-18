@@ -12,12 +12,11 @@ def _init_clients():
     ws_c = Workspace(ws_url)
     # The KBase web-client instantiated below is being deprecated and no longer works for all functions.
     # A local work-around has been added using kb_sdk and fba_tools
-    fba_c = fbaModelServices(fba_url)
-    gap_c = LocalFbaModelServices
-    return ws_c, fba_c, gap_c
+    fba_c = LocalFbaModelServices
+    return ws_c, fba_c
 
 
-ws_client, fba_client, gapfill_client = _init_clients()
+ws_client, fba_client = _init_clients()
 
 
 # =====================================================================================================================
@@ -223,7 +222,7 @@ def _gapfill_solution(fba):
 
 
 def fba_formulation(media):
-    return {u'media': str(media.object_id), u'media_workspace': str(media.workspace_id)}
+    return {u'media_id': str(media.object_id), u'media_workspace': str(media.workspace_id)}
 
 
 def runfba(model, media, workspace=None):
@@ -237,8 +236,9 @@ def runfba(model, media, workspace=None):
     """
     if workspace is None:
         workspace = model.workspace_id
-    fba_params = {u'workspace': workspace, u'model': model.object_id, u'model_workspace': model.workspace_id,
-                  u'formulation': fba_formulation(media)}
+    fba_params = fba_formulation(media).update({u'workspace': workspace,
+                                                u'fbamodel_id': model.object_id,
+                                                u'fbamodel_workspace': model.workspace_id})
     info = fba_client.runfba(fba_params)
     return info[0], info[6]
 
@@ -254,8 +254,10 @@ def runfva(model, media, workspace=None):
     """
     if workspace is None:
         workspace = model.workspace_id
-    fba_params = {u'workspace': workspace, u'model': model.object_id, u'model_workspace': model.workspace_id,
-                  u'formulation': fba_formulation(media), u'fva': True}
+    fba_params = fba_formulation(media).update({u'workspace': workspace,
+                                                u'fbamodel_id': model.object_id,
+                                                u'fbamodel_workspace': model.workspace_id,
+                                                u'fva': True})
     info = fba_client.runfba(fba_params)
     return info[0], info[6]
 
@@ -271,9 +273,9 @@ def translate_model(src_model, protcomp, workspace=None):
         workspace = src_model.workspace_id
     trans_params = {u'keep_nogene_rxn': 1,
                     u'protcomp': protcomp.object_id, u'protcomp_workspace': protcomp.workspace_id,
-                    u'model': src_model.object_id, u'model_workspace': src_model.workspace_id,
+                    u'fbamodel_id': src_model.object_id, u'fbamodel_workspace': src_model.workspace_id,
                     u'workspace': workspace}
-    info = fba_client.translate_fbamodel(trans_params)
+    info = fba_client.translate_model(trans_params)
     return info[0], info[6]
 
 
@@ -286,8 +288,8 @@ def reconstruct_genome(genome, workspace=None):
     """
     if workspace is None:
         workspace = genome.workspace_id
-    recon_params = {u'genome': genome.object_id, u'genome_workspace': genome.workspace_id, u'workspace': workspace}
-    info = fba_client.genome_to_fbamodel(recon_params)
+    recon_params = {u'genome_id': genome.object_id, u'genome_workspace': genome.workspace_id, u'workspace': workspace}
+    info = fba_client.build_metabolic_model(recon_params)
     return info[0], info[6]
 
 
@@ -301,11 +303,10 @@ def remove_reactions_in_place(model, reactions_to_remove):
     :param reactions_to_remove: reactions to remove (removal_id's)
     :return:
     """
-    removal_args = {'model': model.object_id,
-                    'workspace': model.workspace_id,
-                    'reaction': reactions_to_remove,
-                    'removeReaction': True}
-    fba_client.adjust_model_reaction(removal_args)
+    removal_args = {'fbamodel_id': model.object_id,
+                    'fbamodel_workspace': model.workspace_id,
+                    'data': {'reactions_to_remove': reactions_to_remove}}
+    fba_client.remove_reactions(removal_args)
 
 
 def remove_reaction(model, reaction, workspace=None, output_id=None, in_place=False):
@@ -331,11 +332,11 @@ def remove_reaction(model, reaction, workspace=None, output_id=None, in_place=Fa
             i += 1
             output_id = model.name + '-' + str(i)
 
-    info = fba_client.remove_reactions({'model': model.object_id,
-                                        'model_workspace':model.workspace_id,
-                                        'output_id': output_id,
+    info = fba_client.remove_reactions({'fbamodel_id': model.object_id,
+                                        'fbamodel_workspace':model.workspace_id,
+                                        'fbamodel_output_id': output_id,
                                         'workspace': model.workspace_id,
-                                        'reactions': [reaction]})
+                                        'data': {'reactions_to_remove': [reaction]}})
     return info[0], info[6]
 
 
@@ -350,10 +351,10 @@ def add_reactions(model, new_reactions, workspace=None, name=None):
     """
     if workspace is None:
         workspace = model.workspace_id
-    args = {'model': model.object_id,
-            'model_workspace': model.workspace_id,
+    args = {'fbamodel_id': model.object_id,
+            'fbamodel_workspace': model.workspace_id,
             'workspace': workspace,
-            'reactions': new_reactions}
+            'data': {'reactions_to_add': new_reactions}}
     if name is not None:
         args['output_id'] = name
     info = fba_client.add_reactions(args)
@@ -394,12 +395,13 @@ def add_reactions_manually(model, reactions, workspace=None, name=None):
 
 
 def adjust_gprs(model, adjustments):
-    adjust_args = {'model': model.object_id,
-                    'workspace': model.workspace_id,
-                    'reaction': [r[0] for r in adjustments],
-                    'gpr': [str(r[1])[1:-1] for r in adjustments]
-                    }
-    fba_client.adjust_model_reaction(adjust_args)
+    adjust_args = {'fbamodel_id': model.object_id,
+                   'fbamodel_workspace': model.workspace_id,
+                   'workspace': model.workspace_id,
+                   'data': {'reactions_to_modify': [(r[0], r[0].split('_')[-1][0], r[1], r[2]) for r in adjustments]},
+                   }
+    fba_client.edit_reactions(adjust_args)
+
 
 def adjust_directions(model, adjustments):
     """
@@ -408,12 +410,13 @@ def adjust_directions(model, adjustments):
     :param adjustments: list<tuple> (rxn_id, direction). if rxn_id is not already in the model, it may be added
     :return: None
     """
-    adjust_args = {'model': model.object_id,
-                    'workspace': model.workspace_id,
-                    'reaction': [r[0] for r in adjustments],
-                    'direction': [str(r[1]) for r in adjustments]
+    adjust_args = {'fbamodel_id': model.object_id,
+                    'fbamodel_workspace': model.workspace_id,
+                   'workspace': model.workspace_id,
+                   'data': {'reactions_to_modify': [(r[0], r[0].split('_')[-1][0], r[1]) for r in adjustments]}
                     }
-    fba_client.adjust_model_reaction(adjust_args)
+    fba_client.edit_reactions(adjust_args)
+
 
 def _integrate_gapfill(model, solution_fba, workspace=None):
     changes = _gapfill_solution(solution_fba)

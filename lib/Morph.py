@@ -374,7 +374,7 @@ class Morph:
             else:
                 if rxn_id not in super_rxns:
                     super_rxns[rxn_id] = (reaction.get_rxn_ref(), reaction.get_comp_ref(), direction, str(reaction.gpr))
-                    adjustments.append((reaction.get_removal_id(), reaction.gpr))
+                    adjustments.append((reaction.get_removal_id(), reaction.get_direction(), reaction.gpr))
         # ---->
         super_rxns = super_rxns.values()
         result = service.add_reactions(self.model, super_rxns, name='super_model')
