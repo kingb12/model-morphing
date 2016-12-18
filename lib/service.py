@@ -272,7 +272,7 @@ def translate_model(src_model, protcomp, workspace=None):
     if workspace is None:
         workspace = src_model.workspace_id
     trans_params = {u'keep_nogene_rxn': 1,
-                    u'protcomp': protcomp.object_id, u'protcomp_workspace': protcomp.workspace_id,
+                    u'proteincomparison_id': protcomp.object_id, u'proteincomparison_workspace': protcomp.workspace_id,
                     u'fbamodel_id': src_model.object_id, u'fbamodel_workspace': src_model.workspace_id,
                     u'workspace': workspace}
     info = fba_client.translate_model(trans_params)
