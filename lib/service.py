@@ -262,18 +262,23 @@ def runfva(model, media, workspace=None):
     return info[0], info[6]
 
 
-def translate_model(src_model, protcomp, workspace=None):
+def translate_model(src_model, protcomp, workspace=None, translation_name=None):
     """
     Uses the service to translate an FBAModel to a close genome relative
     :param protcomp: ProteomeComparison with source and target Genome
     :param src_model: FBAModel of source
     return: tuple identity of the translated model stored in the service
     """
+    if translation_name is None:
+        translation_name = src_model.name + '_translation'
     if workspace is None:
         workspace = src_model.workspace_id
     trans_params = {u'keep_nogene_rxn': 1,
-                    u'proteincomparison_id': protcomp.object_id, u'proteincomparison_workspace': protcomp.workspace_id,
-                    u'fbamodel_id': src_model.object_id, u'fbamodel_workspace': src_model.workspace_id,
+                    u'proteincomparison_id': protcomp.object_id,
+                    u'proteincomparison_workspace': protcomp.workspace_id,
+                    u'fbamodel_id': src_model.object_id,
+                    u'fbamodel_workspace': src_model.workspace_id,
+                    u'fbamodel_output_id': translation_name,
                     u'workspace': workspace}
     info = fba_client.translate_model(trans_params)
     return info[0], info[6]
