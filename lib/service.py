@@ -198,7 +198,7 @@ def gapfill_model(model, media, workspace=None, rxn_probs=None):
               u'workspace': workspace,
               u'media_id': media.object_id, u'media_workspace': media.workspace_id,
               u'comprehensive_gapfill': False}
-    gapfill_client.gapfill_model(params)
+    fba_client.gapfill_model(params)
     return model.object_id, model.workspace_id
 
 
@@ -240,6 +240,8 @@ def runfba(model, media, workspace=None):
                                                 u'fbamodel_id': model.object_id,
                                                 u'fbamodel_workspace': model.workspace_id})
     info = fba_client.runfba(fba_params)
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
@@ -259,6 +261,8 @@ def runfva(model, media, workspace=None):
                                                 u'fbamodel_workspace': model.workspace_id,
                                                 u'fva': True})
     info = fba_client.runfba(fba_params)
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
@@ -281,6 +285,8 @@ def translate_model(src_model, protcomp, workspace=None, translation_name=None):
                     u'fbamodel_output_id': translation_name,
                     u'workspace': workspace}
     info = fba_client.translate_model(trans_params)
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
@@ -295,6 +301,8 @@ def reconstruct_genome(genome, workspace=None):
         workspace = genome.workspace_id
     recon_params = {u'genome_id': genome.object_id, u'genome_workspace': genome.workspace_id, u'workspace': workspace}
     info = fba_client.build_metabolic_model(recon_params)
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
@@ -342,6 +350,8 @@ def remove_reaction(model, reaction, workspace=None, output_id=None, in_place=Fa
                                         'fbamodel_output_id': output_id,
                                         'workspace': model.workspace_id,
                                         'data': {'reactions_to_remove': [reaction]}})
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
@@ -363,6 +373,8 @@ def add_reactions(model, new_reactions, workspace=None, name=None):
     if name is not None:
         args['output_id'] = name
     info = fba_client.add_reactions(args)
+    ws, name = info[3].split('/')
+    info = get_info(None, ws, name)
     return info[0], info[6]
 
 
