@@ -683,10 +683,8 @@ def _general_direction(model_rxn1, model_rxn2):
     r2d = model_rxn2.get_direction()
     if r1d == r2d:
         return r1d
-    elif r1d == '=' or r2d == '=':
-        return '='
     else:
-        raise Exception('directions are incompatible')
+        return '='
 
 class RepresentationError(Exception):
     def __init__(self, value):
