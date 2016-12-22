@@ -318,7 +318,8 @@ def remove_reactions_in_place(model, reactions_to_remove):
     """
     removal_args = {'fbamodel_id': model.object_id,
                     'fbamodel_workspace': model.workspace_id,
-                    'data': {'reactions_to_remove': reactions_to_remove}}
+                    'data': {'reactions_to_remove': reactions_to_remove},
+                    'fbamodel_output_id': model.name}
     fba_client.remove_reactions(removal_args)
 
 

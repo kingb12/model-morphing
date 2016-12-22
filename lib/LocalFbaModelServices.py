@@ -28,8 +28,7 @@ def edit_reactions(args):
 
 
 def remove_reactions(args):
-    info = call("edit_metabolic_model", args)
-    return dict(zip(info[0::2], info[1::2]))
+    call("edit_metabolic_model", args)
 
 
 def compare_models(args):
