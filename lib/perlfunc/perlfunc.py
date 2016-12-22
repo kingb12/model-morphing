@@ -83,9 +83,9 @@ def perlargs(*args):
 			t = type(vec[i])
 			result += sep + str(i) + ' => '
 			if t == ListType:
-				result += '[' + perl_vector(i) + ']'
+				result += '[' + perl_vector(vec[i]) + ']'
 			elif t == DictType:
-				result += '{' + perl_dict(i) + '}'
+				result += '{' + perl_dict(vec[i]) + '}'
 			else:
 				result += perl_elem(vec[i])
 			sep = ', '
