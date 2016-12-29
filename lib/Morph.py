@@ -27,7 +27,7 @@ class Morph:
 
     def __init__(self, *arg_hash, **kwargs):
         """
-        Initiializes a Morph! A reasonable Morph needs each of the following set:
+        Initiializes a Morph! A Morph needs each of the following set:
             src_model: (FBAModel) the model of the source organism
             genome: (Genome) the genome of the target organism
             probanno: (ReactionProbabilities) the likelihoods for KBase reactions in the target organism
@@ -37,7 +37,6 @@ class Morph:
         :param kwargs: keyword arguments
         :return:
         """
-        # TODO: EDIT THIS DOC LINE WITH THE TRUTH
         self.src_model = None
         self.model = None
         self.genome = None
