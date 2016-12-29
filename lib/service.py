@@ -283,6 +283,7 @@ def translate_model(src_model, protcomp, workspace=None, translation_name=None):
                     u'fbamodel_id': src_model.object_id,
                     u'fbamodel_workspace': src_model.workspace_id,
                     u'fbamodel_output_id': translation_name,
+                    u'genome_id': "some_genome",
                     u'workspace': workspace}
     info = fba_client.translate_model(trans_params)
     ws, name = info['new_fbamodel_ref'].split('/')
