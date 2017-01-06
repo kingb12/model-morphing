@@ -6,6 +6,7 @@ use Time::HiRes qw(time);
 use Bio::KBase::AuthToken;
 use Bio::KBase::workspace::Client;
 use fba_tools::fba_toolsImpl;
+use Bio::KBase::ObjectAPI::functions;
 
 # Some initialization upon loading
 local $| = 1;
@@ -14,6 +15,14 @@ if (!defined($ENV{'KB_AUTH_TOKEN'})) {
 	$ENV{'KB_AUTH_TOKEN'} = Bio::KBase::fbaModelServices::ScriptHelpers::getToken();
 }
 my $fba_client = FBAToolsClient->new($ENV{'KB_AUTH_TOKEN'},"https://kbase.us/services/ws");
+
+my $actions = {propagate_model_to_new_genome => \&Bio::KBase::ObjectAPI::functions::func_propagate_model_to_new_genome,
+               edit_metabolic_model => \&Bio::KBase::ObjectAPI::functions::func_edit_metabolic_model,
+               gapfill_metabolic_model => \&Bio::KBase::ObjectAPI::functions::func_gapfill_metabolic_model,
+               compare_models => \&Bio::KBase::ObjectAPI::functions::func_compare_models,
+               build_metabolic_model => \&Bio::KBase::ObjectAPI::functions::func_build_metabolic_model,
+               run_flux_balance_analysis => \&Bio::KBase::ObjectAPI::functions::func_run_flux_balance_analysis,
+               };
 
 # Outward facing function
 sub call {
@@ -60,10 +69,13 @@ sub call {
 		my $output;
 		# eval {
 			if (defined($parameters)) {
-				$output = $self->{obj}->$function($parameters);
+				# $output = $self->{obj}->$function($parameters);
+				Bio::KBase::utilities::set_context($testctx);
+				$output = $actions->{$function}->($parameters);
 			} else {
-				$output = $self->{obj}->$function();
-			}
+				# $output = $self->{obj}->$function();
+			    Bio::KBase::utilities::set_context($testctx);
+				$output = $actions->{$function}->();			}
 		# };
 		return $output;
 	}

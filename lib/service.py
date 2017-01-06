@@ -121,6 +121,10 @@ def save_object(data, type, wsid, objid=None, name=None):
     return info[0], info[6]
 
 
+def ws_info(wsid, name=None):
+    return ws_client.get_workspace_info({u'id': wsid})
+
+
 def list_objects(workspace_id, typestr=None):
     """
     returns a list of all the objects within a workspace in tuples (obj_id, ws_id, object_name)
@@ -284,7 +288,8 @@ def translate_model(src_model, protcomp, workspace=None, translation_name=None):
                     u'fbamodel_workspace': src_model.workspace_id,
                     u'fbamodel_output_id': translation_name,
                     u'genome_id': "some_genome",
-                    u'workspace': workspace}
+                    u'workspace': workspace,
+                    u'gapfill_model': 0}
     info = fba_client.translate_model(trans_params)
     ws, name = info['new_fbamodel_ref'].split('/')
     info = get_info(None, ws, name)
@@ -300,7 +305,8 @@ def reconstruct_genome(genome, workspace=None):
     """
     if workspace is None:
         workspace = genome.workspace_id
-    recon_params = {u'genome_id': genome.object_id, u'genome_workspace': genome.workspace_id, u'workspace': workspace}
+    recon_params = {u'genome_id': genome.object_id, u'genome_workspace': genome.workspace_id, u'workspace': workspace,
+                    u'fbamodel_output_id': genome.name + u'_recon', u'gapfill_model': 0}
     info = fba_client.build_metabolic_model(recon_params)
     ws, name = info['new_fbamodel_ref'].split('/')
     info = get_info(None, ws, name)

@@ -69,6 +69,8 @@ class Morph:
             self.log = Log(self)
         if self.ws_id is None:
             self.ws_id, self.ws_name = service.init_workspace()
+        else:
+            self.ws_name = service.ws_info(self.ws_id)
         self._check_rep()
 
     def _check_rep(self):

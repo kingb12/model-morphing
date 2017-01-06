@@ -13,3 +13,4 @@ RUN ["chmod", "+x", "./lib/model-morphing/scripts/run_async.sh"]
 RUN ["chmod", "+x", "./lib/model-morphing/scripts/login.sh"]
 
 ENTRYPOINT [ "./lib/model-morphing/scripts/entrypoint.sh" ]
+CMD ["login"]

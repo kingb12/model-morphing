@@ -4,7 +4,7 @@
 . /kb/deployment/user-env.sh
 
 export PYTHONPATH="${PYTHONPATH}:/kb/module/lib/model-morphing/lib/"
-export PERL5LIB="${PERL5LIB}:/kb/module/lib/model-morphing/:/kb/module/lib/"
+export PERL5LIB="/kb/module/lib:${PERL5LIB}:${PATH}:/kb/module/lib/model-morphing/:kb/runtime/bin:/kb/runtime/java/bin"
 export KB_DEPLOYMENT_CONFIG="/kb/module/deploy.cfg"
 
 # Login to KBase in this enviroment (creates a .kbase_config file in the home directory)
@@ -18,7 +18,7 @@ fi
 
 # Set Up workdir
 
-python ./lib/model-morphing/scripts/prepare_deploy_cfg.py ./deploy.cfg ./work/config.properties
+python ./lib/model-morphing/scripts/prepare_deploy_cfg.py ./deploy.cfg ./lib/model-morphing/kbconfig.properties
 python ./lib/model-morphing/scripts/extract_token.py ~/.kbase_config ./work/token
 
 if [ $# -eq 0 ] ; then
