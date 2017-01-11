@@ -8,16 +8,15 @@ Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' org
 
 This tool runs within a Docker container, so it a working installation of Docker is a pre-requisite. Information on how to install Docker for your system can be found at [docker.com](https://www.docker.com/) and elsewhere online.
 
-========= TO BE UPDATED SHORTLY ==============
 ## Installation
 1. Clone this repository: `git clone https://github.com/kingb12/model-morphing.git`
-2. Add `path-to-the-cloned-repo/lib/` to your `PYTHONPATH` environment variable REMOVE AND DO A PIP INSTALL -e
 
 ## Running from the Interpreter
-1. Navigate to `model-morphing/lib/`
-2. run in shell `ipython`
-
-==================== =========================
+1. Navigate to `model-morphing/`
+2. Make sure the docker daemon is running (i.e. you can run `docker ...` commands)
+3. Build the image: `docker build -t kingb12/mm .`
+4. Run the image:  `docker run -t -i kingb12/mm .`
+5. With no other arguments, this will bring you into an iPython console with appropriate modules for morphing imported. To run the container with some other command (e.g. bash), use: `docker run -t -i kingb12/mm /bin/bash`. This can be customized as needed.
 
 ## Tutorial
 A walk-through of the steps for completing a morph, and touching on possible customizations
@@ -71,6 +70,12 @@ These steps can be run individually as well. The translation and reconstruction 
 
 The labeling step and building of the super model must be performed after the translation and reconstruction steps.
 
+### Translating Media (optional):
+
+A common use case occurs when the source organism and target organism don't grow on identical media. In this case, one can specify the source media upon Morph construction as described above, 
+and prior to processing reactions, use the `translate_media` method. The `translate_media` method takes a Media object as an argument and if necessary, gapfills the model so it can grow on this new media, changing `morph.media` to the supplied argument.
+
+
 ### Processing Reactions (Iterative FBA Based Removal)
 
 A next step would be to try iterative FBA Based reaction removal. This is done using the process_reactions method. In the simplest case, this can be done using a call with no arguments:
@@ -94,12 +99,6 @@ self, rxn_list=None, name='', process_count=0, get_count=False, iterative_models
 
 
 This function will run for a while, and will give updates on progress to stdout as it is able to remove/keep reactions. When it complete, the morphing process is finished! The final model is the one referenced by `morph.model`
-
-                      
-### Translating Media:
-
-A common use case occurs when the source organism and target organism don't grow on identical media. In this case, one can specify the source media upon Morph construction as described above, 
-and prior to processing reactions, use the `translate_media` method. The `translate_media` method takes a Media object as an argument and if necessary, gapfills the model so it can grow on this new media, changing `morph.media` to the supplied argument.
 
 ## Questions, Concerns, Feature Requests, etc.
 
