@@ -10,13 +10,13 @@ This tool runs within a Docker container, so it a working installation of Docker
 
 ## Installation
 1. Clone this repository: `git clone https://github.com/kingb12/model-morphing.git`
+2. Navigate to `model-morphing/`
+3. Make sure the docker daemon is running (i.e. you can run `docker ...` commands)
+4. Build the image: `docker build -t kingb12/mm .`
 
-## Running from the Interpreter
-1. Navigate to `model-morphing/`
-2. Make sure the docker daemon is running (i.e. you can run `docker ...` commands)
-3. Build the image: `docker build -t kingb12/mm .`
-4. Run the image:  `docker run -t -i kingb12/mm .`
-5. With no other arguments, this will bring you into an iPython console with appropriate modules for morphing imported. To run the container with some other command (e.g. bash), use: `docker run -t -i kingb12/mm /bin/bash`. This can be customized as needed.
+## Running
+5. Run the image:  `docker run -t -i kingb12/mm .`
+6. With no other arguments, this will bring you into an **iPython console** with appropriate modules and classes from `model_morphing` imported. To run the container with some other command (e.g. bash), use: `docker run -t -i kingb12/mm /bin/bash`. This can be customized as needed.
 
 ## Tutorial
 A walk-through of the steps for completing a morph, and touching on possible customizations
