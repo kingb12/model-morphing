@@ -1,12 +1,11 @@
-A tool for morphing a metabolic model from one genome to a closely related one, without ever disrupting growth
-
-# Morphing a Model for Organism 'A' to Organism 'B'
+# Morphing a Genome-Scale Metabolic Model from Organism 'A' to Organism 'B'
 
 Takes a Model/Genome for a 'source' organism and 'morphs' it to the 'target' organism. It keeps reactions from the 'source' model for which there is at least one matching gene feature, and attempts to remove those in the source model that do not have BLAST hits in the second genome. It also adds reactions annotated within the target genome that are unique to the target organism. The model is never broken in the process, such that the Biomass reaction and any other specified reaction [insert how you flag this option] must always carry flux. If a reaction can't be removed without breaking the model, it is removed and gap-filled using Prob-Anno gapfilling [other options?]
 
 ## Requirements
 
-This tool runs within a Docker container, so it a working installation of Docker is a pre-requisite. Information on how to install Docker for your system can be found at [docker.com](https://www.docker.com/) and elsewhere online.
+- This tool runs within a Docker container, so it a working installation of Docker is a pre-requisite. Information on how to install Docker for your system can be found at [docker.com](https://www.docker.com/) and elsewhere online.
+- This tools uses models in **KBase** workspaces. To use, you must upload your model into a KBase workspace/narrative, which can be done through KBase's narrative interface at [kbase.us](https://kbase.us)
 
 ## Installation
 1. Clone this repository: `git clone https://github.com/kingb12/model-morphing.git`
@@ -27,7 +26,7 @@ For easy management of the necessary data for morphing, a Morph class exists in 
 These are the minimal required arguments to instantiate a morph. Many of these are subclass instances of StoredObject's, a wrapper abstraction for objects in KBase. If an object is stored in KBase, then it can be uniquely referenced by its object_id and workspace_id. 
  - `genome`: a target genome (Genome object). A Genome is initialized with an object_id, workspace_id for it storage in KBase (e.g. `my_genome = Genome(object_id, workspace_id)`).
  - `src_model`: a source model (FBAModel object). A Model is initialized with an object_id, workspace_id for it storage in KBase (e.g. `my_model = FBAModel(object_id, workspace_id)`).
- - `probanno`: reaction probabilities for the target genome (ReactionProbabailities object). This holds likelihoods for the presence in the target organism of all KBase reactions. A ReactionProbabilities is initialized with an object_id, workspace_id for it storage in KBase (e.g. `my_rxn_probs = ReactionProbabilities(object_id, workspace_id)`).
+ - `probanno`: reaction probabilities for the target genome (ReactionProbabilities object). This holds likelihoods for the presence in the target organism of all KBase reactions. A ReactionProbabilities is initialized with an object_id, workspace_id for it storage in KBase (e.g. `my_rxn_probs = ReactionProbabilities(object_id, workspace_id)`).
  - `protcomp`: a proteome comparison between the genomes of the source and target organism (ProteomeComparison object). A ProteomeComparison is initialized with an object_id, workspace_id for it storage in KBase (e.g. `my_prot_comp = ProteomeComparison(object_id, workspace_id)`).
  - `media`: media that the source model grows on (Media object). If the source model does not grow on any media, you can specify one you wish the model to grow on when completed for the target organism, and gapfill using `fill_src_to_media` method or the `fill_src=True` flag in `prepare_supermodel`.
  
