@@ -41,7 +41,7 @@ elif [ "${1}" = "report" ] ; then
   export "KB_SDK_COMPILE_REPORT_FILE=./work/compile_report.json"
   make compile
 elif [ "${1}" = "login" ] ; then
-  bash
+  ipython -i /kb/module/lib/model-morphing/scripts/._mm_init.py
 else
   echo Unknown
 fi

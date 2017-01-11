@@ -2,6 +2,7 @@ FROM kingb12/fba_tools:latest
 
 RUN mkdir /kb/module/lib/model-morphing
 COPY ./ /kb/module/lib/model-morphing
+RUN ["pip", "install", "-e", "/kb/module/lib/model-morphing"]
 
 RUN ["pip", "install", "ipython"]
 RUN pip install matplotlib

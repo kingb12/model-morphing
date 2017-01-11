@@ -6,8 +6,6 @@ setup(name='model_morphing',
       author='Brendan King <bking@systemsbiology.org',
       author_email='bking@systemsbiology.org',
       license='MIT',
-      packages=['lib', 'test'],
-      install_requires=[
-          'cobra',
-      ],
+      packages=['model_morphing'],
+
       zip_safe=False)
