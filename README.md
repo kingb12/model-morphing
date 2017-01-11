@@ -1,3 +1,4 @@
+** This branch of the repo holds data from our experiments and analyses **
 A tool for morphing a metabolic model from one genome to a closely related one, without ever disrupting growth
 
 # Morphing a Model for Organism 'A' to Organism 'B'
