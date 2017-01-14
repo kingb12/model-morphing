@@ -88,7 +88,7 @@ In the default case, all 'gene-no-match' reactions and 'no-gene' reactions are t
 an FBA solution for a model in which the reaction has been removed exhibits growth (f > 0.0). Any reactions that are essential to growth on morph.media are kept, regardless of source or genetic basis.
 
 This process van be customized with a few keyword arguments:
-self, rxn_list=None, name='', process_count=0, get_count=False, iterative_models=True, growth_condition=GrowthConditions.SimpleCondition()
+
 - `rxn_list`: the reactions to test for removal in order (a list of reaction IDs). Default case is gene-no-match sorted by increasing likelihood, then no-gene by increasing likelihood.
 - `growth_condition`: a GrowthCondition object, which has an evaluate function that returns true or false, indicating when to keep or remove a reaction. Default is SimpleCondition, which takes a morph/model, runs FBA on it, and returns True if flux > 0.0, False otherwise. Other options are available, including one for ensuring growth on multiple media. Subclasses can be used for desired process effects, see the GrowthConditions module for details.
 - `name`: (non-algorithmic) The prefix name for all intermediate models. Default is 'MM'. Can be changed if you plan on using/inspecting intermiediate models.
