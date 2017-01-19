@@ -1,6 +1,12 @@
 import service
 import copy
+import json
 
+# Some repeated string constants
+OBJECT_ID = 'object_id'
+WORKSPACE_ID = 'workspace_id'
+TYPE_STR = 'type'
+STORED_OBJECT = 'StoredObject'
 
 class StoredObject(object):
     """
@@ -21,9 +27,9 @@ class StoredObject(object):
 
     def __getattr__(self, item):
         # Overriding __getattr__ to  get special objects
-        if item is 'object_id':
+        if item is OBJECT_ID:
             return self.identity[0]
-        elif item is 'workspace_id':
+        elif item is WORKSPACE_ID:
             return self.identity[1]
         elif item is 'data':
             if self.__dict__['_data'] is None:
@@ -41,7 +47,7 @@ class StoredObject(object):
 
     def __setattr__(self, key, value):
         # Overriding __getattr__ to  get special objects
-        if key in ['object_id', 'workspace_id']:
+        if key in [OBJECT_ID, WORKSPACE_ID]:
             raise MutationError(key)
         else:
             self.__dict__[key] = value
@@ -58,6 +64,16 @@ class StoredObject(object):
 
     def __repr__(self):
         return 'Type: ' + str(type(self)) + ', Stored Identity: ' + str((self.object_id, self.workspace_id))
+
+    def to_json(self):
+        return json.dumps({OBJECT_ID: self.object_id, WORKSPACE_ID: self.workspace_id, TYPE_STR: self.__class__.__name__})
+
+    @classmethod
+    def from_json(cls, json_str):
+        json_dict = json.loads(json_str)
+        if cls.__name__ != STORED_OBJECT and cls.__name__ != json_dict[TYPE_STR]:
+            raise TypeError("incorrect class. This JSON represents a " + json_dict[TYPE_STR])
+        return cls(json_dict[OBJECT_ID], json_dict[WORKSPACE_ID])
 
     def get_object(self):
         """
@@ -80,10 +96,10 @@ class StoredObject(object):
     def reference(self):
         if self._ver is None:
             self.get_object()
-        return {'object_id': self.object_id,
-                'workspace_id': self.workspace_id,
+        return {OBJECT_ID: self.object_id,
+                WORKSPACE_ID: self.workspace_id,
                 'version': self._ver,
-                'class': self.__class__}
+                'class': self.__class__.__name__}
     @classmethod
     def save(cls, stored_data, workspace_id, objid=None, name=None, typestr=None):
         """

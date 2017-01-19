@@ -88,8 +88,50 @@ class Morph:
         if self.recon_model is not None:
             assert isinstance(self.recon_model, FBAModel), str(type(self.recon_model))
 
-    def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
+    def to_json(self, filename=None):
+        data = {}
+        for prop in Morph.properties:
+            val = self.__dict__[prop]
+            if hasattr(self, prop) and val is not None:
+                if isinstance(val, StoredObject):
+                    data[prop] = self.__dict__[prop].to_json()
+                elif isinstance(val, Log):
+                    data[prop] = val.to_json()
+                else:
+                    data[prop] = val
+        if filename is not None:
+            with open(filename, 'w') as f:
+                f.write(json.dumps(data))
+        else:
+            return json.dumps(data)
+
+    @staticmethod
+    def from_json(json_str):
+        data = json.loads(json_str)
+        args = {}
+        for key in data:
+            if key in {'src_model', 'model', 'recon_model', 'trans_model'}:
+                args[key] = FBAModel.from_json(data[key])
+            elif key == 'genome':
+                args[key] = Genome.from_json(data[key])
+            elif key == 'protcomp':
+                args[key] = ProteomeComparison.from_json(data[key])
+            elif key == 'probanno':
+                args[key] = ReactionProbabilities.from_json(data[key])
+            elif key == 'media':
+                args[key] = Media.from_json(data[key])
+            elif key == 'log':
+                args[key] = Log.from_json(data[key])
+            else:
+                args[key] = data[key]
+        return Morph(args)
+
+
+    @staticmethod
+    def from_json_file(filename):
+        with open(filename, 'r') as f:
+            return Morph.from_json(f.read())
+
 
     # Overridden Functions to produce unique output
     def __str__(self):
@@ -686,6 +728,7 @@ def _general_direction(model_rxn1, model_rxn2):
         return '='
     else:
         raise Exception('directions are incompatible')
+
 
 class RepresentationError(Exception):
     def __init__(self, value):

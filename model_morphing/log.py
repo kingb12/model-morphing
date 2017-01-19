@@ -1,7 +1,13 @@
 import copy
 import Plotter
 import objects
+import json
 
+#String constants
+TYPE_STR = 'type'
+MEMBERS = 'members'
+CONTEXT = 'context'
+NOTES = 'notes'
 class Log:
     """
     A simple class for logging what occurs to a mutatable object. Object is responsible for composing a log, and making
@@ -11,19 +17,21 @@ class Log:
     stores the initial state of the object as encoded by the object. Default behavior for this might be to just perform
     a deepcopy on the object and store a reference to it, etc. This is at the discretion of the composing object.
     """
-    # TODO: A LOG SHOULD BE ABLE TO WRITE ITSELF IN MARKDOWN
-    def __init__(self, object):
+    def __init__(self, object=None):
         """
 
         :param object: the object to be logged. Remember, a log does not update itself
         :return: Log with initial action
         """
-        try:
-            a = object.logInitialize()
-        except AttributeError:
-            a = copy.deepcopy(object)
-        self.actions = []
-        self.actions.append(Action('initialize', [a], context=str(Log.__init__)))
+        if object is not None:
+            try:
+                a = object.logInitialize()
+            except AttributeError:
+                a = copy.deepcopy(object)
+            self.actions = []
+            self.actions.append(Action('initialize', [a], context=str(Log.__init__)))
+        else:
+            self.actions = []
 
     def add(self, action_type, inputs, outputs, context=None, notes=None):
         self._make_references(inputs)
@@ -47,6 +55,18 @@ class Log:
         else:
             if isinstance(item, objects.StoredObject):
                     item = item.reference()
+
+    def to_json(self):
+        j_actions = [a.to_json() for a in self.actions]
+        return json.dumps(j_actions)
+
+    @staticmethod
+    def from_json(json_str):
+        actions = [Action.from_json(a) for a in json.loads(json_str)]
+        log = Log()
+        log.actions = [a for a in actions if a is not None]
+
+        return log
 
 
 
@@ -84,3 +104,18 @@ class Action:
 
     def md_tuple(self):
         return str(self.type), str(self.members), str(self.context), str(self.notes)
+
+    def to_json(self):
+        optional = {}
+        if self.context is not None:
+            optional[CONTEXT] = self.context
+        if self.notes is not None:
+            optional[NOTES] = self.notes
+        return json.dumps({TYPE_STR: self.type, MEMBERS: self.members}.update(optional))
+
+    @staticmethod
+    def from_json(json_str):
+        data = json.loads(json_str)
+        if data is None:
+            return None
+        return Action(data[TYPE_STR], data[MEMBERS], context=data[CONTEXT] if CONTEXT in data else None, notes=data[NOTES] if NOTES in data else None)
