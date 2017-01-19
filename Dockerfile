@@ -12,6 +12,7 @@ RUN apt-get -y install vim
 RUN ["chmod", "+x", "./lib/model-morphing/scripts/entrypoint.sh"]
 RUN ["chmod", "+x", "./lib/model-morphing/scripts/run_async.sh"]
 RUN ["chmod", "+x", "./lib/model-morphing/scripts/login.sh"]
+RUN ["chmod", "+x", "./lib/model-morphing/all_the_models.sh"]
 
 ENTRYPOINT [ "./lib/model-morphing/scripts/entrypoint.sh" ]
 CMD ["login"]
