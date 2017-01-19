@@ -10,17 +10,17 @@ export KB_DEPLOYMENT_CONFIG="/kb/module/deploy.cfg"
 # Login to KBase in this enviroment (creates a .kbase_config file in the home directory)
 if [ $# -gt 1 ] && [ "${1}" = "login" ] ; then
   sh ./lib/model-morphing/scripts/login.sh "${@:2}"
-else
+  python ./lib/model-morphing/scripts/prepare_deploy_cfg.py ./deploy.cfg ./lib/model-morphing/kbconfig.properties
+  python ./lib/model-morphing/scripts/extract_token.py ~/.kbase_config ./work/token
+  export KB_AUTH_TOKEN=`cat /kb/module/work/token`
+elif  [ "${1}" = "login" ] || [ $# -eq 0 ]; then
   echo "Please enter your KBase username (sign up at http://kbase.us):"
   read username
   sh ./lib/model-morphing/scripts/login.sh $username
+  python ./lib/model-morphing/scripts/prepare_deploy_cfg.py ./deploy.cfg ./lib/model-morphing/kbconfig.properties
+  python ./lib/model-morphing/scripts/extract_token.py ~/.kbase_config ./work/token
+  export KB_AUTH_TOKEN=`cat /kb/module/work/token`
 fi
-
-# Set Up workdir
-
-python ./lib/model-morphing/scripts/prepare_deploy_cfg.py ./deploy.cfg ./lib/model-morphing/kbconfig.properties
-python ./lib/model-morphing/scripts/extract_token.py ~/.kbase_config ./work/token
-export KB_AUTH_TOKEN=`cat /kb/module/work/token`
 
 if [ $# -eq 0 ] ; then
   bash
@@ -43,5 +43,5 @@ elif [ "${1}" = "report" ] ; then
 elif [ "${1}" = "login" ] ; then
   ipython -i /kb/module/lib/model-morphing/scripts/._mm_init.py
 else
-  echo Unknown
+  exec "$@"
 fi
