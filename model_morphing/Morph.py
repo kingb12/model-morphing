@@ -23,7 +23,7 @@ class Morph:
     # morphed from source import to target, and the set of
     properties = {'src_model', 'genome', 'probanno', 'protcomp', 'model', 'rxn_labels', 'ws_id', 'ws_name',
                   'trans_model',
-                  'recon_model', 'media', 'probhash', 'log'}
+                  'recon_model', 'media', 'probhash', 'log', 'merge_conflicts'}
 
     def __init__(self, *arg_hash, **kwargs):
         """
@@ -372,6 +372,8 @@ class Morph:
 
     Where morph.model, morph.ws_id forms a valid ObjectIdentity for a model object in KBase (the super model)
     """
+        if self.merge_conflicts is None:
+            self.merge_conflicts = []
         src_rxns = dict([(r.rxn_id(), r) for r in self.src_model.get_reactions()])
         super_rxns = dict()
         specials = list()
@@ -388,6 +390,7 @@ class Morph:
             merge_gpr = trans_rxn.gpr.merge(recon_rxn.gpr)
             direction = _general_direction(trans_rxn, recon_rxn)
             if trans_rxn.gpr != merge_gpr or trans_rxn.get_direction() != direction:
+                self.merge_conflicts.append(rxn_id)
                 super_rxns[rxn_id] = (recon_rxn.get_rxn_ref(), recon_rxn.get_comp_ref(), direction, str(merge_gpr))
                 removal_id = trans_rxn.get_removal_id()
                 reactions_to_remove.append(removal_id)
